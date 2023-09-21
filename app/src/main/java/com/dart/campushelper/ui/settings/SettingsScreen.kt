@@ -7,16 +7,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dart.campushelper.App
 import com.dart.campushelper.ui.*
 import com.dart.campushelper.ui.login.LoginViewModel
 import com.dart.campushelper.ui.login.ShowLoginDialog
-import com.dart.campushelper.utils.Constants.Companion.JOIN_QQ_GROUP_URL
+import com.dart.campushelper.utils.Constants
+import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
 import com.dart.campushelper.utils.DropdownMenuPreference
 import com.dart.campushelper.utils.PreferenceHeader
 import com.dart.campushelper.utils.SwitchPreference
 import com.dart.campushelper.utils.TextPreference
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,15 +123,18 @@ fun SettingsScreen(
         contentText = "确定要登出吗？"
     )
 
+    val clipboardManager = LocalClipboardManager.current
+
     addTextAlertDialog(
         openDialog = openFeedbackUrlConfirmDialog,
         actionAfterConfirm = {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(JOIN_QQ_GROUP_URL)
-            App.context.startActivity(intent)
+            // Copy QQ group number
+            clipboardManager.setText(AnnotatedString(Constants.QQ_GROUP_NUMBER))
+            settingsViewModel.viewModelScope.launch {
+                MainActivity.snackBarHostState.showSnackbar("已复制 QQ 群号码")
+            }
         },
-        contentText = "您即将离开此应用，确认后将跳转到浏览器打开 QQ 群入群链接"
+        contentText = "您即将复制 QQ 群号码，确认？"
     )
 
     addTextAlertDialog(
@@ -134,7 +142,7 @@ fun SettingsScreen(
         actionAfterConfirm = {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse("https://github.com/founchoo")
+            intent.data = Uri.parse(GITHUB_URL)
             App.context.startActivity(intent)
         },
         contentText = "您即将离开此应用，确认后将跳转到浏览器打开 Github 仓库"

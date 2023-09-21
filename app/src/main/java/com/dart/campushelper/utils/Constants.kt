@@ -38,5 +38,7 @@ class Constants {
             .addQueryParameter("query.sfjg||", "")
             .build()
         const val STUDENT_INFO_URL = "https://hbut.jw.chaoxing.com/admin/cjgl/xscjbbdy/printdgxscj"
+        const val GITHUB_URL = "https://github.com/founchoo/CampusHelper"
+        const val QQ_GROUP_NUMBER = "422915042"
     }
 }
