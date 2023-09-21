@@ -12,4 +12,4 @@ Currently, we provide the following functions:
   - Automatic calculation of GPA and average score
   - Grade filter
 
-If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Any help would be appricated!
+If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Any help would be appreciated!
