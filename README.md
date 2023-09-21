@@ -29,3 +29,22 @@ Note: considering the private information, we have make student id number covere
 ## Participation
 
 If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Any help would be appreciated!
+
+## Thanks
+
+During the development, we have used the following tools/website which are helpful:
+
+- https://www.composables.com/icons A website generating **Material Symbols for Jetpack Compose**.
+
+  You just need to copy it and paste to you `.kt` file. It will generate a function named `rememberIconName`, and to use it, just call the function, so easy and simple.
+
+- https://stackoverflow.com/ StackOverflow of course, a knowledge sharing community which gained a lot of population.
+  In the development, there are so many times when we refer to it and seek suggestions.
+
+- https://m3.material.io/ Material Design guidelines.
+
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary Official development document.
+
+- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
+
+- https://json2kt.com/ Convert `JSON` to `.kt` file
