@@ -1,0 +1,67 @@
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/drawable/baseline_settings_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/drawable/outline_color_palette_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/drawable/outline_moon_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/drawable/outline_settings_24dp.xml" value="0.12" />
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/drawable/outline_view_week_24dp.xml" value="0.12" />
+        <entry key="..\:/Workspace/AndroidStudio/CampusHelper/app/src/main/res/xml/filepaths.xml" value="0.10885416666666667" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable-night/baseline_menu_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable-night/design_services-48px.xml" value="0.123" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable-night/outline_person_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_feed_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_grade_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_grade_black_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_menu_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_news_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_schedule_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/baseline_settings_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/design_services-48px.xml" value="0.123" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/feed-48px.xml" value="0.123" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/ic_launcher_background.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/ic_menu_camera.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/ic_menu_gallery.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/ic_menu_slideshow.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_arr_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_card_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_design_services_black_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_feed_black_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_grade_24dp.xml" value="0.123" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_news_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_person_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_schedule_24dp.xml" value="0.14427083333333332" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/outline_settings_24dp.xml" value="0.119" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/drawable/side_nav_bar.xml" value="0.2641025641025641" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/activity_main.xml" value="0.23148148148148148" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/app_bar_main.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/content_main.xml" value="0.806722663215103" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/dean_news_item.xml" value="0.1" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/edu_sch_item.xml" value="0.1109375" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_dean_arr.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_dean_detail.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_dean_news.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_edu_grade.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_edu_info.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_edu_sch.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_gallery.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_home.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/fragment_slideshow.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/layout/nav_header_main.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/menu/activity_main_drawer.xml" value="0.24820512820512822" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/menu/main.xml" value="0.2520833333333333" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/menu/me.xml" value="0.128125" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.123" />
+        <entry key="..\:/Workspace/AndroidStudio/HBUT/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.123" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
