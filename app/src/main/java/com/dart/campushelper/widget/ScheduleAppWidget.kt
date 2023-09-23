@@ -1,8 +1,6 @@
 package com.dart.campushelper.widget
 
 import android.content.Context
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,11 +21,9 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.dart.campushelper.receiver.ScheduleGlanceWidgetReceiver
 import com.dart.campushelper.receiver.ScheduleRefreshCallback
-import com.dart.campushelper.ui.Root.Companion.scheduleViewModel
 
 class ScheduleGlanceWidget : GlanceAppWidget() {
     @Composable
@@ -64,7 +60,7 @@ class ScheduleGlanceWidget : GlanceAppWidget() {
                     Button(text = "刷新", onClick = actionRunCallback<ScheduleRefreshCallback>())
                 }
 
-                LazyColumn() {
+                /*LazyColumn() {
                     if (dayOfWeek != null) {
                         itemsIndexed(
                             items = scheduleViewModel.courses.value.filter {
@@ -97,7 +93,7 @@ class ScheduleGlanceWidget : GlanceAppWidget() {
                             }
                         }
                     }
-                }
+                }*/
             }
         }
     }

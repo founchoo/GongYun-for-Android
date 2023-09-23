@@ -1,104 +1,124 @@
 package com.dart.campushelper.ui.schedule
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.AppDataStore
-import com.dart.campushelper.data.app.AppRepository
+import com.dart.campushelper.data.ChaoxingRepository
+import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_START_LOCALDATE
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.ui.Root
-import com.dart.campushelper.utils.DefaultCallback
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.Request
-import java.lang.reflect.Type
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
+import java.time.LocalTime
+import javax.inject.Inject
 
+data class ScheduleUiState(
+    val courses: Map<Pair<Int, Int>, Course> = emptyMap(),
+    val isTimetableLoading: Boolean = true,
+    val currentWeek: Int,
+    // Indicate the day of week, 1 for Monday, 7 for Sunday
+    val dayOfWeek: Int,
+    // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
+    val currentNode: Int = 1,
+    val isLogin: Boolean = false
+)
 
-class ScheduleViewModel(
-    private val appRepository: AppRepository
+@HiltViewModel
+class ScheduleViewModel @Inject constructor(
+    private val chaoxingRepository: ChaoxingRepository,
+    private val userPreferenceRepository: UserPreferenceRepository
 ) : ViewModel() {
 
-    var courses = MutableStateFlow<Map<Pair<Int, Int>, Course>>(mutableMapOf())
-        private set
+    private val mutex = Mutex()
 
-    var isTimetableLoading = MutableStateFlow(true)
-        private set
-
-    val currentWeek = appRepository.observeCurrentWeek().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(),
-        AppDataStore.DEFAULT_VALUE_DISPLAYED_WEEK
+    // UI state exposed to the UI
+    private val _uiState = MutableStateFlow(
+        ScheduleUiState(
+            currentWeek = 1,
+            dayOfWeek = LocalDate.now().dayOfWeek.value,
+            currentNode = getCurrentNode()
+        )
     )
+    val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
-    val dayOfWeek = appRepository.observeDayOfWeek().stateIn(
+    private val startLocalDateStateFlow = userPreferenceRepository.observeStartLocalDate().stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(),
-        AppDataStore.DEFAULT_VALUE_DAY_OF_WEEK
+        SharingStarted.WhileSubscribed(5000),
+        DEFAULT_VALUE_START_LOCALDATE
     )
 
     init {
         viewModelScope.launch {
-            appRepository.observeStartLocalDate().collect {
-                val currentWeek = it?.let { localDate ->
-                    val days = LocalDate.now().dayOfYear - localDate.dayOfYear
-                    (days / 7)
-                } ?: 1
-                appRepository.changeCurrentWeek(currentWeek)
-            }
-            appRepository.observeIsLogin().collect {
-                if (it == false) {
-                    courses.emit(mutableMapOf())
+            userPreferenceRepository.observeIsLogin()
+                .collect {
+                    Log.d("ScheduleViewModel", "observeIsLogin: $it")
+                    _uiState.update { uiState ->
+                        uiState.copy(isLogin = it)
+                    }
+                    if (it) {
+                        getCourses()
+                    }
+                }
+        }
+        viewModelScope.launch {
+            startLocalDateStateFlow.collect { startLocalDate ->
+                val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
+                _uiState.update { uiState ->
+                    uiState.copy(currentWeek = currentWeek)
                 }
             }
         }
-        loadCourses()
     }
 
-    fun loadCourses() {
-
-        isTimetableLoading.value = true
-        Root.client.newCall(
-            Request.Builder()
-                .url(
-                    "https://hbut.jw.chaoxing.com/admin/pkgl/xskb/sdpkkbList?xnxq=" +
-                            Root.semesterYearAndNo +
-                            "&xhid=" +
-                            Root.username +
-                            "&xqdm=" +
-                            if (Root.semesterYearAndNo.isNotEmpty()) Root.semesterYearAndNo.last() else ""
-                )
-                .get()
-                .build()
-        ).enqueue(DefaultCallback(
-            scope = viewModelScope,
-            uiRelatedLoadingIndicators = listOf(isTimetableLoading),
-            actionWhenResponseSuccess = { response ->
-                val json = response.body?.string()
-                val listType: Type = object : TypeToken<ArrayList<Course?>?>() {}.type
-                val list: List<Course> = Gson().fromJson(json, listType)
-                var tmp = mutableMapOf<Pair<Int, Int>, Course>()
-                for (course in list) {
-                    tmp[Pair(course.weekDayNo!!, (course.nodeNo!! + 1) / 2)] = course
-                }
-                viewModelScope.launch {
-                    courses.emit(tmp)
-                }
+    private fun getCurrentNode(): Int {
+        val currentMins = LocalTime.now().hour * 60 + LocalTime.now().minute
+        val nodeEnds = listOf("09:05", "09:55", "11:00", "11:50", "14:45", "15:35", "16:40", "17:30", "19:15", "20:05")
+        nodeEnds.forEachIndexed { i, node ->
+            val nodeEndMins = node.split(":")[0].toInt() * 60 + node.split(":")[1].toInt()
+            if (currentMins <= nodeEndMins) {
+                return i + 1
             }
-        ))
+        }
+        return 1
     }
 
-    companion object {
-        fun provideFactory(
-            appRepository: AppRepository
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ScheduleViewModel(appRepository) as T
+    private fun getWeekCount(startLocalDate: LocalDate?, endLocalDate: LocalDate?): Int {
+        return if (startLocalDate != null && endLocalDate != null) {
+            startLocalDate.let {
+                val days = endLocalDate.dayOfYear - it.dayOfYear
+                (days / 7)
+            }
+        } else {
+            1
+        }
+    }
+
+    private suspend fun getCourses() {
+        Log.d("ScheduleViewModel", "getCourses")
+        mutex.withLock {
+            _uiState.update { uiState ->
+                uiState.copy(isTimetableLoading = true)
+            }
+            Log.d("ScheduleViewModel", "getCourses: ${_uiState.value.isTimetableLoading}")
+            chaoxingRepository.getSchedule().collect { coursesResponse ->
+                Log.d("ScheduleViewModel", "getCourses: ${coursesResponse.body()}")
+                val map = coursesResponse.body()?.associateBy { course ->
+                    Pair(course.weekDayNo!!, (course.nodeNo!! + 1) / 2)
+                }
+                if (map != null) {
+                    _uiState.update { uiState ->
+                        uiState.copy(courses = map, isTimetableLoading = false)
+                    }
+                }
             }
         }
     }

@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
 }
 
 android {
@@ -21,16 +23,16 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
         viewBinding true
@@ -49,9 +51,20 @@ android {
 
 dependencies {
 
+    //Hilt
+    def hilt_version = '2.48'
+    implementation("com.google.dagger:hilt-android:$hilt_version")
+    kapt("com.google.dagger:hilt-compiler:$hilt_version")
+    implementation("com.google.dagger:hilt-android-gradle-plugin:$hilt_version")
+
+
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
     implementation "io.github.fornewid:placeholder-material3:1.0.1"
 
-    implementation("com.squareup.okhttp3:okhttp-urlconnection:3.8.1")
+    implementation("com.squareup.okhttp3:okhttp-urlconnection:4.11.0")
 
     // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.11.0"))
@@ -86,7 +99,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
 
     // Annotation processor
-    implementation "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+    //noinspection LifecycleAnnotationProcessorWithJava8
+    annotationProcessor "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
 
     implementation 'org.jsoup:jsoup:1.16.1'
 
@@ -95,8 +109,8 @@ dependencies {
 
     implementation 'org.jetbrains.anko:anko-commons:0.10.8'
 
-    implementation('androidx.compose.material3:material3:1.2.0-alpha07')
-    implementation('androidx.compose.material3:material3-window-size-class:1.2.0-alpha07')
+    implementation('androidx.compose.material3:material3:1.2.0-alpha08')
+    implementation('androidx.compose.material3:material3-window-size-class:1.2.0-alpha08')
 
     // Integration with activities
     implementation 'androidx.activity:activity-compose:1.7.2'
@@ -126,9 +140,9 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
 
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.2'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.7.2'
-    implementation 'androidx.navigation:navigation-compose:2.7.2'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.3'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.3'
+    implementation 'androidx.navigation:navigation-compose:2.7.3'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'

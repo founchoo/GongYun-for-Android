@@ -1,99 +1,113 @@
 package com.dart.campushelper.ui.login
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_CURRENT_WEEK
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_IS_LOGIN
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_USERNAME
-import com.dart.campushelper.data.app.AppRepository
+import com.dart.campushelper.api.ChaoxingService
+import com.dart.campushelper.data.ChaoxingRepository
+import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.data.VALUES
 import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.ui.Root
-import com.dart.campushelper.utils.Constants.Companion.LOGIN_URL
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.FormBody
-import okhttp3.Request
-import okhttp3.Response
-import java.io.IOException
 import java.time.LocalDate
+import javax.inject.Inject
 
-class LoginViewModel(
-    private val appRepository: AppRepository
+data class LoginUiState(
+    val isShowLoginDialog: Boolean = false,
+    val username: String = "",
+    val password: String = "",
+)
+
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val chaoxingRepository: ChaoxingRepository,
+    private val userPreferenceRepository: UserPreferenceRepository
 ) : ViewModel() {
 
-    var isShowLoginDialog by mutableStateOf(false)
-    var username by mutableStateOf("")
-    var password by mutableStateOf("")
+    // UI state exposed to the UI
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun login() {
-
-        Root.client.newCall(
-            Request.Builder()
-                .url(LOGIN_URL)
-                .post(
-                    FormBody.Builder()
-                        .add("username", username)
-                        .add("password", password)
-                        .add("jcaptchaCode", "")
-                        .add("rememberMe", "1")
-                        .build()
-                )
-                .build()
-        ).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                viewModelScope.launch {
-                    MainActivity.snackBarHostState.showSnackbar("登录失败")
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                // When login successfully, the server will redirect to home page
-                // But we already disable it from redirecting in App.kt
-                // So here, it will return 302 and we can detect it
-                if (response.code == 302) {
-                    viewModelScope.launch {
-                        appRepository.changeIsLogin(true)
-                        appRepository.changeUsername(username)
+        viewModelScope.launch {
+            chaoxingRepository.login(_uiState.value.username, _uiState.value.password)
+                .collect { it ->
+                    if (it.code() == 302) {
+                        chaoxingRepository.getStudentInfo().collect { studentInfoResponse ->
+                            val studentInfo = studentInfoResponse.body()?.data?.records?.get(0)
+                            MainActivity.userCache.semesterYearAndNo = studentInfo?.dataXnxq ?: ""
+                            MainActivity.userCache.enterUniversityYear = studentInfo?.rxnj ?: ""
+                            MainActivity.userCache.studentId = studentInfo?.xh ?: ""
+                        }
+                        chaoxingRepository.getWeekInfo().collect { weekInfoResponse ->
+                            val startWeekMonthAndDay = weekInfoResponse.body()?.data?.first()?.date
+                            if (startWeekMonthAndDay != null) {
+                                var month = startWeekMonthAndDay.split("-")[0]
+                                if (month.length == 1) {
+                                    month = "0$month"
+                                }
+                                var day = startWeekMonthAndDay.split("-")[1]
+                                if (day.length == 1) {
+                                    day = "0$day"
+                                }
+                                userPreferenceRepository.changeStartLocalDate(
+                                    LocalDate.parse("${LocalDate.now().year}-$month-$day")
+                                )
+                            }
+                        }
+                        userPreferenceRepository.changeUsername(_uiState.value.username)
+                        userPreferenceRepository.changePassword(_uiState.value.password)
+                        userPreferenceRepository.changeIsLogin(true)
+                        _uiState.update { uiState ->
+                            uiState.copy(isShowLoginDialog = false)
+                        }
                         MainActivity.snackBarHostState.showSnackbar("登录成功")
-                    }
-                    isShowLoginDialog = false
-                } else {
-                    viewModelScope.launch {
-                        appRepository.changeIsLogin(false)
+                    } else {
+                        userPreferenceRepository.changeIsLogin(false)
                         MainActivity.snackBarHostState.showSnackbar("登录失败")
                     }
                 }
-            }
-        })
+        }
+    }
+
+    fun onUsernameChanged(input: String) {
+        _uiState.update {
+            it.copy(username = input)
+        }
+    }
+
+    fun onPasswordChanged(input: String) {
+        _uiState.update {
+            it.copy(password = input)
+        }
+    }
+
+    fun onHideLoginDialogRequest() {
+        _uiState.update {
+            it.copy(isShowLoginDialog = false)
+        }
+    }
+
+    fun onShowLoginDialogRequest() {
+        _uiState.update {
+            it.copy(isShowLoginDialog = true)
+        }
     }
 
     fun logout() {
         viewModelScope.launch {
-            appRepository.changeCurrentWeek(DEFAULT_VALUE_CURRENT_WEEK)
-            appRepository.changeCookies(emptySet())
-            appRepository.changeStartLocalDate(LocalDate.now())
-            appRepository.changeUsername(DEFAULT_VALUE_USERNAME)
-            appRepository.changeIsLogin(DEFAULT_VALUE_IS_LOGIN)
-            appRepository.changeSemesterYearAndNo(DEFAULT_VALUE_SEMESTER_YEAR_AND_NO)
-            appRepository.changeEnterUniversityYear(DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
+            userPreferenceRepository.changeIsLogin(false)
         }
-    }
-
-    companion object {
-        fun provideFactory(
-            appRepository: AppRepository,
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return LoginViewModel(appRepository) as T
-            }
+        viewModelScope.launch {
+            MainActivity.userCache.reset()
+            userPreferenceRepository.changeUsername(VALUES.DEFAULT_VALUE_USERNAME)
+            userPreferenceRepository.changePassword(VALUES.DEFAULT_VALUE_PASSWORD)
+            userPreferenceRepository.changeStartLocalDate(LocalDate.now())
+            ChaoxingService.cookies.emit(emptyList())
         }
     }
 }

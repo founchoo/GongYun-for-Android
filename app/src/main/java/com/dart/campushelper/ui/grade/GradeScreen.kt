@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.dart.campushelper.ui.Root
 import com.dart.campushelper.ui.rememberFilterAlt
 import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
@@ -55,16 +54,7 @@ fun GradeScreen(
     gradeViewModel: GradeViewModel
 ) {
 
-    val grades by gradeViewModel.grades.collectAsState()
-    val courseSorts by gradeViewModel.courseSorts.collectAsState()
-    val courseSortsSelected by gradeViewModel.courseSortsSelected.collectAsState()
-    val semesters by gradeViewModel.semesters.collectAsState()
-    val semestersSelected by gradeViewModel.semestersSelected.collectAsState()
-
-    val rankingAvailable by gradeViewModel.rankingAvailable.collectAsState()
-    val rankingInfo by gradeViewModel.rankingInfo.collectAsState()
-    val isRankingInfoLoading by gradeViewModel.isRankingInfoLoading.collectAsState()
-    val isGradesLoading by gradeViewModel.isGradesLoading.collectAsState()
+    val scheduleUiState by gradeViewModel.uiState.collectAsState()
 
     // Grade gpa calculation section.
     var gpa = 0.0
@@ -73,13 +63,13 @@ fun GradeScreen(
     var totalScore = 0.0
     var totalCredit = 0.0
     var totalPointMultipleCredit = 0.0
-    grades.forEach {
+    scheduleUiState.grades.forEach {
         totalScore += it.score
         totalPointMultipleCredit += (it.score / 10.0 - 5) * it.credit
         totalCredit += it.credit
     }.run {
         gpa = totalPointMultipleCredit / totalCredit
-        averageScore = totalScore / grades.size
+        averageScore = totalScore / scheduleUiState.grades.size
     }
 
     val scope = rememberCoroutineScope()
@@ -93,7 +83,7 @@ fun GradeScreen(
         !listState.isScrollInProgress
     }.value
 
-    if (Root.isLogin == true) {
+    if (scheduleUiState.isLogin) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -117,7 +107,7 @@ fun GradeScreen(
                     item {
                         Card(
                             modifier = Modifier.placeholder(
-                                visible = isGradesLoading,
+                                visible = scheduleUiState.isGradesLoading,
                                 highlight = PlaceholderHighlight.shimmer()
                             )
                         ) {
@@ -158,10 +148,10 @@ fun GradeScreen(
                         Spacer(Modifier.width(10.dp))
                     }
                     item {
-                        if (rankingAvailable) {
+                        if (scheduleUiState.rankingAvailable) {
                             Card(
                                 modifier = Modifier.placeholder(
-                                    visible = isRankingInfoLoading,
+                                    visible = scheduleUiState.isRankingInfoLoading,
                                     highlight = PlaceholderHighlight.shimmer()
                                 )
                             ) {
@@ -182,17 +172,17 @@ fun GradeScreen(
                                     Column {
                                         Text(
                                             text = "平均学分绩点排名 " +
-                                                    "年级 ${rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
+                                                    "年级 ${scheduleUiState.rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                    "专业 ${scheduleUiState.rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
+                                                    "班级 ${scheduleUiState.rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
                                             textAlign = TextAlign.Center,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                         )
                                         Text(
                                             text = "算术平均分排名 " +
-                                                    "年级 ${rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
+                                                    "年级 ${scheduleUiState.rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                    "专业 ${scheduleUiState.rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
+                                                    "班级 ${scheduleUiState.rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
                                             textAlign = TextAlign.Center,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                         )
@@ -251,13 +241,13 @@ fun GradeScreen(
                     .fillMaxHeight()
                     .padding(25.dp, 0.dp, 25.dp, 10.dp)
                     .placeholder(
-                        visible = isGradesLoading,
+                        visible = scheduleUiState.isGradesLoading,
                         highlight = PlaceholderHighlight.shimmer()
                     ),
                 verticalArrangement = Arrangement.Top,
                 state = listState,
             ) {
-                itemsIndexed(grades.toList()) { _, grade ->
+                itemsIndexed(scheduleUiState.grades.toList()) { _, grade ->
                     Row(
                         modifier = Modifier
                             .padding(8.dp)
@@ -330,14 +320,14 @@ fun GradeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(-5.dp)
                     ) {
-                        for (i in semesters) {
+                        for (i in scheduleUiState.semesters) {
                             FilterChip(
-                                selected = semestersSelected[i] ?: false,
+                                selected = scheduleUiState.semestersSelected[i] ?: false,
                                 onClick = {
-                                    semestersSelected[i] = !(semestersSelected[i] ?: false)
+                                    gradeViewModel.changeSemesterSelected(i, !(scheduleUiState.semestersSelected[i] ?: false))
                                 },
                                 label = { Text(i) },
-                                leadingIcon = if (semestersSelected[i] == true) {
+                                leadingIcon = if (scheduleUiState.semestersSelected[i] == true) {
                                     {
                                         Icon(
                                             imageVector = Icons.Filled.Done,
@@ -367,14 +357,14 @@ fun GradeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(-5.dp)
                     ) {
-                        for (i in courseSorts) {
+                        for (i in scheduleUiState.courseSorts) {
                             FilterChip(
-                                selected = courseSortsSelected[i] ?: false,
+                                selected = scheduleUiState.courseSortsSelected[i] ?: false,
                                 onClick = {
-                                    courseSortsSelected[i] = !(courseSortsSelected[i] ?: false)
+                                    gradeViewModel.changeCourseSortSelected(i, !(scheduleUiState.courseSortsSelected[i] ?: false))
                                 },
                                 label = { Text(i) },
-                                leadingIcon = if (courseSortsSelected[i] == true) {
+                                leadingIcon = if (scheduleUiState.courseSortsSelected[i] == true) {
                                     {
                                         Icon(
                                             imageVector = Icons.Filled.Done,

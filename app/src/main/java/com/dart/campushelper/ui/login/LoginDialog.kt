@@ -12,6 +12,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,9 @@ import com.dart.campushelper.ui.rememberVisibilityOff
 fun ShowLoginDialog(
     loginViewModel: LoginViewModel
 ) {
+
+    val loginUiState by loginViewModel.uiState.collectAsState()
+
     var displayPassword by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -40,13 +44,13 @@ fun ShowLoginDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
-                    value = loginViewModel.username,
-                    onValueChange = { loginViewModel.username = it },
+                    value = loginUiState.username,
+                    onValueChange = { loginViewModel.onUsernameChanged(it) },
                     label = { Text("账号") },
                 )
                 OutlinedTextField(
-                    value = loginViewModel.password,
-                    onValueChange = { loginViewModel.password = it },
+                    value = loginUiState.password,
+                    onValueChange = { loginViewModel.onPasswordChanged(it) },
                     label = { Text("密码") },
                     trailingIcon = {
                         IconButton(
@@ -64,7 +68,7 @@ fun ShowLoginDialog(
             }
         },
         onDismissRequest = {
-            loginViewModel.isShowLoginDialog = false
+            loginViewModel.onHideLoginDialogRequest()
         },
         confirmButton = {
             TextButton(
@@ -78,7 +82,7 @@ fun ShowLoginDialog(
         dismissButton = {
             TextButton(
                 onClick = {
-                    loginViewModel.isShowLoginDialog = false
+                    loginViewModel.onHideLoginDialogRequest()
                 }
             ) {
                 Text("取消")

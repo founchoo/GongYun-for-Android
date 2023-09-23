@@ -3,18 +3,27 @@ package com.dart.campushelper.ui.settings
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.dart.campushelper.App
-import com.dart.campushelper.ui.*
+import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.ui.login.LoginViewModel
 import com.dart.campushelper.ui.login.ShowLoginDialog
+import com.dart.campushelper.ui.rememberAccountCircle
+import com.dart.campushelper.ui.rememberChat
+import com.dart.campushelper.ui.rememberClearNight
+import com.dart.campushelper.ui.rememberCode
+import com.dart.campushelper.ui.rememberInfo
+import com.dart.campushelper.ui.rememberPalette
 import com.dart.campushelper.utils.Constants
 import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
 import com.dart.campushelper.utils.DropdownMenuPreference
@@ -24,37 +33,27 @@ import com.dart.campushelper.utils.TextPreference
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    loginViewModel: LoginViewModel
 ) {
-    val loginViewModel: LoginViewModel = viewModel(
-        factory = LoginViewModel.provideFactory(App.container.appRepository)
-    )
 
-    val isLogin by settingsViewModel.isLogin.collectAsState()
-    val username by settingsViewModel.username.collectAsState()
-    val enableSystemColor by settingsViewModel.enableSystemColor.collectAsState()
-    val selectedDarkMode by settingsViewModel.selectedDarkModel.collectAsState()
-    val isPin by settingsViewModel.isPin.collectAsState()
-
-    var openFeedbackUrlConfirmDialog = remember { mutableStateOf(false) }
-    var openSourceCodeUrlConfirmDialog = remember { mutableStateOf(false) }
-    var openLogoutConfirmDialog = remember { mutableStateOf(false) }
+    val loginUiState by loginViewModel.uiState.collectAsState()
+    val settingsUiState by settingsViewModel.uiState.collectAsState()
 
     LazyColumn() {
         item {
             PreferenceHeader(text = "账户")
             TextPreference(
-                title = if (isLogin == true) "登出" else "登录",
-                description = if (isLogin == true) "欢迎 ${username}" else "请先登录",
+                title = if (settingsUiState.isLogin) "登出" else "登录",
+                description = if (settingsUiState.isLogin) "欢迎 ${settingsUiState.username}" else "请先登录",
                 imageVector = rememberAccountCircle()
             ) {
-                if (isLogin == true) {
-                    openLogoutConfirmDialog.value = true
+                if (settingsUiState.isLogin) {
+                    settingsViewModel.onShowLogoutConfirmDialogRequest()
                 } else {
-                    loginViewModel.isShowLoginDialog = true
+                    loginViewModel.onShowLoginDialogRequest()
                 }
             }
             /*PreferenceHeader(text = "课表")
@@ -71,7 +70,7 @@ fun SettingsScreen(
             SwitchPreference(
                 imageVector = rememberPalette(),
                 title = "系统主题色",
-                defaultValue = enableSystemColor ?: false,
+                value = settingsUiState.enableSystemColor,
                 onValueChanged = {
                     settingsViewModel.changeEnableSystemColor(it)
                 }
@@ -79,7 +78,7 @@ fun SettingsScreen(
             DropdownMenuPreference(
                 imageVector = rememberClearNight(),
                 title = "深色主题",
-                defaultValue = selectedDarkMode,
+                value = settingsUiState.selectedDarkMode,
                 selections = listOf(
                     "跟随系统",
                     "开启",
@@ -101,66 +100,73 @@ fun SettingsScreen(
                 description = "加入群聊提供你的意见及建议",
                 imageVector = rememberChat()
             ) {
-                openFeedbackUrlConfirmDialog.value = true
+                settingsViewModel.onShowFeedbackUrlConfirmDialogRequest()
             }
             TextPreference(
                 title = "开源代码",
                 description = "你的开发将为此应用贡献一份力量",
                 imageVector = rememberCode()
             ) {
-                openSourceCodeUrlConfirmDialog.value = true
+                settingsViewModel.onShowSourceCodeUrlConfirmDialogRequest()
             }
         }
     }
 
-    if (loginViewModel.isShowLoginDialog) {
+    if (loginUiState.isShowLoginDialog) {
         ShowLoginDialog(loginViewModel)
     }
 
     addTextAlertDialog(
-        openDialog = openLogoutConfirmDialog,
-        actionAfterConfirm = { loginViewModel.logout() },
+        isShowDialog = settingsUiState.openLogoutConfirmDialog,
+        actionAfterConfirm = {
+            loginViewModel.logout()
+            settingsViewModel.onHideLogoutConfirmDialogRequest()
+        },
+        onDismissRequest = { settingsViewModel.onHideLogoutConfirmDialogRequest() },
         contentText = "确定要登出吗？"
     )
 
     val clipboardManager = LocalClipboardManager.current
 
     addTextAlertDialog(
-        openDialog = openFeedbackUrlConfirmDialog,
+        isShowDialog = settingsUiState.openFeedbackUrlConfirmDialog,
         actionAfterConfirm = {
+            settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
             // Copy QQ group number
             clipboardManager.setText(AnnotatedString(Constants.QQ_GROUP_NUMBER))
             settingsViewModel.viewModelScope.launch {
                 MainActivity.snackBarHostState.showSnackbar("已复制 QQ 群号码")
             }
         },
+        onDismissRequest = { settingsViewModel.onHideFeedbackUrlConfirmDialogRequest() },
         contentText = "您即将复制 QQ 群号码，确认？"
     )
 
     addTextAlertDialog(
-        openDialog = openSourceCodeUrlConfirmDialog,
+        isShowDialog = settingsUiState.openSourceCodeUrlConfirmDialog,
         actionAfterConfirm = {
+            settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.data = Uri.parse(GITHUB_URL)
-            App.context.startActivity(intent)
+            CampusHelperApplication.context.startActivity(intent)
         },
+        onDismissRequest = { settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest() },
         contentText = "您即将离开此应用，确认后将跳转到浏览器打开 Github 仓库"
     )
 }
 
 @Composable
 fun addTextAlertDialog(
-    openDialog: MutableState<Boolean>,
+    isShowDialog: Boolean,
     actionAfterConfirm: () -> Unit,
+    onDismissRequest: () -> Unit,
     titleText: String = "提示",
     contentText: String
 ) {
-    if (openDialog.value) {
+    if (isShowDialog) {
         AlertDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
+            onDismissRequest = onDismissRequest,
             title = {
                 Text(
                     text = titleText,
@@ -175,14 +181,13 @@ fun addTextAlertDialog(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    openDialog.value = false
                     actionAfterConfirm()
                 }) {
                     Text("确定")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { openDialog.value = false }) {
+                TextButton(onClick = onDismissRequest) {
                     Text("取消")
                 }
             }

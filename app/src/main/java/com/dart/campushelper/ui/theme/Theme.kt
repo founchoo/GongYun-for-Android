@@ -1,8 +1,8 @@
 package com.dart.campushelper.ui.theme
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -20,9 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.dart.campushelper.data.AppContainer
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
-import com.dart.campushelper.data.AppDataStore.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.example.compose.md_theme_dark_background
 import com.example.compose.md_theme_dark_error
 import com.example.compose.md_theme_dark_errorContainer
@@ -139,28 +136,24 @@ private val DarkColorScheme = darkColorScheme(
     surfaceTint = md_theme_dark_surfaceTint
 )
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun CampusHelperTheme(
-    appContainer: AppContainer,
+    viewModel: ThemeViewModel,
     content: @Composable () -> Unit
 ) {
-    // Dynamic color is available on Android 12+
-    val selectedDarkMode by appContainer.appRepository.observeSelectedDarkMode().collectAsState(
-        initial = DEFAULT_VALUE_SELECTED_DARK_MODE
-    )
-    val enableSystemColor by appContainer.appRepository.observeEnableSystemColor().collectAsState(
-        initial = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
-    )
 
-    val darkTheme = when (selectedDarkMode) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Log.d("Theme", "uiState: $uiState")
+
+    val darkTheme = when (uiState.darkMode) {
         "开启" -> true
         "关闭" -> false
         else -> isSystemInDarkTheme()
     }
 
     val colorScheme: ColorScheme = when {
-        enableSystemColor == true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        uiState.enableSystemColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }

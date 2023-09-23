@@ -20,13 +20,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.ui.Root
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class AppWidgetPinnedReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        Root.scope.launch {
+        MainScope().launch {
             MainActivity.snackBarHostState.showSnackbar("微件已固定到主屏幕")
         }
     }

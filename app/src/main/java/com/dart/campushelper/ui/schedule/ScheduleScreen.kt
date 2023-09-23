@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,38 +29,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.ui.Root
 import com.dart.campushelper.utils.NoLoginPlaceholder
 import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
 import io.github.fornewid.placeholder.material3.placeholder
 import io.github.fornewid.placeholder.material3.shimmer
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalUnitApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
     scheduleViewModel: ScheduleViewModel
 ) {
     val nodes = (1..10)
     val weeks = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
-    val dayOfWeek = scheduleViewModel.dayOfWeek.collectAsState()
-    val currentWeek by scheduleViewModel.currentWeek.collectAsState()
-    val courses by scheduleViewModel.courses.collectAsState()
-
-    val isTimetableLoading by scheduleViewModel.isTimetableLoading.collectAsState()
+    val scheduleUiState by scheduleViewModel.uiState.collectAsState()
 
     var showCourseDetail by remember { mutableStateOf(false) }
     var coursesToDisplay by remember { mutableStateOf(listOf<Course>()) }
 
-    if (Root.isLogin == true) {
+    if (scheduleUiState.isLogin) {
         Column(
             modifier = Modifier
                 .padding(5.dp, 0.dp, 3.dp, 3.dp)
         ) {
-            // 星期
+            // Week header, e.g. 周一 周二 ...
             Row() {
                 Box(
                     modifier = Modifier
@@ -79,7 +71,7 @@ fun ScheduleScreen(
                         ) {
                             Text(
                                 text = week,
-                                color = if (dayOfWeek.value - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                                color = if (scheduleUiState.dayOfWeek - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
                                 modifier = Modifier
                                     .align(Alignment.Center)
                                     .padding(0.dp, 0.dp, 0.dp, 5.dp)
@@ -98,12 +90,13 @@ fun ScheduleScreen(
                     verticalArrangement = Arrangement.SpaceAround,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    nodes.forEach { node ->
+                    nodes.forEachIndexed { index, node ->
                         Box(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                         ) {
                             Text(
+                                color = if (scheduleUiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
                                 text = node.toString(),
                                 textAlign = TextAlign.Center
                             )
@@ -122,7 +115,7 @@ fun ScheduleScreen(
                                 .fillMaxHeight()
                                 .weight(1F)
                         ) {
-                            val coursesOnWeek = courses.filter {
+                            val coursesOnWeek = scheduleUiState.courses.filter {
                                 it.key.first == week
                             }
 
@@ -135,7 +128,7 @@ fun ScheduleScreen(
                                 var currentCourse: Course? = null
                                 for (coursesOnBothWeekAndNodeItem in coursesOnBothWeekAndNode) {
                                     if (coursesOnBothWeekAndNodeItem.weekNoList.contains(
-                                            currentWeek
+                                            scheduleUiState.currentWeek
                                         )
                                     ) {
                                         currentCourse = coursesOnBothWeekAndNodeItem
@@ -159,15 +152,18 @@ fun ScheduleScreen(
                                         .padding(3.dp)
                                         .clip(RoundedCornerShape(5.dp))
                                         .background(background)
-                                        .clickable {
-                                            if (coursesOnBothWeekAndNode.isNotEmpty()) {
-                                                coursesToDisplay =
-                                                    coursesOnBothWeekAndNode.toMutableList()
-                                                showCourseDetail = true
+                                        .clickable(
+                                            enabled = !scheduleUiState.isTimetableLoading,
+                                            onClick = {
+                                                if (coursesOnBothWeekAndNode.isNotEmpty()) {
+                                                    coursesToDisplay =
+                                                        coursesOnBothWeekAndNode.toMutableList()
+                                                    showCourseDetail = true
+                                                }
                                             }
-                                        }
+                                        )
                                         .placeholder(
-                                            visible = isTimetableLoading,
+                                            visible = scheduleUiState.isTimetableLoading,
                                             highlight = PlaceholderHighlight.shimmer()
                                         )
                                 ) {
