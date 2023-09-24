@@ -20,11 +20,9 @@ Currently, we provide the following functions:
 
 Note: considering the private information, we have make student id number covered with black line by photo editor. In our real app, there is no covery on the personal information.
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/fa917cd1-c264-4432-a249-e7edc8ddc604" width="300">
+![Light mode](https://github.com/founchoo/CampusHelper/assets/24630338/c4cf3986-9db7-4f59-9238-c33c530aa430 "Light mode")
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/7ee2bc0b-d192-4e0f-a2a7-74bae86add68" width="300">
-
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/16f2f14a-4e4a-4cec-9aa6-d2bd02e9ddfd" width="300">
+![Dark mode](https://github.com/founchoo/CampusHelper/assets/24630338/8a2751df-5640-4cec-985c-6982837efe2a "Dark mode")
 
 ## Participation
 
