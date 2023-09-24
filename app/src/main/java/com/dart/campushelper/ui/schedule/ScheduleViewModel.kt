@@ -7,6 +7,8 @@ import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_START_LOCALDATE
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.utils.getCurrentNode
+import com.dart.campushelper.utils.getWeekCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,7 +20,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
-import java.time.LocalTime
 import javax.inject.Inject
 
 data class ScheduleUiState(
@@ -29,7 +30,11 @@ data class ScheduleUiState(
     val dayOfWeek: Int,
     // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
     val currentNode: Int = 1,
-    val isLogin: Boolean = false
+    val isLogin: Boolean = false,
+    val isCourseDetailDialogOpen: Boolean = false,
+    val nodeHeaders: IntRange = (1..10),
+    val weekHeaders: List<String> = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
+    val contentInCourseDetailDialog: List<Course> = emptyList()
 )
 
 @HiltViewModel
@@ -79,26 +84,21 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    private fun getCurrentNode(): Int {
-        val currentMins = LocalTime.now().hour * 60 + LocalTime.now().minute
-        val nodeEnds = listOf("09:05", "09:55", "11:00", "11:50", "14:45", "15:35", "16:40", "17:30", "19:15", "20:05")
-        nodeEnds.forEachIndexed { i, node ->
-            val nodeEndMins = node.split(":")[0].toInt() * 60 + node.split(":")[1].toInt()
-            if (currentMins <= nodeEndMins) {
-                return i + 1
-            }
+    fun showCourseDetailDialog() {
+        _uiState.update {
+            it.copy(isCourseDetailDialogOpen = true)
         }
-        return 1
     }
 
-    private fun getWeekCount(startLocalDate: LocalDate?, endLocalDate: LocalDate?): Int {
-        return if (startLocalDate != null && endLocalDate != null) {
-            startLocalDate.let {
-                val days = endLocalDate.dayOfYear - it.dayOfYear
-                (days / 7)
-            }
-        } else {
-            1
+    fun hideCourseDetailDialog() {
+        _uiState.update {
+            it.copy(isCourseDetailDialogOpen = false)
+        }
+    }
+
+    fun setContentInCourseDetailDialog(value: List<Course>) {
+        _uiState.update {
+            it.copy(contentInCourseDetailDialog = value)
         }
     }
 

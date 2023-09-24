@@ -20,9 +20,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,22 +36,17 @@ import io.github.fornewid.placeholder.material3.shimmer
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ScheduleScreen(
-    scheduleViewModel: ScheduleViewModel
+    viewModel: ScheduleViewModel
 ) {
-    val nodes = (1..10)
-    val weeks = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
-    val scheduleUiState by scheduleViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    var showCourseDetail by remember { mutableStateOf(false) }
-    var coursesToDisplay by remember { mutableStateOf(listOf<Course>()) }
-
-    if (scheduleUiState.isLogin) {
+    if (uiState.isLogin) {
         Column(
             modifier = Modifier
                 .padding(5.dp, 0.dp, 3.dp, 3.dp)
         ) {
             // Week header, e.g. 周一 周二 ...
-            Row() {
+            Row {
                 Box(
                     modifier = Modifier
                         .weight(0.5F)
@@ -64,14 +56,14 @@ fun ScheduleScreen(
                         .weight(7F)
                         .align(Alignment.Top)
                 ) {
-                    weeks.forEachIndexed { index, week ->
+                    uiState.weekHeaders.forEachIndexed { index, week ->
                         Box(
                             modifier = Modifier
                                 .weight(1F)
                         ) {
                             Text(
                                 text = week,
-                                color = if (scheduleUiState.dayOfWeek - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                                color = if (uiState.dayOfWeek - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
                                 modifier = Modifier
                                     .align(Alignment.Center)
                                     .padding(0.dp, 0.dp, 0.dp, 5.dp)
@@ -81,7 +73,7 @@ fun ScheduleScreen(
                 }
             }
 
-            Row() {
+            Row {
                 // 节点数
                 Column(
                     modifier = Modifier
@@ -90,13 +82,13 @@ fun ScheduleScreen(
                     verticalArrangement = Arrangement.SpaceAround,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    nodes.forEachIndexed { index, node ->
+                    uiState.nodeHeaders.forEachIndexed { index, node ->
                         Box(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                         ) {
                             Text(
-                                color = if (scheduleUiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                                color = if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
                                 text = node.toString(),
                                 textAlign = TextAlign.Center
                             )
@@ -115,7 +107,7 @@ fun ScheduleScreen(
                                 .fillMaxHeight()
                                 .weight(1F)
                         ) {
-                            val coursesOnWeek = scheduleUiState.courses.filter {
+                            val coursesOnWeek = uiState.courses.filter {
                                 it.key.first == week
                             }
 
@@ -128,7 +120,7 @@ fun ScheduleScreen(
                                 var currentCourse: Course? = null
                                 for (coursesOnBothWeekAndNodeItem in coursesOnBothWeekAndNode) {
                                     if (coursesOnBothWeekAndNodeItem.weekNoList.contains(
-                                            scheduleUiState.currentWeek
+                                            uiState.currentWeek
                                         )
                                     ) {
                                         currentCourse = coursesOnBothWeekAndNodeItem
@@ -153,17 +145,16 @@ fun ScheduleScreen(
                                         .clip(RoundedCornerShape(5.dp))
                                         .background(background)
                                         .clickable(
-                                            enabled = !scheduleUiState.isTimetableLoading,
+                                            enabled = coursesOnBothWeekAndNode.isNotEmpty(),
                                             onClick = {
-                                                if (coursesOnBothWeekAndNode.isNotEmpty()) {
-                                                    coursesToDisplay =
-                                                        coursesOnBothWeekAndNode.toMutableList()
-                                                    showCourseDetail = true
-                                                }
+                                                viewModel.setContentInCourseDetailDialog(
+                                                    coursesOnBothWeekAndNode.toList()
+                                                )
+                                                viewModel.showCourseDetailDialog()
                                             }
                                         )
                                         .placeholder(
-                                            visible = scheduleUiState.isTimetableLoading,
+                                            visible = uiState.isTimetableLoading,
                                             highlight = PlaceholderHighlight.shimmer()
                                         )
                                 ) {
@@ -210,26 +201,27 @@ fun ScheduleScreen(
         NoLoginPlaceholder()
     }
 
-    if (showCourseDetail) {
+    if (uiState.isCourseDetailDialogOpen) {
         AlertDialog(
-            confirmButton = {
+            confirmButton = {},
+            dismissButton = {
                 TextButton({
-                    showCourseDetail = false
+                    viewModel.hideCourseDetailDialog()
                 }) {
                     Text("关闭")
                 }
             },
-            onDismissRequest = { showCourseDetail = false },
+            onDismissRequest = { viewModel.hideCourseDetailDialog() },
             title = { Text("课程详情") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    for (course in coursesToDisplay) {
-                        Column {
-                            Text(course.courseName.toString())
-                            Text("周数: ${course.zc}")
-                            Text("教室: ${course.classroomName}")
-                            Text("老师: ${course.teacherName}")
-                        }
+                    for (course in uiState.contentInCourseDetailDialog) {
+                        Text(
+                            "课程: ${course.courseName}\n" +
+                                    "周数: ${course.zc}\n" +
+                                    "教室: ${course.classroomName}\n" +
+                                    "教师: ${course.teacherName}\n"
+                        )
                     }
                 }
             }

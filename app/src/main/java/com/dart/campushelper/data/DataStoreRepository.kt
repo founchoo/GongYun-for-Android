@@ -120,7 +120,7 @@ class DataStoreRepository @Inject constructor(
     override fun observeSelectedDarkMode(): Flow<String> = dataStore.data.map { it[KEY_SELECTED_DARK_MODE] ?: DEFAULT_VALUE_SELECTED_DARK_MODE }
 
     override fun observeStartLocalDate(): Flow<LocalDate?> = dataStore.data.map {
-        LocalDate.parse(it[KEY_START_LOCALDATE])
+        LocalDate.parse(it[KEY_START_LOCALDATE] ?: LocalDate.now().toString())
     }
 
     override fun observeDayOfWeek(): Flow<Int> = dataStore.data.map { it[KEY_DAY_OF_WEEK] ?: DEFAULT_VALUE_DAY_OF_WEEK }

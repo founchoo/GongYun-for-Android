@@ -3,17 +3,5 @@
     <string name="grade_label">成绩</string>
     <string name="settings_label">设置</string>
     <string name="schedule_label">课表</string>
-    <string name="detail_label">详情</string>
-    <string name="login_edu">登录到教学管理系统</string>
-    <string name="back_hint_message">再按一次以退出</string>
-    <string name="title_activity_schedule">ScheduleActivity</string>
-    <string name="title_activity_web_view">WebViewActivity</string>
-    <string name="preference_file_key">com.dart.campushelper.PREFERENCE_FILE_KEY</string>
-    <string name="preference_current_week_key">com.dart.campushelper.PREFERENCE_CURRENT_WEEK</string>
-    <string name="preference_current_week_default_value">1</string>
-    <string name="preference_use_system_theme_key">com.dart.campushelper.PREFERENCE_USE_SYSTEM_THEME</string>
-    <string name="preference_use_system_theme_default_value">True</string>
-    <string name="preference_dark_mode_key">com.dart.campushelper.PREFERENCE_DARK_MODE</string>
-    <string name="preference_dark_mode_default_value">跟随系统</string>
     <string name="placeholder_main_activity_pin_unavailable">启动器不支持固定微件</string>
 </resources>

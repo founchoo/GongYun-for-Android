@@ -4,18 +4,16 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dart.campushelper.model.Grade
 import com.dart.campushelper.ui.rememberFilterAlt
 import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
@@ -46,44 +45,28 @@ var fabVisibility: Boolean? by mutableStateOf(null)
 
 @SuppressLint("RestrictedApi", "CoroutineCreationDuringComposition", "UnrememberedMutableState")
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class, ExperimentalMaterialApi::class
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
 )
 @Composable
 fun GradeScreen(
-    gradeViewModel: GradeViewModel
+    viewModel: GradeViewModel
 ) {
 
-    val scheduleUiState by gradeViewModel.uiState.collectAsState()
-
-    // Grade gpa calculation section.
-    var gpa = 0.0
-    var averageScore = 0.0
-
-    var totalScore = 0.0
-    var totalCredit = 0.0
-    var totalPointMultipleCredit = 0.0
-    scheduleUiState.grades.forEach {
-        totalScore += it.score
-        totalPointMultipleCredit += (it.score / 10.0 - 5) * it.credit
-        totalCredit += it.credit
-    }.run {
-        gpa = totalPointMultipleCredit / totalCredit
-        averageScore = totalScore / scheduleUiState.grades.size
-    }
+    val uiState by viewModel.uiState.collectAsState()
 
     val scope = rememberCoroutineScope()
+
     bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
-    var text by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
     fabVisibility = derivedStateOf {
         !listState.isScrollInProgress
     }.value
 
-    if (scheduleUiState.isLogin) {
+    if (uiState.isLogin) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -100,14 +83,14 @@ fun GradeScreen(
                         )
                     )
             ) {
-                LazyRow() {
+                LazyRow {
                     item {
                         Spacer(Modifier.width(25.dp))
                     }
                     item {
                         Card(
                             modifier = Modifier.placeholder(
-                                visible = scheduleUiState.isGradesLoading,
+                                visible = uiState.isGradesLoading,
                                 highlight = PlaceholderHighlight.shimmer()
                             )
                         ) {
@@ -127,14 +110,18 @@ fun GradeScreen(
                                 )
                                 Column {
                                     Text(
-                                        text = "平均学分绩点 ${DecimalFormat("#.####").format(gpa)}",
+                                        text = "平均学分绩点 ${
+                                            DecimalFormat("#.####").format(
+                                                uiState.gradePointAverage
+                                            )
+                                        }",
                                         textAlign = TextAlign.Center,
                                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                     )
                                     Text(
                                         text = "算数平均分 ${
                                             DecimalFormat("#.####").format(
-                                                averageScore
+                                                uiState.averageScore
                                             )
                                         }",
                                         textAlign = TextAlign.Center,
@@ -148,10 +135,10 @@ fun GradeScreen(
                         Spacer(Modifier.width(10.dp))
                     }
                     item {
-                        if (scheduleUiState.rankingAvailable) {
+                        if (uiState.rankingAvailable) {
                             Card(
                                 modifier = Modifier.placeholder(
-                                    visible = scheduleUiState.isRankingInfoLoading,
+                                    visible = uiState.isRankingInfoLoading,
                                     highlight = PlaceholderHighlight.shimmer()
                                 )
                             ) {
@@ -172,17 +159,17 @@ fun GradeScreen(
                                     Column {
                                         Text(
                                             text = "平均学分绩点排名 " +
-                                                    "年级 ${scheduleUiState.rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${scheduleUiState.rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${scheduleUiState.rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
+                                                    "年级 ${uiState.rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                    "专业 ${uiState.rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
+                                                    "班级 ${uiState.rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
                                             textAlign = TextAlign.Center,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                         )
                                         Text(
                                             text = "算术平均分排名 " +
-                                                    "年级 ${scheduleUiState.rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${scheduleUiState.rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${scheduleUiState.rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
+                                                    "年级 ${uiState.rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                    "专业 ${uiState.rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
+                                                    "班级 ${uiState.rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
                                             textAlign = TextAlign.Center,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                         )
@@ -241,15 +228,19 @@ fun GradeScreen(
                     .fillMaxHeight()
                     .padding(25.dp, 0.dp, 25.dp, 10.dp)
                     .placeholder(
-                        visible = scheduleUiState.isGradesLoading,
+                        visible = uiState.isGradesLoading,
                         highlight = PlaceholderHighlight.shimmer()
                     ),
                 verticalArrangement = Arrangement.Top,
                 state = listState,
             ) {
-                itemsIndexed(scheduleUiState.grades.toList()) { _, grade ->
+                itemsIndexed(uiState.grades.toList()) { _, grade ->
                     Row(
                         modifier = Modifier
+                            .clickable {
+                                viewModel.showGradeDetailDialog()
+                                viewModel.setContentForGradeDetailDialog(grade)
+                            }
                             .padding(8.dp)
                     ) {
                         Column(modifier = Modifier.weight(4f)) {
@@ -281,6 +272,15 @@ fun GradeScreen(
         NoLoginPlaceholder()
     }
 
+    if (uiState.isGradeDetailDialogOpen) {
+        GradeDetailDialog(
+            grade = uiState.contentForGradeDetailDialog,
+            onDismissRequest = {
+                viewModel.hideGradeDetailDialog()
+            }
+        )
+    }
+
     // Sheet content
     if (openBottomSheet) {
 
@@ -299,8 +299,8 @@ fun GradeScreen(
                 Spacer(Modifier.height(15.dp))
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = text,
-                    onValueChange = { text = it },
+                    value = uiState.searchKeyword,
+                    onValueChange = { viewModel.changeSearchKeyword(it) },
                     label = { Text("课程名称") },
                     singleLine = true,
                     placeholder = { Text("留空则不对课程名称进行筛选") },
@@ -320,14 +320,17 @@ fun GradeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(-5.dp)
                     ) {
-                        for (i in scheduleUiState.semesters) {
+                        for (i in uiState.semesters) {
                             FilterChip(
-                                selected = scheduleUiState.semestersSelected[i] ?: false,
+                                selected = uiState.semestersSelected[i] ?: false,
                                 onClick = {
-                                    gradeViewModel.changeSemesterSelected(i, !(scheduleUiState.semestersSelected[i] ?: false))
+                                    viewModel.changeSemesterSelected(
+                                        i,
+                                        !(uiState.semestersSelected[i] ?: false)
+                                    )
                                 },
                                 label = { Text(i) },
-                                leadingIcon = if (scheduleUiState.semestersSelected[i] == true) {
+                                leadingIcon = if (uiState.semestersSelected[i] == true) {
                                     {
                                         Icon(
                                             imageVector = Icons.Filled.Done,
@@ -357,14 +360,17 @@ fun GradeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(-5.dp)
                     ) {
-                        for (i in scheduleUiState.courseSorts) {
+                        for (i in uiState.courseSorts) {
                             FilterChip(
-                                selected = scheduleUiState.courseSortsSelected[i] ?: false,
+                                selected = uiState.courseSortsSelected[i] ?: false,
                                 onClick = {
-                                    gradeViewModel.changeCourseSortSelected(i, !(scheduleUiState.courseSortsSelected[i] ?: false))
+                                    viewModel.changeCourseSortSelected(
+                                        i,
+                                        !(uiState.courseSortsSelected[i] ?: false)
+                                    )
                                 },
                                 label = { Text(i) },
-                                leadingIcon = if (scheduleUiState.courseSortsSelected[i] == true) {
+                                leadingIcon = if (uiState.courseSortsSelected[i] == true) {
                                     {
                                         Icon(
                                             imageVector = Icons.Filled.Done,
@@ -404,7 +410,7 @@ fun GradeScreen(
                                     openBottomSheet = false
                                 }
                             }
-                            gradeViewModel.filterGrades(text)
+                            viewModel.filterGrades(uiState.searchKeyword)
                         },
                     ) {
                         Text("应用筛选")
@@ -416,7 +422,42 @@ fun GradeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GradeDetailDialog(
+    grade: Grade,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        title = {
+            Text(text = "成绩详情")
+        },
+        text = {
+            Text(
+                text = "课程名称: ${grade.name}\n" +
+                        "课程代码: ${grade.kcid}\n" +
+                        "课程性质: ${grade.courseSort}\n" +
+                        "学分: ${grade.credit}\n" +
+                        "学年学期: ${grade.xnxq}\n" +
+                        "成绩: ${grade.score}\n" +
+                        "绩点: ${grade.gp}"
+            )
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("关闭")
+            }
+        }
+    )
+}
+
 @Composable
 fun CreateFloatingActionButtonForGrade() {
 

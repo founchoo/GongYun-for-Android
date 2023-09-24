@@ -3,6 +3,7 @@ package com.dart.campushelper.ui.settings
 import android.appwidget.AppWidgetManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.CampusHelperApplication
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
@@ -30,6 +31,7 @@ data class SettingsUiState(
     val openLogoutConfirmDialog: Boolean = false,
     val openFeedbackUrlConfirmDialog: Boolean = false,
     val openSourceCodeUrlConfirmDialog: Boolean = false,
+    val appVersion: String = ""
 )
 
 @HiltViewModel
@@ -38,7 +40,11 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state exposed to the UI
-    private val _uiState = MutableStateFlow(SettingsUiState())
+    private val _uiState = MutableStateFlow(
+        SettingsUiState(
+            appVersion = BuildConfig.VERSION_NAME
+        )
+    )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private val usernameStateFlow = userPreferenceRepository.observeUsername().stateIn(
@@ -47,17 +53,19 @@ class SettingsViewModel @Inject constructor(
         DEFAULT_VALUE_USERNAME
     )
 
-    private val enableSystemColorStateFlow = userPreferenceRepository.observeEnableSystemColor().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
-    )
+    private val enableSystemColorStateFlow =
+        userPreferenceRepository.observeEnableSystemColor().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+        )
 
-    private val selectedDarkModeStateFlow = userPreferenceRepository.observeSelectedDarkMode().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_SELECTED_DARK_MODE
-    )
+    private val selectedDarkModeStateFlow =
+        userPreferenceRepository.observeSelectedDarkMode().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            DEFAULT_VALUE_SELECTED_DARK_MODE
+        )
 
     private val isPinStateFlow = userPreferenceRepository.observeIsPin().stateIn(
         viewModelScope,
@@ -132,9 +140,11 @@ class SettingsViewModel @Inject constructor(
             val widgetManager = AppWidgetManager.getInstance(CampusHelperApplication.context)
             // Get a list of our app widget providers to retrieve their info
             val widgetProviders =
-                widgetManager.getInstalledProvidersForPackage(CampusHelperApplication.context.packageName, null)
+                widgetManager.getInstalledProvidersForPackage(
+                    CampusHelperApplication.context.packageName,
+                    null
+                )
             widgetProviders[0].pin(CampusHelperApplication.context)
-        } else {
         }
     }
 

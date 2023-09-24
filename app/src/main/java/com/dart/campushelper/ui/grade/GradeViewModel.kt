@@ -30,7 +30,12 @@ data class GradesUiState(
     val semesters: List<String> = emptyList(),
     val courseSortsSelected: Map<String, Boolean> = emptyMap(),
     val semestersSelected: Map<String, Boolean> = emptyMap(),
-    val isLogin: Boolean = false
+    val isLogin: Boolean = false,
+    val gradePointAverage: Double = 0.0,
+    val averageScore: Double = 0.0,
+    val searchKeyword: String = "",
+    val isGradeDetailDialogOpen: Boolean = false,
+    val contentForGradeDetailDialog: Grade = Grade(),
 )
 
 @HiltViewModel
@@ -62,6 +67,30 @@ class GradeViewModel @Inject constructor(
         }
     }
 
+    fun showGradeDetailDialog() {
+        _uiState.update {
+            it.copy(isGradeDetailDialogOpen = true)
+        }
+    }
+
+    fun hideGradeDetailDialog() {
+        _uiState.update {
+            it.copy(isGradeDetailDialogOpen = false)
+        }
+    }
+
+    fun changeSearchKeyword(keyword: String) {
+        _uiState.update {
+            it.copy(searchKeyword = keyword)
+        }
+    }
+
+    fun setContentForGradeDetailDialog(value: Grade) {
+        _uiState.update {
+            it.copy(contentForGradeDetailDialog = value)
+        }
+    }
+
     private suspend fun getGrades() {
         mutex.withLock {
             viewModelScope.launch {
@@ -69,8 +98,12 @@ class GradeViewModel @Inject constructor(
                     val grades = gradesResponse?.body()?.results
                     if (grades != null) {
                         _uiState.update {
-                            it.copy(grades = grades)
+                            it.copy(
+                                grades = grades,
+                            )
                         }
+                        updateGPA()
+                        updateAverageScore()
                         val courseSortList = grades.map {
                             it.courseSort ?: ""
                         }.toSet().toList()
@@ -93,6 +126,28 @@ class GradeViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun updateGPA() {
+        _uiState.update {
+            it.copy(
+                gradePointAverage = it.grades.sumOf { grade ->
+                    (grade.score / 10.0 - 5) * grade.credit
+                } / it.grades.sumOf { grade ->
+                    grade.credit
+                },
+            )
+        }
+    }
+
+    private fun updateAverageScore() {
+        _uiState.update {
+            it.copy(
+                averageScore = it.grades.sumOf { grade ->
+                    grade.score.toDouble()
+                } / it.grades.size,
+            )
         }
     }
 
@@ -170,6 +225,8 @@ class GradeViewModel @Inject constructor(
                 rankingAvailable = !_uiState.value.courseSortsSelected.containsValue(false) && text == ""
             )
         }
+        updateGPA()
+        updateAverageScore()
         viewModelScope.launch {
             getStudentRankingInfo()
         }

@@ -24,6 +24,7 @@ import com.dart.campushelper.ui.rememberClearNight
 import com.dart.campushelper.ui.rememberCode
 import com.dart.campushelper.ui.rememberInfo
 import com.dart.campushelper.ui.rememberPalette
+import com.dart.campushelper.ui.rememberPushPin
 import com.dart.campushelper.utils.Constants
 import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
 import com.dart.campushelper.utils.DropdownMenuPreference
@@ -56,20 +57,22 @@ fun SettingsScreen(
                     loginViewModel.onShowLoginDialogRequest()
                 }
             }
-            /*PreferenceHeader(text = "课表")
+            PreferenceHeader(text = "课表")
             // Pin course info widget to desktop
             SwitchPreference(
                 imageVector = rememberPushPin(),
-                defaultValue = isPin ?: false,
-                title = "固定微件到桌面",
+                value = settingsUiState.isPin,
+                title = "（实验性）固定课程到桌面",
+                description = "请确保已授予\"桌面快捷方式\"权限",
                 onValueChanged = {
                     settingsViewModel.changeIsPin(it)
                 }
-            )*/
+            )
             PreferenceHeader(text = "主题")
             SwitchPreference(
                 imageVector = rememberPalette(),
                 title = "系统主题色",
+                description = "开启后将跟随系统主题色",
                 value = settingsUiState.enableSystemColor,
                 onValueChanged = {
                     settingsViewModel.changeEnableSystemColor(it)
@@ -91,7 +94,7 @@ fun SettingsScreen(
             PreferenceHeader(text = "关于")
             TextPreference(
                 title = "校园助手",
-                description = "copyright 2023 摘叶飞镖",
+                description = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
                 imageVector = rememberInfo()
             ) {
             }

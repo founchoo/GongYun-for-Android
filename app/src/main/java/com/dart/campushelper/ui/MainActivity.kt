@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("CoroutineCreationDuringComposition", "StateFlowValueCalledInComposition")
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun CampusHelperApp(mianViewModel: MainViewModel) {
+    fun CampusHelperApp(mainViewModel: MainViewModel) {
 
         val uiState by mainViewModel.uiState.collectAsState()
 

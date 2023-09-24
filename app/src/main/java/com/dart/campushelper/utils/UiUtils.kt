@@ -114,6 +114,9 @@ fun SwitchPreference(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
+            .clickable {
+                onValueChanged(!value)
+            }
             .padding(vertical = 15.dp)
             .fillMaxWidth()
     ) {
