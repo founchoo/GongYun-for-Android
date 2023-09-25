@@ -29,6 +29,7 @@
         <item name="colorPrimaryInverse">@color/md_theme_dark_inversePrimary</item>
 
         <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowBackground">@color/md_theme_dark_background</item>
 
     </style>
 </resources>

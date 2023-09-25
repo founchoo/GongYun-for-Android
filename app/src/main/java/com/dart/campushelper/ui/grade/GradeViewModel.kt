@@ -1,6 +1,7 @@
 package com.dart.campushelper.ui.grade
 
 import android.util.Log
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.toMutableStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,16 +9,19 @@ import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.RankingInfo
-import com.dart.campushelper.utils.ResponseErrorHandler
+import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.utils.network.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.jsoup.Jsoup
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 data class GradesUiState(
@@ -30,7 +34,7 @@ data class GradesUiState(
     val semesters: List<String> = emptyList(),
     val courseSortsSelected: Map<String, Boolean> = emptyMap(),
     val semestersSelected: Map<String, Boolean> = emptyMap(),
-    val isLogin: Boolean = false,
+    val showLoginPlaceholder: Boolean = false,
     val gradePointAverage: Double = 0.0,
     val averageScore: Double = 0.0,
     val searchKeyword: String = "",
@@ -44,22 +48,43 @@ class GradeViewModel @Inject constructor(
     private val userPreferenceRepository: UserPreferenceRepository
 ) : ViewModel() {
 
-    private val mutex = Mutex()
-
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(GradesUiState())
     val uiState: StateFlow<GradesUiState> = _uiState.asStateFlow()
+
+    val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeUsername().first()
+            }
+        )
+
+    val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeIsLogin().first()
+        }
+    )
 
     private var _backupGrades = emptyList<Grade>()
 
     init {
         viewModelScope.launch {
-            userPreferenceRepository.observeIsLogin().collect {
+            combine(
+                isLoginStateFlow,
+                usernameStateFlow
+            ) { isLogin, username ->
+                Log.d("GradeViewModel", "observeIsLogin: $isLogin, $username")
+                listOf(isLogin.toString(), username)
+            }.collect {
                 Log.d("GradeViewModel", "observeIsLogin: $it")
                 _uiState.update { uiState ->
-                    uiState.copy(isLogin = it)
+                    uiState.copy(showLoginPlaceholder = it[1].isEmpty())
                 }
-                if (it) {
+                if (it[0] == true.toString() && it[1].isNotEmpty()) {
                     getGrades()
                     getStudentRankingInfo()
                 }
@@ -92,38 +117,46 @@ class GradeViewModel @Inject constructor(
     }
 
     private suspend fun getGrades() {
-        mutex.withLock {
-            viewModelScope.launch {
-                chaoxingRepository.getGrades().collect { gradesResponse ->
-                    val grades = gradesResponse?.body()?.results
-                    if (grades != null) {
-                        _uiState.update {
-                            it.copy(
-                                grades = grades,
-                            )
-                        }
-                        updateGPA()
-                        updateAverageScore()
-                        val courseSortList = grades.map {
-                            it.courseSort ?: ""
-                        }.toSet().toList()
-                        val semesterList = grades.map { grade ->
-                            grade.xnxq ?: ""
-                        }.toSet().toList()
-                        _uiState.update {
-                            it.copy(
-                                courseSorts = courseSortList,
-                                courseSortsSelected = courseSortList.map { sortName ->
-                                    sortName to true
-                                }.toMutableStateMap(),
-                                semesters = semesterList,
-                                semestersSelected = semesterList.map { semesterName ->
-                                    semesterName to true
-                                }.toMutableStateMap(),
-                                isGradesLoading = false
-                            )
-                        }
+        viewModelScope.launch {
+            val gradesResult = chaoxingRepository.getGrades()
+            when (gradesResult.status) {
+                Status.SUCCESS -> {
+                    val grades = gradesResult.data!!
+                    _uiState.update {
+                        it.copy(
+                            grades = grades,
+                        )
                     }
+                    updateGPA()
+                    updateAverageScore()
+                    val courseSortList = grades.map {
+                        it.courseSort ?: ""
+                    }.toSet().toList()
+                    val semesterList = grades.map { grade ->
+                        grade.xnxq ?: ""
+                    }.toSet().toList()
+                    _uiState.update {
+                        it.copy(
+                            courseSorts = courseSortList,
+                            courseSortsSelected = courseSortList.map { sortName ->
+                                sortName to true
+                            }.toMutableStateMap(),
+                            semesters = semesterList,
+                            semestersSelected = semesterList.map { semesterName ->
+                                semesterName to true
+                            }.toMutableStateMap(),
+                            isGradesLoading = false
+                        )
+                    }
+                }
+                Status.ERROR -> {
+                    val result = MainActivity.snackBarHostState.showSnackbar("加载成绩失败，请稍后重试", "重试")
+                    if (result == SnackbarResult.ActionPerformed) {
+                        getGrades()
+                    }
+                }
+                Status.LOADING -> {
+
                 }
             }
         }
@@ -152,55 +185,32 @@ class GradeViewModel @Inject constructor(
     }
 
     private suspend fun getStudentRankingInfo() {
-        mutex.withLock {
-            _uiState.update {
-                it.copy(isRankingInfoLoading = true)
-            }
-            chaoxingRepository.getStudentRankingInfo(
-                _uiState.value.semestersSelected.map {
-                    if (it.value) {
-                        it.key
-                    } else {
-                        ""
-                    }
-                }.joinToString(",")
-            ).collect { rankingInfoResponse ->
-                val rankingInfo = RankingInfo()
-                ResponseErrorHandler(
-                    response = rankingInfoResponse,
-                    scope = viewModelScope,
-                    actionWhenResponseSuccess = { it ->
-                        Jsoup.parse(it).run {
-                            select("table")[1].select("td").forEachIndexed { index, element ->
-                                val value = element.text().contains("/").run {
-                                    if (this) {
-                                        element.text().split("/").let {
-                                            if (it[0] == "" || it[1] == "") {
-                                                Pair(0, 0)
-                                            } else {
-                                                Pair(it[0].toInt(), it[1].toInt())
-                                            }
-                                        }
-                                    } else {
-                                        Pair(0, 0)
-                                    }
-                                }
-
-                                when (index) {
-                                    1 -> rankingInfo.byGPAByInstitute = value
-                                    2 -> rankingInfo.byGPAByMajor = value
-                                    3 -> rankingInfo.byGPAByClass = value
-                                    5 -> rankingInfo.byScoreByInstitute = value
-                                    6 -> rankingInfo.byScoreByMajor = value
-                                    7 -> rankingInfo.byScoreByClass = value
-                                }
-                            }
-                        }
-                    }
-                )
-                _uiState.update {
-                    it.copy(isRankingInfoLoading = false, rankingInfo = rankingInfo)
+        _uiState.update {
+            it.copy(isRankingInfoLoading = true)
+        }
+        val stuRankInfoResult =  chaoxingRepository.getStudentRankingInfo(
+            _uiState.value.semestersSelected.map {
+                if (it.value) {
+                    it.key
+                } else {
+                    ""
                 }
+            }.joinToString(",")
+        )
+        when (stuRankInfoResult.status) {
+            Status.SUCCESS -> {
+                _uiState.update {
+                    it.copy(isRankingInfoLoading = false, rankingInfo = stuRankInfoResult.data!!)
+                }
+            }
+            Status.ERROR -> {
+                val result = MainActivity.snackBarHostState.showSnackbar("加载排名失败", "重试")
+                if (result == SnackbarResult.ActionPerformed) {
+                    getStudentRankingInfo()
+                }
+            }
+            Status.LOADING -> {
+
             }
         }
     }

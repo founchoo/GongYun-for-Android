@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -50,7 +52,9 @@ class SettingsViewModel @Inject constructor(
     private val usernameStateFlow = userPreferenceRepository.observeUsername().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_USERNAME
+        runBlocking {
+            userPreferenceRepository.observeUsername().first()
+        }
     )
 
     private val enableSystemColorStateFlow =
@@ -73,10 +77,12 @@ class SettingsViewModel @Inject constructor(
         DEFAULT_VALUE_IS_PIN
     )
 
-    private var isLoginStateFlow = userPreferenceRepository.observeIsLogin().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_IS_LOGIN
+    val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeIsLogin().first()
+        }
     )
 
     init {

@@ -40,7 +40,9 @@ fun ScheduleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    if (uiState.isLogin) {
+    if (uiState.showLoginPlaceholder) {
+        NoLoginPlaceholder()
+    } else {
         Column(
             modifier = Modifier
                 .padding(5.dp, 0.dp, 3.dp, 3.dp)
@@ -197,8 +199,6 @@ fun ScheduleScreen(
                 }
             }
         }
-    } else {
-        NoLoginPlaceholder()
     }
 
     if (uiState.isCourseDetailDialogOpen) {

@@ -3,11 +3,13 @@ package com.dart.campushelper.ui
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.app.UiModeManager
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -95,6 +97,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            uiModeManager.setApplicationNightMode(
+                when (themeViewModel.uiState.value.darkMode) {
+                    "开启" -> UiModeManager.MODE_NIGHT_YES
+                    "关闭" -> UiModeManager.MODE_NIGHT_NO
+                    else -> UiModeManager.MODE_NIGHT_AUTO
+                }
+            )
+        }
+
         mainViewModel.logout()
 
         setContent {

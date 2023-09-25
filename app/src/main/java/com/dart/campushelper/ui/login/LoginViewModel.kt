@@ -1,5 +1,6 @@
 package com.dart.campushelper.ui.login
 
+import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.api.ChaoxingService
@@ -7,6 +8,10 @@ import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES
 import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
+import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
+import com.dart.campushelper.utils.Constants.Companion.RETRY
+import com.dart.campushelper.utils.network.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,43 +39,41 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         viewModelScope.launch {
-            chaoxingRepository.login(_uiState.value.username, _uiState.value.password)
-                .collect { it ->
-                    if (it.code() == 302) {
-                        chaoxingRepository.getStudentInfo().collect { studentInfoResponse ->
-                            val studentInfo = studentInfoResponse.body()?.data?.records?.get(0)
-                            MainActivity.userCache.semesterYearAndNo = studentInfo?.dataXnxq ?: ""
-                            MainActivity.userCache.enterUniversityYear = studentInfo?.rxnj ?: ""
-                            MainActivity.userCache.studentId = studentInfo?.xh ?: ""
-                        }
-                        chaoxingRepository.getWeekInfo().collect { weekInfoResponse ->
-                            val startWeekMonthAndDay = weekInfoResponse.body()?.data?.first()?.date
-                            if (startWeekMonthAndDay != null) {
-                                var month = startWeekMonthAndDay.split("-")[0]
-                                if (month.length == 1) {
-                                    month = "0$month"
-                                }
-                                var day = startWeekMonthAndDay.split("-")[1]
-                                if (day.length == 1) {
-                                    day = "0$day"
-                                }
-                                userPreferenceRepository.changeStartLocalDate(
-                                    LocalDate.parse("${LocalDate.now().year}-$month-$day")
-                                )
-                            }
-                        }
-                        userPreferenceRepository.changeUsername(_uiState.value.username)
-                        userPreferenceRepository.changePassword(_uiState.value.password)
-                        userPreferenceRepository.changeIsLogin(true)
-                        _uiState.update { uiState ->
-                            uiState.copy(isShowLoginDialog = false)
-                        }
-                        MainActivity.snackBarHostState.showSnackbar("登录成功")
+            val loginResource =
+                chaoxingRepository.login(_uiState.value.username, _uiState.value.password)
+            when (loginResource.status) {
+                Status.SUCCESS -> {
+                    val studentInfoResult = chaoxingRepository.getStudentInfo()
+                    if (studentInfoResult.status == Status.SUCCESS) {
+                        MainActivity.userCache = studentInfoResult.data!!
+                    }
+                    val semesterStartLocalDateResult = chaoxingRepository.getSemesterStartLocalDate()
+                    if (semesterStartLocalDateResult.status == Status.SUCCESS) {
+                        userPreferenceRepository.changeStartLocalDate(
+                            semesterStartLocalDateResult.data!!
+                        )
+                    }
+                    userPreferenceRepository.changeUsername(_uiState.value.username)
+                    userPreferenceRepository.changePassword(_uiState.value.password)
+                    userPreferenceRepository.changeIsLogin(true)
+                    _uiState.update { uiState ->
+                        uiState.copy(isShowLoginDialog = false)
+                    }
+                    MainActivity.snackBarHostState.showSnackbar("登录成功")
+                }
+                Status.ERROR -> {
+                    userPreferenceRepository.changeIsLogin(false)
+                    if (loginResource.message == LOGIN_INFO_ERROR) {
+                        MainActivity.snackBarHostState.showSnackbar(loginResource.message)
                     } else {
-                        userPreferenceRepository.changeIsLogin(false)
-                        MainActivity.snackBarHostState.showSnackbar("登录失败")
+                        val result = MainActivity.snackBarHostState.showSnackbar(NETWORK_CONNECT_ERROR, RETRY)
+                        if (result == SnackbarResult.ActionPerformed) {
+                            login()
+                        }
                     }
                 }
+                Status.LOADING -> {}
+            }
         }
     }
 

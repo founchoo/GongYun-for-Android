@@ -5,7 +5,6 @@ import com.dart.campushelper.api.UserPreferenceService
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import javax.inject.Inject
@@ -50,7 +49,7 @@ class UserPreferenceRepository @Inject constructor(
         dataStoreService.changeEnterUniversityYear(enterUniversityYear)
     }
 
-    override fun observeIsLogin(): StateFlow<Boolean> {
+    override fun observeIsLogin(): Flow<Boolean> {
         return dataStoreService.observeIsLogin().stateIn(
             GlobalScope,
             SharingStarted.Eagerly,

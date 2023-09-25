@@ -10,7 +10,6 @@ import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -84,28 +83,6 @@ interface ChaoxingService {
 
             val client = OkHttpClient.Builder()
                 .followRedirects(false)
-                .addInterceptor {
-                    var error: Boolean
-                    val request = it.request()
-                    Log.d("okhttp.OkHttpClient", "request: $request")
-                    var response = okhttp3.Response.Builder()
-                        .request(it.request())
-                        .protocol(okhttp3.Protocol.HTTP_1_1)
-                        .message("Not found response body")
-                        .code(404)
-                        .body("Not found response body".toResponseBody(null))
-                        .build()
-                    error = false
-                    try {
-                        response = it.proceed(request)
-                        Log.d("okhttp.OkHttpClient", "response: $response")
-                    } catch (e: Exception) {
-                        Log.d("okhttp.OkHttpClient", "error: $e")
-                    }
-                    Log.d("okhttp.OkHttpClient", "response: $response")
-                    Log.d("okhttp.OkHttpClient", "error: $error")
-                    response
-                }
                 .cookieJar(object : CookieJar {
 
                     override fun loadForRequest(url: HttpUrl): List<Cookie> {

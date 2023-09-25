@@ -25,8 +25,8 @@ import com.dart.campushelper.ui.rememberCode
 import com.dart.campushelper.ui.rememberInfo
 import com.dart.campushelper.ui.rememberPalette
 import com.dart.campushelper.ui.rememberPushPin
-import com.dart.campushelper.utils.Constants
 import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
+import com.dart.campushelper.utils.Constants.Companion.QQ_GROUP_NUMBER
 import com.dart.campushelper.utils.DropdownMenuPreference
 import com.dart.campushelper.utils.PreferenceHeader
 import com.dart.campushelper.utils.SwitchPreference
@@ -136,13 +136,13 @@ fun SettingsScreen(
         actionAfterConfirm = {
             settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
             // Copy QQ group number
-            clipboardManager.setText(AnnotatedString(Constants.QQ_GROUP_NUMBER))
+            clipboardManager.setText(AnnotatedString(QQ_GROUP_NUMBER))
             settingsViewModel.viewModelScope.launch {
                 MainActivity.snackBarHostState.showSnackbar("已复制 QQ 群号码")
             }
         },
         onDismissRequest = { settingsViewModel.onHideFeedbackUrlConfirmDialogRequest() },
-        contentText = "您即将复制 QQ 群号码，确认？"
+        contentText = "您即将复制 QQ 群号码"
     )
 
     addTextAlertDialog(

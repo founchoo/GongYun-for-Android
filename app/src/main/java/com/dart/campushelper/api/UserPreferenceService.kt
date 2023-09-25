@@ -1,7 +1,6 @@
 package com.dart.campushelper.api
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDate
 
 interface UserPreferenceService {
@@ -29,7 +28,7 @@ interface UserPreferenceService {
     /**
      * Observe section.
      */
-    fun observeIsLogin(): StateFlow<Boolean>
+    fun observeIsLogin(): Flow<Boolean>
 
     fun observeSelectedDarkMode(): Flow<String>
 

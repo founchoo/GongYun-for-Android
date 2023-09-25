@@ -66,7 +66,9 @@ fun GradeScreen(
         !listState.isScrollInProgress
     }.value
 
-    if (uiState.isLogin) {
+    if (uiState.showLoginPlaceholder) {
+        NoLoginPlaceholder()
+    } else {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -268,8 +270,6 @@ fun GradeScreen(
                 }
             }
         }
-    } else {
-        NoLoginPlaceholder()
     }
 
     if (uiState.isGradeDetailDialogOpen) {
