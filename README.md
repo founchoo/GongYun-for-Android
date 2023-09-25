@@ -1,10 +1,15 @@
+<div align="center">
+  
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
+
 # CampusHelper
+</div>
 
 ## Introduction
 
 Hello, there! 
 
-Welcome to CampusHelper, an third party academic affairs management system for students in HBUT(Hubei University of Technology)
+Welcome to CampusHelper, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) for **Android**.
 
 ## Functions
 
@@ -24,13 +29,17 @@ Note: considering the private information, we have make student id number covere
 
 ![Dark mode](https://github.com/founchoo/CampusHelper/assets/24630338/8a2751df-5640-4cec-985c-6982837efe2a "Dark mode")
 
-## Participation
+## Download
 
-If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Any help would be appreciated!
+Go to [release page](https://github.com/founchoo/CampusHelper/releases/latest) to download `.apk` file.
+
+## Contributions
+
+If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Also, you can [click here](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=VLnZWjYQIT2laeBM4b3YXXrsAqyG9Igd&authKey=I%2FuZwBycJTU04QvDVyU1%2FbtjesWFu%2FP5eNOQl0mMxeuo8fD%2Bn8%2BtcY50K8TpNFSg&noverify=0&group_code=422915042) to join our QQ group. Any help would be appreciated!
 
 ## Thanks
 
-During the development, we have used the following tools/website which are helpful:
+During the development, we have used the following projects/websites which are helpful:
 
 - https://www.composables.com/icons A website generating **Material Symbols for Jetpack Compose**.
 
@@ -46,3 +55,5 @@ During the development, we have used the following tools/website which are helpf
 - https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
 
 - https://json2kt.com/ Convert `JSON` to `.kt` file
+
+- https://github.com/harmittaa/KoinExample Grate help in retrofit error handler
