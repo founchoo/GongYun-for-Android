@@ -39,7 +39,7 @@ If you find some bugs or have some ideas on how to improve it, feel free to post
 
 ## Thanks
 
-During the development, we have used the following tools/website which are helpful:
+During the development, we have used the following projects/websites which are helpful:
 
 - https://www.composables.com/icons A website generating **Material Symbols for Jetpack Compose**.
 
@@ -55,3 +55,5 @@ During the development, we have used the following tools/website which are helpf
 - https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
 
 - https://json2kt.com/ Convert `JSON` to `.kt` file
+
+- https://github.com/harmittaa/KoinExample Grate help in retrofit error handler
