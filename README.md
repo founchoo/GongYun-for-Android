@@ -16,6 +16,7 @@ Welcome to CampusHelper, an third party academic affairs management system for s
 Currently, we provide the following functions:
 
 - Check schedule/timetable
+  - Other weeks are also available
 - Check grades
   - Ranking info
   - Automatic calculation of GPA and average score
