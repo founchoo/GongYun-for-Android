@@ -61,23 +61,29 @@ class SettingsViewModel @Inject constructor(
         userPreferenceRepository.observeEnableSystemColor().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+            runBlocking {
+                userPreferenceRepository.observeEnableSystemColor().first()
+            }
         )
 
     private val selectedDarkModeStateFlow =
         userPreferenceRepository.observeSelectedDarkMode().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            DEFAULT_VALUE_SELECTED_DARK_MODE
+            runBlocking {
+                userPreferenceRepository.observeSelectedDarkMode().first()
+            }
         )
 
     private val isPinStateFlow = userPreferenceRepository.observeIsPin().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_IS_PIN
+        runBlocking {
+            userPreferenceRepository.observeIsPin().first()
+        }
     )
 
-    val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {

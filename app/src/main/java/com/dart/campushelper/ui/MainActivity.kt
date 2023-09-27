@@ -62,6 +62,7 @@ import com.dart.campushelper.ui.grade.CreateFloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
 import com.dart.campushelper.ui.grade.GradeViewModel
 import com.dart.campushelper.ui.login.LoginViewModel
+import com.dart.campushelper.ui.schedule.CreateActionsForSchedule
 import com.dart.campushelper.ui.schedule.ScheduleScreen
 import com.dart.campushelper.ui.schedule.ScheduleViewModel
 import com.dart.campushelper.ui.settings.SettingsScreen
@@ -110,8 +111,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        mainViewModel.logout()
-
         setContent {
             scope = rememberCoroutineScope()
             snackBarHostState = remember { SnackbarHostState() }
@@ -125,26 +124,22 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun CampusHelperApp(mainViewModel: MainViewModel) {
 
-        val uiState by mainViewModel.uiState.collectAsState()
+        val mainUiState by mainViewModel.uiState.collectAsState()
+        val scheduleUiState by scheduleViewModel.uiState.collectAsState()
 
         val schedule = Screen("课表", R.string.schedule_label)
         val grade = Screen("成绩", R.string.grade_label)
         val settings = Screen("设置", R.string.settings_label)
 
-        val items = listOf(
-            schedule,
-            grade,
-            settings
+        val idsOutline = mapOf(
+            schedule to rememberViewTimeline(),
+            grade to rememberDriveFileRenameOutline(),
+            settings to rememberSettings()
         )
-        val idsOutline = listOf(
-            rememberViewTimeline(),
-            rememberDriveFileRenameOutline(),
-            rememberSettings()
-        )
-        val idsFill = listOf(
-            rememberViewTimelineFilled(),
-            rememberDriveFileRenameOutlineFilled(),
-            rememberSettingsFilled()
+        val idsFill = mapOf(
+            schedule to rememberViewTimelineFilled(),
+            grade to rememberDriveFileRenameOutlineFilled(),
+            settings to rememberSettingsFilled(),
         )
 
         CampusHelperTheme(themeViewModel) {
@@ -174,9 +169,9 @@ class MainActivity : ComponentActivity() {
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    if (currentDestination?.route == schedule.route && uiState.isLogin) {
+                                    if (currentDestination?.route == schedule.route) {
                                         Text(
-                                            text = "当前第 ${scheduleViewModel.uiState.value.currentWeek} 周",
+                                            text = "当前第 ${scheduleUiState.currentWeek} 周，正在浏览第 ${scheduleUiState.browsedWeek} 周",
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
@@ -186,29 +181,36 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             actions = {
+                                if (currentDestination?.route == schedule.route) {
+                                    CreateActionsForSchedule(
+                                        scheduleViewModel,
+                                    )
+                                }
                             },
                             scrollBehavior = scrollBehavior
                         )
                     },
                     bottomBar = {
                         NavigationBar {
-                            items.forEachIndexed { index, screen ->
+                            (if (mainUiState.isLogin)
+                                listOf(
+                                    schedule,
+                                    grade,
+                                    settings
+                                ) else
+                                listOf(settings)).forEachIndexed { index, screen ->
                                 NavigationBarItem(
                                     selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                                     icon = {
                                         Icon(
                                             imageVector = when (currentDestination?.route == screen.route) {
-                                                true -> idsFill[index]
-                                                false -> idsOutline[index]
+                                                true -> idsFill[screen]!!
+                                                false -> idsOutline[screen]!!
                                             },
                                             contentDescription = screen.route
                                         )
                                     },
-                                    label = {
-                                        Text(
-                                            screen.route
-                                        )
-                                    },
+                                    label = { Text(screen.route) },
                                     alwaysShowLabel = false,
                                     onClick = {
                                         navController.navigate(screen.route) {
@@ -227,7 +229,7 @@ class MainActivity : ComponentActivity() {
                         SnackbarHost(hostState = snackBarHostState)
                     },
                     floatingActionButton = {
-                        if (uiState.isLogin) {
+                        if (mainUiState.isLogin) {
                             when (currentDestination?.route) {
                                 grade.route -> CreateFloatingActionButtonForGrade()
                                 else -> null
@@ -237,25 +239,22 @@ class MainActivity : ComponentActivity() {
                 ) {
                     NavHost(
                         navController,
-                        schedule.route,
+                        if (mainUiState.isLogin) schedule.route else settings.route,
                         Modifier.padding(it),
                     ) {
                         composable(
                             schedule.route,
                         ) {
-                            showActions = true
                             ScheduleScreen(scheduleViewModel)
                         }
                         composable(
                             grade.route,
                         ) {
-                            showActions = true
                             GradeScreen(gradeViewModel)
                         }
                         composable(
                             settings.route,
                         ) {
-                            showActions = false
                             SettingsScreen(settingsViewModel, loginViewModel)
                         }
                     }

@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_START_LOCALDATE
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.getCurrentNode
@@ -28,13 +27,13 @@ import javax.inject.Inject
 
 data class ScheduleUiState(
     val courses: Map<Pair<Int, Int>, Course> = emptyMap(),
-    val isTimetableLoading: Boolean = true,
+    val isTimetableLoading: Boolean = false,
     val currentWeek: Int,
+    val browsedWeek: Int,
     // Indicate the day of week, 1 for Monday, 7 for Sunday
     val dayOfWeek: Int,
     // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
     val currentNode: Int = 1,
-    val showLoginPlaceholder: Boolean = false,
     val isCourseDetailDialogOpen: Boolean = false,
     val nodeHeaders: IntRange = (1..10),
     val weekHeaders: List<String> = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
@@ -51,13 +50,14 @@ class ScheduleViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         ScheduleUiState(
             currentWeek = 1,
+            browsedWeek = 1,
             dayOfWeek = LocalDate.now().dayOfWeek.value,
-            currentNode = getCurrentNode()
+            currentNode = getCurrentNode(),
         )
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
-    val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -66,7 +66,7 @@ class ScheduleViewModel @Inject constructor(
             }
         )
 
-    val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
@@ -75,9 +75,11 @@ class ScheduleViewModel @Inject constructor(
     )
 
     private val startLocalDateStateFlow = userPreferenceRepository.observeStartLocalDate().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        DEFAULT_VALUE_START_LOCALDATE
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeStartLocalDate().first()
+        }
     )
 
     init {
@@ -90,9 +92,6 @@ class ScheduleViewModel @Inject constructor(
                 listOf(isLogin.toString(), username)
             }.collect {
                 Log.d("ScheduleViewModel", "observeIsLogin: $it")
-                _uiState.update { uiState ->
-                    uiState.copy(showLoginPlaceholder = it[1].isEmpty())
-                }
                 if (it[0] == true.toString() && it[1].isNotEmpty()) {
                     getCourses()
                 }
@@ -102,9 +101,15 @@ class ScheduleViewModel @Inject constructor(
             startLocalDateStateFlow.collect { startLocalDate ->
                 val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
                 _uiState.update { uiState ->
-                    uiState.copy(currentWeek = currentWeek)
+                    uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
                 }
             }
+        }
+    }
+
+    fun setBrowsedWeek(value: Int) {
+        _uiState.update {
+            it.copy(browsedWeek = value)
         }
     }
 
@@ -126,7 +131,7 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getCourses() {
+    suspend fun getCourses() {
         Log.d("ScheduleViewModel", "getCourses")
         _uiState.update { uiState ->
             uiState.copy(isTimetableLoading = true)
@@ -139,13 +144,13 @@ class ScheduleViewModel @Inject constructor(
                 val map = resource.data!!.associateBy { course ->
                     Pair(course.weekDayNo!!, (course.nodeNo!! + 1) / 2)
                 }
-                Log.d("ScheduleViewModel", "getCourses: $map")
+                Log.d("ScheduleViewModel", "getCourses: ${map.size}")
                 _uiState.update { uiState ->
                     uiState.copy(courses = map, isTimetableLoading = false)
                 }
             }
             Status.ERROR -> {
-                val result = MainActivity.snackBarHostState.showSnackbar("加载课表失败，请稍后重试", "重试")
+                val result = MainActivity.snackBarHostState.showSnackbar("加载课表失败，请稍后重试\n" + resource.message, "重试")
                 if (result == SnackbarResult.ActionPerformed) {
                     getCourses()
                 }

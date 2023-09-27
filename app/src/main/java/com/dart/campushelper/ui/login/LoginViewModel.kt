@@ -25,6 +25,7 @@ data class LoginUiState(
     val isShowLoginDialog: Boolean = false,
     val username: String = "",
     val password: String = "",
+    val loginInfoError: Boolean = false
 )
 
 @HiltViewModel
@@ -59,12 +60,13 @@ class LoginViewModel @Inject constructor(
                     _uiState.update { uiState ->
                         uiState.copy(isShowLoginDialog = false)
                     }
-                    MainActivity.snackBarHostState.showSnackbar("登录成功")
                 }
                 Status.ERROR -> {
                     userPreferenceRepository.changeIsLogin(false)
                     if (loginResource.message == LOGIN_INFO_ERROR) {
-                        MainActivity.snackBarHostState.showSnackbar(loginResource.message)
+                        _uiState.update {
+                            it.copy(loginInfoError = true)
+                        }
                     } else {
                         val result = MainActivity.snackBarHostState.showSnackbar(NETWORK_CONNECT_ERROR, RETRY)
                         if (result == SnackbarResult.ActionPerformed) {
@@ -79,13 +81,13 @@ class LoginViewModel @Inject constructor(
 
     fun onUsernameChanged(input: String) {
         _uiState.update {
-            it.copy(username = input)
+            it.copy(loginInfoError = false, username = input)
         }
     }
 
     fun onPasswordChanged(input: String) {
         _uiState.update {
-            it.copy(password = input)
+            it.copy(loginInfoError = false, password = input)
         }
     }
 
@@ -103,12 +105,10 @@ class LoginViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsLogin(false)
-        }
-        viewModelScope.launch {
-            MainActivity.userCache.reset()
             userPreferenceRepository.changeUsername(VALUES.DEFAULT_VALUE_USERNAME)
             userPreferenceRepository.changePassword(VALUES.DEFAULT_VALUE_PASSWORD)
+            MainActivity.userCache.reset()
+            userPreferenceRepository.changeIsLogin(false)
             userPreferenceRepository.changeStartLocalDate(LocalDate.now())
             ChaoxingService.cookies.emit(emptyList())
         }

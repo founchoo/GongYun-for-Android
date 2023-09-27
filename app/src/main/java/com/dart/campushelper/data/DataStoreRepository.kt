@@ -10,7 +10,6 @@ import com.dart.campushelper.api.DataStoreService
 import com.dart.campushelper.data.KEYS.KEY_DAY_OF_WEEK
 import com.dart.campushelper.data.KEYS.KEY_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.KEYS.KEY_ENTER_UNIVERSITY_YEAR
-import com.dart.campushelper.data.KEYS.KEY_IS_LOGIN
 import com.dart.campushelper.data.KEYS.KEY_IS_PIN
 import com.dart.campushelper.data.KEYS.KEY_PASSWORD
 import com.dart.campushelper.data.KEYS.KEY_SELECTED_DARK_MODE
@@ -24,6 +23,7 @@ import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_USERNAME
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -41,11 +41,11 @@ class DataStoreRepository @Inject constructor(
     // Used to make suspend functions that read and update state safe to call from any thread
     private val mutex = Mutex()
 
+    private var isLogin = MutableStateFlow(false)
+
     override suspend fun changeIsLogin(isLogin: Boolean) {
         mutex.withLock {
-            dataStore.edit {
-                it[KEY_IS_LOGIN] = isLogin
-            }
+            this.isLogin.emit(isLogin)
         }
     }
 
@@ -113,9 +113,7 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
-    override fun observeIsLogin(): Flow<Boolean> = dataStore.data.map {
-        it[KEY_IS_LOGIN] ?: false
-    }
+    override fun observeIsLogin(): Flow<Boolean> = isLogin
 
     override fun observeSelectedDarkMode(): Flow<String> = dataStore.data.map { it[KEY_SELECTED_DARK_MODE] ?: DEFAULT_VALUE_SELECTED_DARK_MODE }
 

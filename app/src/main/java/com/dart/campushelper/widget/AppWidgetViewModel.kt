@@ -65,6 +65,7 @@ class AppWidgetViewModel @Inject constructor(
 
     @WorkerThread
     suspend fun getTodaySchedule() {
+
         Log.d("AppWidgetViewModel", "getTodaySchedule: ")
         val result = chaoxingRepository.getSchedule()
         if (result.status == Status.SUCCESS) {

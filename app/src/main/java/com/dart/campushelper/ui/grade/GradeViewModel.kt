@@ -52,7 +52,7 @@ class GradeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GradesUiState())
     val uiState: StateFlow<GradesUiState> = _uiState.asStateFlow()
 
-    val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -61,7 +61,7 @@ class GradeViewModel @Inject constructor(
             }
         )
 
-    val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
@@ -116,8 +116,11 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getGrades() {
+    suspend fun getGrades() {
         viewModelScope.launch {
+            _uiState.update {
+                it.copy(isGradesLoading = true)
+            }
             val gradesResult = chaoxingRepository.getGrades()
             when (gradesResult.status) {
                 Status.SUCCESS -> {
@@ -134,7 +137,7 @@ class GradeViewModel @Inject constructor(
                     }.toSet().toList()
                     val semesterList = grades.map { grade ->
                         grade.xnxq ?: ""
-                    }.toSet().toList()
+                    }.toSet().toList().sorted()
                     _uiState.update {
                         it.copy(
                             courseSorts = courseSortList,
@@ -184,7 +187,7 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getStudentRankingInfo() {
+    suspend fun getStudentRankingInfo() {
         _uiState.update {
             it.copy(isRankingInfoLoading = true)
         }

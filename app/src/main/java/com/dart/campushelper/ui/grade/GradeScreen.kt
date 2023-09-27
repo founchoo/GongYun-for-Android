@@ -10,8 +10,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,8 +32,8 @@ import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
 import com.dart.campushelper.ui.rememberSort
 import com.dart.campushelper.ui.rememberTimeline
-import com.dart.campushelper.utils.NoLoginPlaceholder
 import com.dart.campushelper.utils.fadingEdge
+import com.dart.campushelper.utils.isScrollingUp
 import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
 import io.github.fornewid.placeholder.material3.placeholder
 import io.github.fornewid.placeholder.material3.shimmer
@@ -61,216 +65,7 @@ fun GradeScreen(
         skipPartiallyExpanded = true
     )
 
-    val listState = rememberLazyListState()
-    fabVisibility = derivedStateOf {
-        !listState.isScrollInProgress
-    }.value
-
-    if (uiState.showLoginPlaceholder) {
-        NoLoginPlaceholder()
-    } else {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Spacer(Modifier.width(10.dp))
-            // Grade gpa and ranking info section.
-            Box(
-                modifier = Modifier
-                    .fadingEdge(
-                        Brush.horizontalGradient(
-                            0f to Color.Transparent,
-                            0.1f to Color.Red,
-                            0.9f to Color.Red,
-                            1f to Color.Transparent
-                        )
-                    )
-            ) {
-                LazyRow {
-                    item {
-                        Spacer(Modifier.width(25.dp))
-                    }
-                    item {
-                        Card(
-                            modifier = Modifier.placeholder(
-                                visible = uiState.isGradesLoading,
-                                highlight = PlaceholderHighlight.shimmer()
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(10.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Icon(
-                                    imageVector = rememberGlyphs(),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "已筛选课程成绩",
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.W900
-                                )
-                                Column {
-                                    Text(
-                                        text = "平均学分绩点 ${
-                                            DecimalFormat("#.####").format(
-                                                uiState.gradePointAverage
-                                            )
-                                        }",
-                                        textAlign = TextAlign.Center,
-                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                    )
-                                    Text(
-                                        text = "算数平均分 ${
-                                            DecimalFormat("#.####").format(
-                                                uiState.averageScore
-                                            )
-                                        }",
-                                        textAlign = TextAlign.Center,
-                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    item {
-                        Spacer(Modifier.width(10.dp))
-                    }
-                    item {
-                        if (uiState.rankingAvailable) {
-                            Card(
-                                modifier = Modifier.placeholder(
-                                    visible = uiState.isRankingInfoLoading,
-                                    highlight = PlaceholderHighlight.shimmer()
-                                )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = rememberGroups(),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        text = "排名信息",
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W900
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "平均学分绩点排名 " +
-                                                    "年级 ${uiState.rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${uiState.rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${uiState.rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                        )
-                                        Text(
-                                            text = "算术平均分排名 " +
-                                                    "年级 ${uiState.rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
-                                                    "专业 ${uiState.rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
-                                                    "班级 ${uiState.rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                ),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = rememberGroups(),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                    Text(
-                                        text = "排名信息不可用",
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W900,
-                                        color = MaterialTheme.colorScheme.onErrorContainer,
-                                        maxLines = 2
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "当筛选课程性质或课程",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                        Text(
-                                            text = "名称时排名信息不可用",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    item {
-                        Spacer(Modifier.width(25.dp))
-                    }
-                }
-            }
-            // Grades info section.
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(25.dp, 0.dp, 25.dp, 10.dp)
-                    .placeholder(
-                        visible = uiState.isGradesLoading,
-                        highlight = PlaceholderHighlight.shimmer()
-                    ),
-                verticalArrangement = Arrangement.Top,
-                state = listState,
-            ) {
-                itemsIndexed(uiState.grades.toList()) { _, grade ->
-                    Row(
-                        modifier = Modifier
-                            .clickable {
-                                viewModel.showGradeDetailDialog()
-                                viewModel.setContentForGradeDetailDialog(grade)
-                            }
-                            .padding(8.dp)
-                    ) {
-                        Column(modifier = Modifier.weight(4f)) {
-                            Text(
-                                text = grade.name,
-                                textAlign = TextAlign.Left,
-                                style = MaterialTheme.typography.titleMedium,
-                                softWrap = true,
-                            )
-                            Text(
-                                text = "学分 ${grade.credit}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Text(
-                            text = grade.score.toString(),
-                            textAlign = TextAlign.Right,
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .fillMaxWidth()
-                                .weight(1f),
-                        )
-                    }
-                    HorizontalDivider()
-                }
-            }
-        }
-    }
+    AddContent(uiState, viewModel)
 
     if (uiState.isGradeDetailDialogOpen) {
         GradeDetailDialog(
@@ -480,6 +275,220 @@ fun CreateFloatingActionButtonForGrade() {
                 imageVector = rememberFilterAlt(),
                 contentDescription = null,
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@SuppressLint("UnrememberedMutableState")
+@Composable
+fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
+
+    val listState = rememberLazyListState()
+    var isScrollingUp by mutableStateOf(listState.isScrollingUp())
+    fabVisibility = isScrollingUp
+    val refreshScope = rememberCoroutineScope()
+    fun refresh() = refreshScope.launch {
+        viewModel.getGrades()
+        viewModel.getStudentRankingInfo()
+    }
+    val state = rememberPullRefreshState(uiState.isGradesLoading, ::refresh)
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Spacer(Modifier.width(10.dp))
+        // Grade gpa and ranking info section.
+        Box(
+            modifier = Modifier
+                .fadingEdge(
+                    Brush.horizontalGradient(
+                        0f to Color.Transparent,
+                        0.1f to Color.Red,
+                        0.9f to Color.Red,
+                        1f to Color.Transparent
+                    )
+                )
+        ) {
+            LazyRow {
+                item {
+                    Spacer(Modifier.width(25.dp))
+                }
+                item {
+                    Card {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = rememberGlyphs(),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "已筛选课程成绩",
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.W900
+                            )
+                            Column {
+                                Text(
+                                    text = "平均学分绩点 ${
+                                        DecimalFormat("#.####").format(
+                                            uiState.gradePointAverage
+                                        )
+                                    }",
+                                    textAlign = TextAlign.Center,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                                Text(
+                                    text = "算数平均分 ${
+                                        DecimalFormat("#.####").format(
+                                            uiState.averageScore
+                                        )
+                                    }",
+                                    textAlign = TextAlign.Center,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                            }
+                        }
+                    }
+                }
+                item {
+                    Spacer(Modifier.width(10.dp))
+                }
+                item {
+                    if (uiState.rankingAvailable) {
+                        Card(
+                            modifier = Modifier.placeholder(
+                                visible = uiState.isRankingInfoLoading,
+                                highlight = PlaceholderHighlight.shimmer()
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(10.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = rememberGroups(),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "排名信息",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.W900
+                                )
+                                Column {
+                                    Text(
+                                        text = "平均学分绩点排名 " +
+                                                "年级 ${uiState.rankingInfo.byGPAByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                "专业 ${uiState.rankingInfo.byGPAByMajor.run { "${this.first}/${this.second}" }} " +
+                                                "班级 ${uiState.rankingInfo.byGPAByClass.run { "${this.first}/${this.second}" }} ",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                    )
+                                    Text(
+                                        text = "算术平均分排名 " +
+                                                "年级 ${uiState.rankingInfo.byScoreByInstitute.run { "${this.first}/${this.second}" }} " +
+                                                "专业 ${uiState.rankingInfo.byScoreByMajor.run { "${this.first}/${this.second}" }} " +
+                                                "班级 ${uiState.rankingInfo.byScoreByClass.run { "${this.first}/${this.second}" }} ",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                            ),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(10.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = rememberGroups(),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = "排名信息不可用",
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.W900,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    maxLines = 2
+                                )
+                                Column {
+                                    Text(
+                                        text = "当筛选课程性质或课程",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Text(
+                                        text = "名称时排名信息不可用",
+                                        textAlign = TextAlign.Center,
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                    Spacer(Modifier.width(25.dp))
+                }
+            }
+        }
+        // Grades info section.
+        Box(Modifier.pullRefresh(state)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(25.dp, 0.dp, 25.dp, 10.dp),
+                verticalArrangement = Arrangement.SpaceAround,
+                state = listState,
+            ) {
+                itemsIndexed(uiState.grades.toList()) { _, grade ->
+                    Box {
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    viewModel.showGradeDetailDialog()
+                                    viewModel.setContentForGradeDetailDialog(grade)
+                                }
+                                .padding(8.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(4f)) {
+                                Text(
+                                    text = grade.name,
+                                    textAlign = TextAlign.Left,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    softWrap = true,
+                                )
+                                Text(
+                                    text = "学分 ${grade.credit}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            Text(
+                                text = grade.score.toString(),
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                            )
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
+            PullRefreshIndicator(uiState.isGradesLoading, state, Modifier.align(Alignment.TopCenter))
         }
     }
 }
