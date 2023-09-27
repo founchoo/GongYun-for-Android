@@ -30,7 +30,7 @@
 
 ## 下载
 
-[点此](https://github.com/founchoo/CampusHelper/releases/latest) 链接跳转到下载页面，页面下方的 `.apk` 文件即是安装包，下载安装即可。
+[点此](https://github.com/founchoo/CampusHelper/releases/latest)链接跳转到下载页面，页面下方的 `.apk` 文件即是安装包，下载安装即可。
 
 ## 参与开发
 
