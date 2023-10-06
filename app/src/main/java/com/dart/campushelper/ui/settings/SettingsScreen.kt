@@ -19,12 +19,16 @@ import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.ui.login.LoginViewModel
 import com.dart.campushelper.ui.login.ShowLoginDialog
 import com.dart.campushelper.ui.rememberAccountCircle
+import com.dart.campushelper.ui.rememberCalendarViewDay
 import com.dart.campushelper.ui.rememberChat
 import com.dart.campushelper.ui.rememberClearNight
 import com.dart.campushelper.ui.rememberCode
+import com.dart.campushelper.ui.rememberDoNotDisturbOn
 import com.dart.campushelper.ui.rememberInfo
 import com.dart.campushelper.ui.rememberPalette
 import com.dart.campushelper.ui.rememberPushPin
+import com.dart.campushelper.ui.rememberSchedule
+import com.dart.campushelper.ui.rememberToday
 import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
 import com.dart.campushelper.utils.Constants.Companion.QQ_GROUP_NUMBER
 import com.dart.campushelper.utils.DropdownMenuPreference
@@ -58,6 +62,42 @@ fun SettingsScreen(
                 }
             }
             PreferenceHeader(text = "课表")
+            SwitchPreference(
+                imageVector = rememberDoNotDisturbOn(),
+                value = settingsUiState.isOtherCourseDisplay,
+                title = "显示非本周课程",
+                description = "以更高的透明度显示非本周课程",
+                onValueChanged = {
+                    settingsViewModel.changeIsOtherCourseDisplay(it)
+                }
+            )
+            SwitchPreference(
+                imageVector = rememberCalendarViewDay(),
+                value = settingsUiState.isYearDisplay,
+                title = "显示年份",
+                description = "在左上角显示当前展示周数所属年份",
+                onValueChanged = {
+                    settingsViewModel.changeIsYearDisplay(it)
+                }
+            )
+            SwitchPreference(
+                imageVector = rememberToday(),
+                value = settingsUiState.isDateDisplay,
+                title = "显示日期",
+                description = "在周数下方显示对应日期",
+                onValueChanged = {
+                    settingsViewModel.changeIsDateDisplay(it)
+                }
+            )
+            SwitchPreference(
+                imageVector = rememberSchedule(),
+                value = settingsUiState.isTimeDisplay,
+                title = "显示时间段",
+                description = "在节次下方显示上课时间段",
+                onValueChanged = {
+                    settingsViewModel.changeIsTimeDisplay(it)
+                }
+            )
             // Pin course info widget to desktop
             SwitchPreference(
                 imageVector = rememberPushPin(),

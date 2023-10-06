@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -39,11 +37,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.ui.rememberTune
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnrememberedMutableState")
@@ -95,56 +99,90 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
     }
 
     val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, ::refresh)
+    val nodeColumnWeight = 0.6F
 
-    Column {
-        Row {
+    Column(Modifier.padding(5.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
             Box(
                 modifier = Modifier
-                    .weight(0.5F)
-            )
+                    .weight(nodeColumnWeight)
+            ) {
+                if (uiState.isYearDisplay) {
+                    Text(
+                        text = "${uiState.browsedYear}年",
+                        fontFamily = FontFamily.Serif,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+            }
             Row(
                 modifier = Modifier
                     .weight(7F)
-                    .align(Alignment.Top)
+                    .align(Alignment.CenterVertically)
             ) {
                 uiState.weekHeaders.forEachIndexed { index, week ->
                     Box(
                         modifier = Modifier
                             .weight(1F)
                     ) {
-                        Text(
-                            text = week,
-                            color = if (uiState.dayOfWeek - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(0.dp, 5.dp, 0.dp, 5.dp)
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            val color =
+                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek) MaterialTheme.colorScheme.primary else Color.Unspecified
+                            Text(
+                                text = week,
+                                color = color,
+                            )
+                            if (uiState.isDateDisplay) {
+                                Text(
+                                    text = uiState.dateHeaders?.get(index) ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = color,
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
         Box(Modifier.pullRefresh(refreshState)) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(5.dp, 0.dp, 3.dp, 3.dp)
-            ) {
+            LazyColumn {
                 item {
                     Row {
                         // 节点数
                         Column(
                             modifier = Modifier
                                 .fillParentMaxHeight()
-                                .weight(0.5F),
+                                .weight(nodeColumnWeight),
                             verticalArrangement = Arrangement.SpaceAround,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             uiState.nodeHeaders.forEachIndexed { index, node ->
-                                Box {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    val color =
+                                        if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified
                                     Text(
-                                        color = if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                                        color = color,
                                         text = node.toString(),
                                         textAlign = TextAlign.Center
                                     )
+                                    if (uiState.isTimeDisplay) {
+                                        Text(
+                                            color = color,
+                                            text = "${uiState.nodeStartHeaders[index]}\n${uiState.nodeEndHeaders[index]}",
+                                            fontSize = 10.sp,
+                                            lineHeight = 10.sp,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -159,38 +197,44 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                         .fillParentMaxHeight()
                                         .weight(1F)
                                 ) {
+                                    // 筛选出当前遍历的星期的课程
                                     val coursesOnWeek = uiState.courses.filter {
                                         it.key.first == week
                                     }
 
                                     for (node in 1..5) {
-
+                                        // 筛选出当前遍历的节次的课程
                                         val coursesOnBothWeekAndNode = coursesOnWeek.filter {
                                             it.key.second == node
                                         }.values
-
-                                        var currentCourse: Course? = null
-                                        for (coursesOnBothWeekAndNodeItem in coursesOnBothWeekAndNode) {
-                                            if (coursesOnBothWeekAndNodeItem.weekNoList.contains(
-                                                    uiState.browsedWeek
-                                                )
-                                            ) {
-                                                currentCourse = coursesOnBothWeekAndNodeItem
+                                        // 筛选出符合当前节次和星期的本周的课程
+                                        val currentCourse: Course? = coursesOnBothWeekAndNode.find {
+                                            it.weekNoList.contains(uiState.browsedWeek)
+                                        }
+                                        // 筛选出符合当前节次和星期的非本周课程
+                                        val nonCurWeekCourses = coursesOnBothWeekAndNode.filter {
+                                            it != currentCourse
+                                        }
+                                        // 点按时弹出的对话框中显示的课程
+                                        val coursesToShowWhenClicked =
+                                            if (uiState.isOtherCourseDisplay) {
+                                                (if (currentCourse == null) emptyList() else listOf(
+                                                    currentCourse
+                                                )).plus(nonCurWeekCourses)
+                                            } else {
+                                                if (currentCourse == null) {
+                                                    emptyList()
+                                                } else {
+                                                    listOf(currentCourse)
+                                                }
                                             }
-                                        }
-                                        var futureCourse: Course? = null
-                                        if (currentCourse == null && coursesOnBothWeekAndNode.isNotEmpty()) {
-                                            futureCourse = coursesOnBothWeekAndNode.first()
-                                        }
+                                        val alpha =
+                                            if (currentCourse != null) 1f else if (coursesToShowWhenClicked.isEmpty()) 0f else 0.3f
 
                                         val foreground =
-                                            MaterialTheme.colorScheme.secondary.copy(
-                                                alpha = if (coursesOnBothWeekAndNode.isEmpty()) 0f else if (currentCourse != null) 1f else 0.3f
-                                            )
+                                            MaterialTheme.colorScheme.secondary.copy(alpha = alpha)
                                         val background =
-                                            MaterialTheme.colorScheme.secondaryContainer.copy(
-                                                alpha = if (coursesOnBothWeekAndNode.isEmpty()) 0f else if (currentCourse != null) 1f else 0.3f
-                                            )
+                                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = alpha)
                                         Box(
                                             modifier = Modifier
                                                 .weight(1F)
@@ -199,46 +243,48 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                 .clip(RoundedCornerShape(5.dp))
                                                 .background(background)
                                                 .clickable(
-                                                    enabled = coursesOnBothWeekAndNode.isNotEmpty(),
+                                                    enabled = coursesToShowWhenClicked.isNotEmpty(),
                                                     onClick = {
                                                         viewModel.setContentInCourseDetailDialog(
-                                                            coursesOnBothWeekAndNode.toList()
+                                                            coursesToShowWhenClicked.toList()
                                                         )
                                                         viewModel.showCourseDetailDialog()
                                                     }
                                                 )
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(15.dp)
-                                                    .clip(CutCornerShape(topStart = 15.dp))
-                                                    .background(
-                                                        if (coursesOnBothWeekAndNode.count() > 1) MaterialTheme.colorScheme.primary else Color.Transparent
+                                            if (coursesToShowWhenClicked.isNotEmpty()) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(15.dp)
+                                                        .clip(CutCornerShape(topStart = 15.dp))
+                                                        .background(
+                                                            if (coursesToShowWhenClicked.count() > 1) MaterialTheme.colorScheme.primary else Color.Transparent
+                                                        )
+                                                        .align(Alignment.BottomEnd)
+                                                )
+                                                Column(
+                                                    modifier = Modifier
+                                                        .padding(2.dp)
+                                                        .align(Alignment.Center),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Text(
+                                                        text = coursesToShowWhenClicked.first().courseName
+                                                            ?: "",
+                                                        style = MaterialTheme.typography.bodySmall.merge(
+                                                            fontWeight = FontWeight.Bold
+                                                        ),
+                                                        textAlign = TextAlign.Center,
+                                                        color = foreground,
                                                     )
-                                                    .align(Alignment.BottomEnd)
-                                            )
-                                            Column(
-                                                modifier = Modifier
-                                                    .padding(4.dp)
-                                                    .align(Alignment.Center),
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = currentCourse?.courseName
-                                                        ?: (futureCourse?.courseName ?: ""),
-                                                    style = MaterialTheme.typography.bodySmall.merge(
-                                                        fontWeight = FontWeight.Bold
-                                                    ),
-                                                    textAlign = TextAlign.Center,
-                                                    color = foreground,
-                                                )
-                                                Text(
-                                                    text = currentCourse?.classroomName
-                                                        ?: (futureCourse?.classroomName ?: ""),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    textAlign = TextAlign.Center,
-                                                    color = foreground,
-                                                )
+                                                    Text(
+                                                        text = coursesToShowWhenClicked.first().classroomName
+                                                            ?: "",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        textAlign = TextAlign.Center,
+                                                        color = foreground,
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -267,12 +313,14 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel) {
         showWeekSliderDialog = true
     }) {
         Icon(
-            imageVector = Icons.Filled.Menu,
-            contentDescription = "Localized description"
+            imageVector = rememberTune(),
+            contentDescription = null
         )
     }
 
     var sliderPosition by remember { mutableFloatStateOf(viewModel.uiState.value.currentWeek.toFloat()) }
+
+    val hapticFeedback = LocalHapticFeedback.current
 
     if (showWeekSliderDialog) {
         AlertDialog(
@@ -286,9 +334,11 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel) {
             },
             dismissButton = {
                 TextButton({
+                    sliderPosition = viewModel.uiState.value.currentWeek.toFloat()
+                    viewModel.resetBrowsedWeek()
                     showWeekSliderDialog = false
                 }) {
-                    Text("关闭")
+                    Text("重置")
                 }
             },
             onDismissRequest = { showWeekSliderDialog = false },
@@ -297,11 +347,16 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel) {
                 Column {
                     Slider(
                         value = sliderPosition,
-                        onValueChange = { sliderPosition = it },
+                        onValueChange = {
+                            if (abs(it - sliderPosition) >= 0.9f) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                            sliderPosition = it
+                        },
                         steps = 20,
-                        valueRange = 1f..20f
+                        valueRange = 1f..20f,
                     )
-                    Text(text = sliderPosition.toInt().toString())
+                    Text(text = "切换到第 ${sliderPosition.toInt()} 周")
                 }
             }
         )

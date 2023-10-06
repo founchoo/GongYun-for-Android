@@ -11,6 +11,14 @@ interface DataStoreService {
     /**
      * Change section.
      */
+    suspend fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean)
+
+    suspend fun changeIsYearDisplay(isYearDisplay: Boolean)
+
+    suspend fun changeIsDateDisplay(isDateDisplay: Boolean)
+
+    suspend fun changeIsTimeDisplay(isPin: Boolean)
+
     suspend fun changeCookies(cookies: List<Cookie>)
 
     suspend fun changeIsLogin(isLogin: Boolean)
@@ -34,6 +42,14 @@ interface DataStoreService {
     /**
      * Observe section.
      */
+    fun observeIsOtherCourseDisplay(): Flow<Boolean?>
+
+    fun observeIsYearDisplay(): Flow<Boolean?>
+
+    fun observeIsDateDisplay(): Flow<Boolean?>
+
+    fun observeIsTimeDisplay(): Flow<Boolean?>
+
     fun observeCookies(): Flow<List<Cookie>>
 
     fun observeIsLogin(): Flow<Boolean>

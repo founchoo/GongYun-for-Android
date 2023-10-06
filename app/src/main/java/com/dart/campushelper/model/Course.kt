@@ -174,7 +174,7 @@ data class Course(
 
     // 教室名称
     val classroomName: String?
-        get() = classroomNameHtml?.let { "@${parseHtml(it)}" }
+        get() = classroomNameHtml?.let { parseHtml(it) }
 
     // 教师名称
     val teacherName: String?

@@ -11,7 +11,11 @@ import com.dart.campushelper.data.KEYS.KEY_COOKIES
 import com.dart.campushelper.data.KEYS.KEY_DAY_OF_WEEK
 import com.dart.campushelper.data.KEYS.KEY_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.KEYS.KEY_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.data.KEYS.KEY_IS_DATE_DISPLAY
+import com.dart.campushelper.data.KEYS.KEY_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_IS_PIN
+import com.dart.campushelper.data.KEYS.KEY_IS_TIME_DISPLAY
+import com.dart.campushelper.data.KEYS.KEY_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_PASSWORD
 import com.dart.campushelper.data.KEYS.KEY_SELECTED_DARK_MODE
 import com.dart.campushelper.data.KEYS.KEY_SEMESTER_YEAR_AND_NO
@@ -44,6 +48,38 @@ class DataStoreRepository @Inject constructor(
 
     // Used to make suspend functions that read and update state safe to call from any thread
     private val mutex = Mutex()
+
+    override suspend fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_OTHER_COURSE_DISPLAY] = isOtherCourseDisplay
+            }
+        }
+    }
+
+    override suspend fun changeIsYearDisplay(isYearDisplay: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_YEAR_DISPLAY] = isYearDisplay
+            }
+        }
+    }
+
+    override suspend fun changeIsDateDisplay(isDateDisplay: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_DATE_DISPLAY] = isDateDisplay
+            }
+        }
+    }
+
+    override suspend fun changeIsTimeDisplay(isTimeDisplay: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_TIME_DISPLAY] = isTimeDisplay
+            }
+        }
+    }
 
     override suspend fun changeCookies(cookies: List<Cookie>) {
         mutex.withLock {
@@ -125,6 +161,22 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
+    override fun observeIsOtherCourseDisplay(): Flow<Boolean?> = dataStore.data.map {
+        it[KEY_IS_OTHER_COURSE_DISPLAY]
+    }
+
+    override fun observeIsYearDisplay(): Flow<Boolean?> = dataStore.data.map {
+        it[KEY_IS_YEAR_DISPLAY]
+    }
+
+    override fun observeIsDateDisplay(): Flow<Boolean?> = dataStore.data.map {
+        it[KEY_IS_DATE_DISPLAY]
+    }
+
+    override fun observeIsTimeDisplay(): Flow<Boolean?> = dataStore.data.map {
+        it[KEY_IS_TIME_DISPLAY]
+    }
+
     override fun observeCookies(): Flow<List<Cookie>> = dataStore.data.map {
         val json = it[KEY_COOKIES] ?: DEFAULT_VALUE_COOKIES
         if (json == DEFAULT_VALUE_COOKIES) {
@@ -180,6 +232,10 @@ class DataStoreRepository @Inject constructor(
 
 object KEYS {
 
+    val KEY_IS_OTHER_COURSE_DISPLAY = booleanPreferencesKey("is_other_course_display")
+    val KEY_IS_YEAR_DISPLAY = booleanPreferencesKey("is_year_display")
+    val KEY_IS_DATE_DISPLAY = booleanPreferencesKey("is_date_display")
+    val KEY_IS_TIME_DISPLAY = booleanPreferencesKey("is_time_display")
     val KEY_COOKIES = stringPreferencesKey("cookies")
     val KEY_IS_LOGIN = booleanPreferencesKey("is_login")
     val KEY_DAY_OF_WEEK = intPreferencesKey("day_of_week")
@@ -194,6 +250,10 @@ object KEYS {
 }
 
 object VALUES {
+    val DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY = false
+    val DEFAULT_VALUE_IS_YEAR_DISPLAY = false
+    val DEFAULT_VALUE_IS_DATE_DISPLAY = false
+    val DEFAULT_VALUE_IS_TIME_DISPLAY = false
     val DEFAULT_VALUE_COOKIES = "[]"
     val DEFAULT_VALUE_IS_LOGIN = false
     val DEFAULT_VALUE_DAY_OF_WEEK = -1

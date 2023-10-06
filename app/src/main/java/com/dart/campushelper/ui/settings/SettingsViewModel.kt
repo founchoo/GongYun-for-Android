@@ -8,6 +8,7 @@ import com.dart.campushelper.CampusHelperApplication
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_LOGIN
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_PIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_USERNAME
@@ -30,6 +31,10 @@ data class SettingsUiState(
     val username: String = DEFAULT_VALUE_USERNAME,
     val enableSystemColor: Boolean = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR,
     val selectedDarkMode: String = DEFAULT_VALUE_SELECTED_DARK_MODE,
+    val isOtherCourseDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
+    val isYearDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
+    val isDateDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
+    val isTimeDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isPin: Boolean = DEFAULT_VALUE_IS_PIN,
     val openLogoutConfirmDialog: Boolean = false,
     val openFeedbackUrlConfirmDialog: Boolean = false,
@@ -84,6 +89,38 @@ class SettingsViewModel @Inject constructor(
         }
     )
 
+    private val isOtherCourseDisplayStateFlow = userPreferenceRepository.observeIsOtherCourseDisplay().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            userPreferenceRepository.observeIsOtherCourseDisplay().first()
+        }
+    )
+
+    private val isYearDisplayStateFlow = userPreferenceRepository.observeIsYearDisplay().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            userPreferenceRepository.observeIsYearDisplay().first()
+        }
+    )
+
+    private val isDateDisplayStateFlow = userPreferenceRepository.observeIsDateDisplay().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            userPreferenceRepository.observeIsDateDisplay().first()
+        }
+    )
+
+    private val isTimeDisplayStateFlow = userPreferenceRepository.observeIsTimeDisplay().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            userPreferenceRepository.observeIsTimeDisplay().first()
+        }
+    )
+
     private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -128,6 +165,34 @@ class SettingsViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            isOtherCourseDisplayStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isOtherCourseDisplay = value ?: false)
+                }
+            }
+        }
+        viewModelScope.launch {
+            isYearDisplayStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isYearDisplay = value ?: false)
+                }
+            }
+        }
+        viewModelScope.launch {
+            isDateDisplayStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isDateDisplay = value ?: false)
+                }
+            }
+        }
+        viewModelScope.launch {
+            isTimeDisplayStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isTimeDisplay = value ?: false)
+                }
+            }
+        }
     }
 
     fun clearCookies() {
@@ -165,6 +230,30 @@ class SettingsViewModel @Inject constructor(
                     null
                 )
             widgetProviders[0].pin(CampusHelperApplication.context)
+        }
+    }
+
+    fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
+        viewModelScope.launch {
+            userPreferenceRepository.changeIsOtherCourseDisplay(isOtherCourseDisplay)
+        }
+    }
+
+    fun changeIsYearDisplay(isYearDisplay: Boolean) {
+        viewModelScope.launch {
+            userPreferenceRepository.changeIsYearDisplay(isYearDisplay)
+        }
+    }
+
+    fun changeIsDateDisplay(isDateDisplay: Boolean) {
+        viewModelScope.launch {
+            userPreferenceRepository.changeIsDateDisplay(isDateDisplay)
+        }
+    }
+
+    fun changeIsTimeDisplay(isTimeDisplay: Boolean) {
+        viewModelScope.launch {
+            userPreferenceRepository.changeIsTimeDisplay(isTimeDisplay)
         }
     }
 

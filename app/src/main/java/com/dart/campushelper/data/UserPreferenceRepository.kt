@@ -11,6 +11,22 @@ class UserPreferenceRepository @Inject constructor(
     private val dataStoreService: DataStoreService,
 ): UserPreferenceService {
 
+    override suspend fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
+        dataStoreService.changeIsOtherCourseDisplay(isOtherCourseDisplay)
+    }
+
+    override suspend fun changeIsYearDisplay(isYearDisplay: Boolean) {
+        dataStoreService.changeIsYearDisplay(isYearDisplay)
+    }
+
+    override suspend fun changeIsDateDisplay(isDateDisplay: Boolean) {
+        dataStoreService.changeIsDateDisplay(isDateDisplay)
+    }
+
+    override suspend fun changeIsTimeDisplay(isTimeDisplay: Boolean) {
+        dataStoreService.changeIsTimeDisplay(isTimeDisplay)
+    }
+
     override suspend fun changeCookies(cookies: List<Cookie>) {
         dataStoreService.changeCookies(cookies)
     }
@@ -49,6 +65,25 @@ class UserPreferenceRepository @Inject constructor(
 
     override suspend fun changeEnterUniversityYear(enterUniversityYear: String) {
         dataStoreService.changeEnterUniversityYear(enterUniversityYear)
+    }
+
+    /**
+     * Observe section.
+     */
+    override fun observeIsOtherCourseDisplay(): Flow<Boolean?> {
+        return dataStoreService.observeIsOtherCourseDisplay()
+    }
+
+    override fun observeIsYearDisplay(): Flow<Boolean?> {
+        return dataStoreService.observeIsYearDisplay()
+    }
+
+    override fun observeIsDateDisplay(): Flow<Boolean?> {
+        return dataStoreService.observeIsDateDisplay()
+    }
+
+    override fun observeIsTimeDisplay(): Flow<Boolean?> {
+        return dataStoreService.observeIsTimeDisplay()
     }
 
     override fun observeCookies(): Flow<List<Cookie>> {
