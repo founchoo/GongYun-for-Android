@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.example.compose.md_theme_dark_background
 import com.example.compose.md_theme_dark_error
 import com.example.compose.md_theme_dark_errorContainer
@@ -166,10 +165,9 @@ fun CampusHelperTheme(
     if (!view.isInEditMode) {
         SideEffect {
             WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()
-            WindowInsetsControllerCompat(window, view).let {
-                it.isAppearanceLightStatusBars = !darkTheme
-            }
         }
     }
 
