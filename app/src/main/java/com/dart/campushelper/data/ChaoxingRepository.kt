@@ -18,6 +18,7 @@ import com.dart.campushelper.utils.network.Status
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -35,7 +36,7 @@ class ChaoxingRepository @Inject constructor(
     private val semesterYearAndNoStateFlow =
         userPreferenceRepository.observeSemesterYearAndNo().stateIn(
             scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Eagerly,
             initialValue = runBlocking {
                 userPreferenceRepository.observeSemesterYearAndNo().first()
             }
@@ -44,7 +45,7 @@ class ChaoxingRepository @Inject constructor(
     private val enterUniversityYearStateFlow =
         userPreferenceRepository.observeEnterUniversityYear().stateIn(
             scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Eagerly,
             initialValue = runBlocking {
                 userPreferenceRepository.observeEnterUniversityYear().first()
             }
@@ -53,7 +54,7 @@ class ChaoxingRepository @Inject constructor(
     private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
         .stateIn(
             scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Eagerly,
             initialValue = runBlocking {
                 userPreferenceRepository.observeUsername().first()
             }
@@ -62,7 +63,7 @@ class ChaoxingRepository @Inject constructor(
     private val passwordStateFlow: StateFlow<String> = userPreferenceRepository.observePassword()
         .stateIn(
             scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = Eagerly,
             initialValue = runBlocking {
                 userPreferenceRepository.observePassword().first()
             }
@@ -152,9 +153,9 @@ class ChaoxingRepository @Inject constructor(
 
     suspend fun getSchedule(): Resource<List<Course>> {
         return normalHandle(::getSchedule, chaoxingService.getSchedule(
-            semesterYearAndNo = runBlocking { semesterYearAndNoStateFlow.value },
-            studentId = runBlocking { usernameStateFlow.value },
-            semesterNo = runBlocking { semesterYearAndNoStateFlow.value.last().toString() },
+            semesterYearAndNo = semesterYearAndNoStateFlow.value,
+            studentId = usernameStateFlow.value,
+            semesterNo = semesterYearAndNoStateFlow.value.last().toString(),
         ))
     }
 
