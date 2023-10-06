@@ -27,8 +27,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
+import com.dart.campushelper.ui.MainActivity
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class AppWidget : GlanceAppWidget() {
@@ -46,12 +46,12 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
 
     val uiState by viewModel.uiState.collectAsState()
 
-    MainScope().launch {
+    MainActivity.scope.launch {
         viewModel.observeStartLocalDate()
     }
 
-    MainScope().launch {
-        viewModel.getTodaySchedule()
+    MainActivity.scope.launch {
+        // viewModel.getTodaySchedule()
     }
 
     GlanceTheme {
@@ -79,8 +79,8 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
                     )
                 )
                 Button(text = "刷新", onClick = {
-                    MainScope().launch {
-                        viewModel.getTodaySchedule()
+                    MainActivity.scope.launch {
+                        // viewModel.getTodaySchedule()
                     }
                 })
             }

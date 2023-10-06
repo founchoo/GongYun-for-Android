@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jsoup.Jsoup
 import javax.inject.Inject
 
 data class GradesUiState(
@@ -69,22 +70,30 @@ class GradeViewModel @Inject constructor(
         }
     )
 
+    private val enterUniversityYearStateFlow = userPreferenceRepository.observeEnterUniversityYear().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeEnterUniversityYear().first()
+        }
+    )
+
     private var _backupGrades = emptyList<Grade>()
 
     init {
         viewModelScope.launch {
             combine(
                 isLoginStateFlow,
-                usernameStateFlow
-            ) { isLogin, username ->
-                Log.d("GradeViewModel", "observeIsLogin: $isLogin, $username")
-                listOf(isLogin.toString(), username)
+                usernameStateFlow,
+                enterUniversityYearStateFlow
+            ) { isLogin, username, enterUniversityYear ->
+                listOf(isLogin.toString(), username, enterUniversityYear)
             }.collect {
                 Log.d("GradeViewModel", "observeIsLogin: $it")
                 _uiState.update { uiState ->
                     uiState.copy(showLoginPlaceholder = it[1].isEmpty())
                 }
-                if (it[0] == true.toString() && it[1].isNotEmpty()) {
+                if (it[0] == true.toString() && it[1].isNotEmpty() && it[2].isNotEmpty()) {
                     getGrades()
                     getStudentRankingInfo()
                 }
@@ -124,7 +133,7 @@ class GradeViewModel @Inject constructor(
             val gradesResult = chaoxingRepository.getGrades()
             when (gradesResult.status) {
                 Status.SUCCESS -> {
-                    val grades = gradesResult.data!!
+                    val grades = gradesResult.data!!.results
                     _uiState.update {
                         it.copy(
                             grades = grades,
@@ -158,7 +167,7 @@ class GradeViewModel @Inject constructor(
                         getGrades()
                     }
                 }
-                Status.LOADING -> {
+                Status.INVALID -> {
 
                 }
             }
@@ -191,19 +200,45 @@ class GradeViewModel @Inject constructor(
         _uiState.update {
             it.copy(isRankingInfoLoading = true)
         }
-        val stuRankInfoResult =  chaoxingRepository.getStudentRankingInfo(
+        val stuRankInfoResult = chaoxingRepository.getStudentRankingInfo(
             _uiState.value.semestersSelected.map {
                 if (it.value) {
                     it.key
                 } else {
                     ""
                 }
-            }.joinToString(",")
+            }.joinToString(","),
         )
         when (stuRankInfoResult.status) {
             Status.SUCCESS -> {
+                val rankingInfo = RankingInfo()
+                Jsoup.parse(stuRankInfoResult.data!!).run {
+                    select("table")[1].select("td").forEachIndexed { index, element ->
+                        val value = element.text().contains("/").run {
+                            if (this) {
+                                element.text().split("/").let {
+                                    if (it[0] == "" || it[1] == "") {
+                                        Pair(0, 0)
+                                    } else {
+                                        Pair(it[0].toInt(), it[1].toInt())
+                                    }
+                                }
+                            } else {
+                                Pair(0, 0)
+                            }
+                        }
+                        when (index) {
+                            1 -> rankingInfo.byGPAByInstitute = value
+                            2 -> rankingInfo.byGPAByMajor = value
+                            3 -> rankingInfo.byGPAByClass = value
+                            5 -> rankingInfo.byScoreByInstitute = value
+                            6 -> rankingInfo.byScoreByMajor = value
+                            7 -> rankingInfo.byScoreByClass = value
+                        }
+                    }
+                }
                 _uiState.update {
-                    it.copy(isRankingInfoLoading = false, rankingInfo = stuRankInfoResult.data!!)
+                    it.copy(isRankingInfoLoading = false, rankingInfo = rankingInfo)
                 }
             }
             Status.ERROR -> {
@@ -212,7 +247,7 @@ class GradeViewModel @Inject constructor(
                     getStudentRankingInfo()
                 }
             }
-            Status.LOADING -> {
+            Status.INVALID -> {
 
             }
         }

@@ -55,7 +55,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dart.campushelper.R
-import com.dart.campushelper.model.Cache
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
 import com.dart.campushelper.ui.grade.CreateFloatingActionButtonForGrade
@@ -93,7 +92,6 @@ class MainActivity : ComponentActivity() {
     companion object {
         lateinit var scope: CoroutineScope
         lateinit var snackBarHostState: SnackbarHostState
-        var userCache: Cache = Cache()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,118 +1,169 @@
 package com.dart.campushelper.data
 
 import android.util.Log
+import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.api.ChaoxingService
-import com.dart.campushelper.model.Cache
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.model.Grade
-import com.dart.campushelper.model.RankingInfo
+import com.dart.campushelper.model.GradeResponse
+import com.dart.campushelper.model.StudentInfoResponse
+import com.dart.campushelper.model.WeekInfoResponse
 import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.utils.Constants
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
+import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
+import com.dart.campushelper.utils.network.LoginCookieInvalidException
 import com.dart.campushelper.utils.network.Resource
 import com.dart.campushelper.utils.network.ResponseHandler
-import org.jsoup.Jsoup
+import com.dart.campushelper.utils.network.Status
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.runBlocking
 import retrofit2.Response
-import java.time.LocalDate
 import javax.inject.Inject
 
 class ChaoxingRepository @Inject constructor(
     private val chaoxingService: ChaoxingService,
+    private val userPreferenceRepository: UserPreferenceRepository,
 ) {
+
+    val scope = CoroutineScope(Dispatchers.IO)
+
+    private val semesterYearAndNoStateFlow =
+        userPreferenceRepository.observeSemesterYearAndNo().stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeSemesterYearAndNo().first()
+            }
+        )
+
+    private val enterUniversityYearStateFlow =
+        userPreferenceRepository.observeEnterUniversityYear().stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeEnterUniversityYear().first()
+            }
+        )
+
+    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeUsername().first()
+            }
+        )
+
+    private val passwordStateFlow: StateFlow<String> = userPreferenceRepository.observePassword()
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observePassword().first()
+            }
+        )
 
     private val responseHandler = ResponseHandler()
 
-    suspend fun getGrades(): Resource<List<Grade>> {
+    private suspend fun autoReLogin(): Boolean {
+        val loginResult = login(
+            username = usernameStateFlow.value,
+            password = passwordStateFlow.value,
+        )
+        Log.d("ChaoxingRepository", "autoReLogin: ${loginResult.status}")
+        return when (loginResult.status) {
+            Status.SUCCESS -> {
+                true
+            }
+            Status.ERROR -> {
+                false
+            }
+            else -> {
+                false
+            }
+        }
+    }
+
+    private suspend fun <T> normalHandle(invokedFun: suspend () -> Resource<T>, response: Response<T>): Resource<T> {
         return try {
-            val grades = chaoxingService.getGrades().body()!!.results
-            Log.d("ChaoxingRepository", "getGrades: $grades")
-            responseHandler.handleSuccess(grades)
+            if (response.code() == 303) {
+                Log.d("ChaoxingRepository", "normalHandle: 303")
+                // Need login again
+                if (autoReLogin()) {
+                    invokedFun()
+                } else {
+                    val result = MainActivity.snackBarHostState.showSnackbar("自动登录失败，请稍后重试",
+                        Constants.RETRY
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        autoReLogin()
+                    }
+                    throw LoginCookieInvalidException()
+                }
+            } else if (response.code() == 200) {
+                responseHandler.handleSuccess(response.body()!!)
+            } else {
+                throw Exception(NETWORK_CONNECT_ERROR)
+            }
+        } catch (e: Exception) {
+            Log.d("ChaoxingRepository", "normalHandle: ${e.message}")
+            responseHandler.handleException(e)
+        }
+    }
+
+    private suspend fun <T> normalHandle(invokedFun: suspend (String) -> Resource<T>, para: String, response: Response<T>): Resource<T> {
+        return try {
+            if (response.code() == 303) {
+                // Need login again
+                if (autoReLogin()) {
+                    invokedFun(para)
+                } else {
+                    val result = MainActivity.snackBarHostState.showSnackbar("自动登录失败，请稍后重试",
+                        Constants.RETRY
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        autoReLogin()
+                    }
+                    throw LoginCookieInvalidException()
+                }
+            } else {
+                responseHandler.handleSuccess(response.body()!!)
+            }
         } catch (e: Exception) {
             responseHandler.handleException(e)
         }
     }
 
-    suspend fun getStudentRankingInfo(semester: String): Resource<RankingInfo> {
-        return try {
-            val response = chaoxingService.getStudentRankingInfo(
-                enterUniversityYear = MainActivity.userCache.enterUniversityYear,
-                semester = semester
-            )
-            val rankingInfo = RankingInfo()
-            Jsoup.parse(response.body()!!).run {
-                select("table")[1].select("td").forEachIndexed { index, element ->
-                    val value = element.text().contains("/").run {
-                        if (this) {
-                            element.text().split("/").let {
-                                if (it[0] == "" || it[1] == "") {
-                                    Pair(0, 0)
-                                } else {
-                                    Pair(it[0].toInt(), it[1].toInt())
-                                }
-                            }
-                        } else {
-                            Pair(0, 0)
-                        }
-                    }
+    suspend fun getGrades(): Resource<GradeResponse> {
+        return normalHandle(::getGrades, chaoxingService.getGrades())
+    }
 
-                    when (index) {
-                        1 -> rankingInfo.byGPAByInstitute = value
-                        2 -> rankingInfo.byGPAByMajor = value
-                        3 -> rankingInfo.byGPAByClass = value
-                        5 -> rankingInfo.byScoreByInstitute = value
-                        6 -> rankingInfo.byScoreByMajor = value
-                        7 -> rankingInfo.byScoreByClass = value
-                    }
-                }
-            }
-            responseHandler.handleSuccess(rankingInfo)
-        } catch (e: Exception) {
-            responseHandler.handleException(e)
-        }
+    suspend fun getStudentRankingInfo(semester: String): Resource<String> {
+        return normalHandle(::getStudentRankingInfo, semester, chaoxingService.getStudentRankingInfo(
+            enterUniversityYear = runBlocking { enterUniversityYearStateFlow.value },
+            semester = semester,
+        ))
     }
 
     suspend fun getSchedule(): Resource<List<Course>> {
-        return try {
-            Log.d("ChaoxingRepository", "getSchedule: ${MainActivity.userCache}")
-            val courses = chaoxingService.getSchedule(
-                semesterYearAndNo = MainActivity.userCache.semesterYearAndNo,
-                studentId = MainActivity.userCache.studentId,
-                semesterNo = MainActivity.userCache.semesterNo
-            ).body()!!
-            responseHandler.handleSuccess(courses)
-        } catch (e: Exception) {
-            responseHandler.handleException(e)
-        }
+        return normalHandle(::getSchedule, chaoxingService.getSchedule(
+            semesterYearAndNo = runBlocking { semesterYearAndNoStateFlow.value },
+            studentId = runBlocking { usernameStateFlow.value },
+            semesterNo = runBlocking { semesterYearAndNoStateFlow.value.last().toString() },
+        ))
     }
 
-    suspend fun getStudentInfo(): Resource<Cache> {
-        return try {
-            val info = chaoxingService.getStudentInfo().body()!!.data!!.records[0]
-            responseHandler.handleSuccess(Cache(
-                semesterYearAndNo = info.dataXnxq!!,
-                studentId = info.xh!!,
-                enterUniversityYear = info.rxnj!!,
-            ))
-        } catch (e: Exception) {
-            responseHandler.handleException(e)
-        }
+    suspend fun getStudentInfo(): Resource<StudentInfoResponse> {
+        return normalHandle(::getStudentInfo, chaoxingService.getStudentInfo())
     }
 
-    suspend fun getSemesterStartLocalDate(): Resource<LocalDate> {
-        return try {
-            val response = chaoxingService.getWeekInfo()
-            val startWeekMonthAndDay = response.body()!!.data.first().date!!
-            var month = startWeekMonthAndDay.split("-")[0]
-            if (month.length == 1) {
-                month = "0$month"
-            }
-            var day = startWeekMonthAndDay.split("-")[1]
-            if (day.length == 1) {
-                day = "0$day"
-            }
-            responseHandler.handleSuccess(LocalDate.parse("${LocalDate.now().year}-$month-$day"))
-        } catch (e: Exception) {
-            responseHandler.handleException(e)
-        }
+    suspend fun getWeekInfo(): Resource<WeekInfoResponse> {
+        return normalHandle(::getWeekInfo, chaoxingService.getWeekInfo())
     }
 
     suspend fun login(

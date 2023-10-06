@@ -3,12 +3,17 @@ package com.dart.campushelper.data
 import com.dart.campushelper.api.DataStoreService
 import com.dart.campushelper.api.UserPreferenceService
 import kotlinx.coroutines.flow.Flow
+import okhttp3.Cookie
 import java.time.LocalDate
 import javax.inject.Inject
 
 class UserPreferenceRepository @Inject constructor(
     private val dataStoreService: DataStoreService,
 ): UserPreferenceService {
+
+    override suspend fun changeCookies(cookies: List<Cookie>) {
+        dataStoreService.changeCookies(cookies)
+    }
 
     override suspend fun changeIsLogin(isLogin: Boolean) {
         dataStoreService.changeIsLogin(isLogin)
@@ -44,6 +49,10 @@ class UserPreferenceRepository @Inject constructor(
 
     override suspend fun changeEnterUniversityYear(enterUniversityYear: String) {
         dataStoreService.changeEnterUniversityYear(enterUniversityYear)
+    }
+
+    override fun observeCookies(): Flow<List<Cookie>> {
+        return dataStoreService.observeCookies()
     }
 
     override fun observeIsLogin(): Flow<Boolean> {

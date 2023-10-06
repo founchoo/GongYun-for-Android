@@ -1,6 +1,7 @@
 package com.dart.campushelper.api
 
 import kotlinx.coroutines.flow.Flow
+import okhttp3.Cookie
 import java.time.LocalDate
 
 /**
@@ -10,6 +11,8 @@ interface DataStoreService {
     /**
      * Change section.
      */
+    suspend fun changeCookies(cookies: List<Cookie>)
+
     suspend fun changeIsLogin(isLogin: Boolean)
 
     suspend fun changeSelectedDarkMode(darkMode: String)
@@ -31,6 +34,8 @@ interface DataStoreService {
     /**
      * Observe section.
      */
+    fun observeCookies(): Flow<List<Cookie>>
+
     fun observeIsLogin(): Flow<Boolean>
 
     fun observeSelectedDarkMode(): Flow<String>

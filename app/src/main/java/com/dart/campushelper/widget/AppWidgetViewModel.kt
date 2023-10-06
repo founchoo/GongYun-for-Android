@@ -5,10 +5,10 @@ import androidx.annotation.WorkerThread
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.getCurrentNode
 import com.dart.campushelper.utils.getWeekCount
 import com.dart.campushelper.utils.network.Status
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -44,16 +44,33 @@ class AppWidgetViewModel @Inject constructor(
     val uiState: StateFlow<AppWidgetUiState> = _uiState.asStateFlow()
 
     private val startLocalDateStateFlow = userPreferenceRepository.observeStartLocalDate().stateIn(
-        MainScope(),
+        MainActivity.scope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
             userPreferenceRepository.observeStartLocalDate().first()
         }
     )
 
+    private val semesterYearAndNoStateFlow = userPreferenceRepository.observeSemesterYearAndNo().stateIn(
+        scope = MainActivity.scope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeSemesterYearAndNo().first()
+        }
+    )
+
+    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+        .stateIn(
+            scope = MainActivity.scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeUsername().first()
+            }
+        )
+
     @WorkerThread
     suspend fun observeStartLocalDate() {
-        MainScope().launch {
+        MainActivity.scope.launch {
             startLocalDateStateFlow.collect { startLocalDate ->
                 val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
                 _uiState.update { uiState ->
@@ -67,6 +84,7 @@ class AppWidgetViewModel @Inject constructor(
     suspend fun getTodaySchedule() {
 
         Log.d("AppWidgetViewModel", "getTodaySchedule: ")
+        // TODO
         val result = chaoxingRepository.getSchedule()
         if (result.status == Status.SUCCESS) {
             val courses = result.data!!.filter { course ->

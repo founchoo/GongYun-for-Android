@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -57,22 +56,14 @@ class ScheduleViewModel @Inject constructor(
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
-    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
-        .stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> =
+        userPreferenceRepository.observeIsLogin().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeUsername().first()
+                userPreferenceRepository.observeIsLogin().first()
             }
         )
-
-    private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking {
-            userPreferenceRepository.observeIsLogin().first()
-        }
-    )
 
     private val startLocalDateStateFlow = userPreferenceRepository.observeStartLocalDate().stateIn(
         scope = viewModelScope,
@@ -84,15 +75,9 @@ class ScheduleViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            combine(
-                isLoginStateFlow,
-                usernameStateFlow
-            ) { isLogin, username ->
-                Log.d("ScheduleViewModel", "observeIsLogin: $isLogin, $username")
-                listOf(isLogin.toString(), username)
-            }.collect {
-                Log.d("ScheduleViewModel", "observeIsLogin: $it")
-                if (it[0] == true.toString() && it[1].isNotEmpty()) {
+            isLoginStateFlow.collect {
+                Log.d("ScheduleViewModel", "isLogin: $it")
+                if (it) {
                     getCourses()
                 }
             }
@@ -149,13 +134,18 @@ class ScheduleViewModel @Inject constructor(
                     uiState.copy(courses = map, isTimetableLoading = false)
                 }
             }
+
             Status.ERROR -> {
-                val result = MainActivity.snackBarHostState.showSnackbar("加载课表失败，请稍后重试\n" + resource.message, "重试")
+                val result = MainActivity.snackBarHostState.showSnackbar(
+                    "加载课表失败，请稍后重试",
+                    "重试"
+                )
                 if (result == SnackbarResult.ActionPerformed) {
                     getCourses()
                 }
             }
-            Status.LOADING -> {
+
+            Status.INVALID -> {
 
             }
         }

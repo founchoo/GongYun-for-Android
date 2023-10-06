@@ -11,6 +11,7 @@ import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_PIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_USERNAME
+import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.ui.pin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -126,6 +127,13 @@ class SettingsViewModel @Inject constructor(
                     it.copy(isPin = value ?: false)
                 }
             }
+        }
+    }
+
+    fun clearCookies() {
+        viewModelScope.launch {
+            userPreferenceRepository.changeCookies(emptyList())
+            MainActivity.snackBarHostState.showSnackbar("Cookies 已清除，请开始调试")
         }
     }
 

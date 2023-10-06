@@ -1,6 +1,7 @@
 package com.dart.campushelper.model
 
 import com.google.gson.annotations.SerializedName
+import java.time.LocalDate
 
 data class WeekInfoResponse(
 
@@ -17,3 +18,16 @@ data class WeekData(
     @SerializedName("xq") var xq: String? = null
 
 )
+
+fun WeekInfoResponse.getSemesterStartLocalDate(): LocalDate? {
+    val startWeekMonthAndDay = this.data.first().date!!
+    var month = startWeekMonthAndDay.split("-")[0]
+    if (month.length == 1) {
+        month = "0$month"
+    }
+    var day = startWeekMonthAndDay.split("-")[1]
+    if (day.length == 1) {
+        day = "0$day"
+    }
+    return LocalDate.parse("${LocalDate.now().year}-$month-$day")
+}

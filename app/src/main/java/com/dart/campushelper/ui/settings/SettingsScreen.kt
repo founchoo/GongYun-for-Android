@@ -97,6 +97,7 @@ fun SettingsScreen(
                 description = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
                 imageVector = rememberInfo()
             ) {
+                // settingsViewModel.clearCookies()
             }
             TextPreference(
                 title = "反馈",
