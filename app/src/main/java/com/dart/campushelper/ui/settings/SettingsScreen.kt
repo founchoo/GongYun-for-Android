@@ -84,7 +84,7 @@ fun SettingsScreen(
                 imageVector = rememberToday(),
                 value = settingsUiState.isDateDisplay,
                 title = "显示日期",
-                description = "在周数下方显示对应日期",
+                description = "在星期下方显示对应日期",
                 onValueChanged = {
                     settingsViewModel.changeIsDateDisplay(it)
                 }

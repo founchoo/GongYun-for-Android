@@ -24,6 +24,11 @@ import com.dart.campushelper.data.KEYS.KEY_USERNAME
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_COOKIES
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_DAY_OF_WEEK
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_DATE_DISPLAY
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_PIN
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_TIME_DISPLAY
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_PASSWORD
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
@@ -161,20 +166,20 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
-    override fun observeIsOtherCourseDisplay(): Flow<Boolean?> = dataStore.data.map {
-        it[KEY_IS_OTHER_COURSE_DISPLAY]
+    override fun observeIsOtherCourseDisplay(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_OTHER_COURSE_DISPLAY] ?: DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
     }
 
-    override fun observeIsYearDisplay(): Flow<Boolean?> = dataStore.data.map {
-        it[KEY_IS_YEAR_DISPLAY]
+    override fun observeIsYearDisplay(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_YEAR_DISPLAY] ?: DEFAULT_VALUE_IS_YEAR_DISPLAY
     }
 
-    override fun observeIsDateDisplay(): Flow<Boolean?> = dataStore.data.map {
-        it[KEY_IS_DATE_DISPLAY]
+    override fun observeIsDateDisplay(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_DATE_DISPLAY] ?: DEFAULT_VALUE_IS_DATE_DISPLAY
     }
 
-    override fun observeIsTimeDisplay(): Flow<Boolean?> = dataStore.data.map {
-        it[KEY_IS_TIME_DISPLAY]
+    override fun observeIsTimeDisplay(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_TIME_DISPLAY] ?: DEFAULT_VALUE_IS_TIME_DISPLAY
     }
 
     override fun observeCookies(): Flow<List<Cookie>> = dataStore.data.map {
@@ -205,8 +210,8 @@ class DataStoreRepository @Inject constructor(
         it[KEY_ENABLE_SYSTEM_COLOR] ?: false
     }
 
-    override fun observeIsPin(): Flow<Boolean?> = dataStore.data.map {
-        it[KEY_IS_PIN]
+    override fun observeIsPin(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_PIN] ?: DEFAULT_VALUE_IS_PIN
     }
 
     override fun observeUsername(): Flow<String> = dataStore.data.map {

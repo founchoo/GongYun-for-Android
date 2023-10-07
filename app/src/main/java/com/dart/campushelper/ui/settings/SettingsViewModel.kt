@@ -161,35 +161,35 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isPinStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isPin = value ?: false)
+                    it.copy(isPin = value)
                 }
             }
         }
         viewModelScope.launch {
             isOtherCourseDisplayStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isOtherCourseDisplay = value ?: false)
+                    it.copy(isOtherCourseDisplay = value)
                 }
             }
         }
         viewModelScope.launch {
             isYearDisplayStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isYearDisplay = value ?: false)
+                    it.copy(isYearDisplay = value)
                 }
             }
         }
         viewModelScope.launch {
             isDateDisplayStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isDateDisplay = value ?: false)
+                    it.copy(isDateDisplay = value)
                 }
             }
         }
         viewModelScope.launch {
             isTimeDisplayStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isTimeDisplay = value ?: false)
+                    it.copy(isTimeDisplay = value)
                 }
             }
         }

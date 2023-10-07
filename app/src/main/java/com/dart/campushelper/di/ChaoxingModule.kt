@@ -3,6 +3,7 @@ package com.dart.campushelper.di
 import android.util.Log
 import com.dart.campushelper.api.ChaoxingService
 import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,12 +18,9 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
-import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -42,27 +40,19 @@ object ChaoxingModule {
         val client = OkHttpClient.Builder()
             .followRedirects(false)
             .cookieJar(ChaoxingCookieJar(userPreferenceRepository))
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BASIC
-            })
-            // Handle HTTP request error only
-            .addInterceptor(Interceptor { chain ->
-                val req = chain.request()
+            .addInterceptor { chain ->
                 try {
-                    Log.d("okhttp.OkHttpClient", "provideChaoxingService: ${req.url}")
-                    val res = chain.proceed(req)
-                    res
+                    chain.proceed(chain.request())
                 } catch (e: Exception) {
-                    Log.d("okhttp.OkHttpClient", "provideChaoxingService: ${e.message}")
-                    Response.Builder()
-                        .request(req)
+                    okhttp3.Response.Builder()
                         .protocol(Protocol.HTTP_1_1)
                         .code(502)
-                        .message("Failed to connect to Internet")
-                        .body("".toResponseBody())
+                        .request(chain.request())
+                        .message(NETWORK_CONNECT_ERROR)
+                        .body(NETWORK_CONNECT_ERROR.toResponseBody())
                         .build()
                 }
-            })
+            }
             .build()
 
         val retrofit = Retrofit.Builder()

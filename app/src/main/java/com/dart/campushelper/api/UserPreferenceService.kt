@@ -39,13 +39,13 @@ interface UserPreferenceService {
     /**
      * Observe section.
      */
-    fun observeIsOtherCourseDisplay(): Flow<Boolean?>
+    fun observeIsOtherCourseDisplay(): Flow<Boolean>
 
-    fun observeIsYearDisplay(): Flow<Boolean?>
+    fun observeIsYearDisplay(): Flow<Boolean>
 
-    fun observeIsDateDisplay(): Flow<Boolean?>
+    fun observeIsDateDisplay(): Flow<Boolean>
 
-    fun observeIsTimeDisplay(): Flow<Boolean?>
+    fun observeIsTimeDisplay(): Flow<Boolean>
 
     fun observeCookies(): Flow<List<Cookie>>
 

@@ -5,16 +5,13 @@ import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.api.ChaoxingService
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.GradeResponse
+import com.dart.campushelper.model.LoginResponse
 import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.WeekInfoResponse
 import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.utils.Constants
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
 import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
-import com.dart.campushelper.utils.network.LoginCookieInvalidException
-import com.dart.campushelper.utils.network.Resource
-import com.dart.campushelper.utils.network.ResponseHandler
-import com.dart.campushelper.utils.network.Status
+import com.dart.campushelper.utils.Constants.Companion.RETRY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,7 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
-import retrofit2.Response
+import retrofit2.Call
+import retrofit2.awaitResponse
 import javax.inject.Inject
 
 class ChaoxingRepository @Inject constructor(
@@ -69,121 +67,103 @@ class ChaoxingRepository @Inject constructor(
             }
         )
 
-    private val responseHandler = ResponseHandler()
+    private suspend fun reLogin(): Boolean = login(
+        username = usernameStateFlow.value,
+        password = passwordStateFlow.value,
+    ).isSuccess
 
-    private suspend fun autoReLogin(): Boolean {
-        val loginResult = login(
-            username = usernameStateFlow.value,
-            password = passwordStateFlow.value,
-        )
-        Log.d("ChaoxingRepository", "autoReLogin: ${loginResult.status}")
-        return when (loginResult.status) {
-            Status.SUCCESS -> {
-                true
-            }
-            Status.ERROR -> {
-                false
-            }
-            else -> {
-                false
-            }
-        }
-    }
-
-    private suspend fun <T> normalHandle(invokedFun: suspend () -> Resource<T>, response: Response<T>): Resource<T> {
-        return try {
-            if (response.code() == 303) {
-                Log.d("ChaoxingRepository", "normalHandle: 303")
-                // Need login again
-                if (autoReLogin()) {
-                    invokedFun()
+    private suspend fun <T> retry(call: Call<T>): T? {
+        val reqUrl = call.request().url.toString()
+        Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
+        try {
+            val res = call.awaitResponse()
+            val code = res.code()
+            Log.d("ChaoxingRepository", "Response code: $code")
+            if (code == 200) {
+                return res.body()
+            } else if (code == 303) {
+                if (reLogin()) {
+                    return retry(call.clone())
                 } else {
-                    val result = MainActivity.snackBarHostState.showSnackbar("自动登录失败，请稍后重试",
-                        Constants.RETRY
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        autoReLogin()
-                    }
-                    throw LoginCookieInvalidException()
+                    return null
                 }
-            } else if (response.code() == 200) {
-                responseHandler.handleSuccess(response.body()!!)
             } else {
                 throw Exception(NETWORK_CONNECT_ERROR)
             }
         } catch (e: Exception) {
-            Log.d("ChaoxingRepository", "normalHandle: ${e.message}")
-            responseHandler.handleException(e)
-        }
-    }
-
-    private suspend fun <T> normalHandle(invokedFun: suspend (String) -> Resource<T>, para: String, response: Response<T>): Resource<T> {
-        return try {
-            if (response.code() == 303) {
-                // Need login again
-                if (autoReLogin()) {
-                    invokedFun(para)
-                } else {
-                    val result = MainActivity.snackBarHostState.showSnackbar("自动登录失败，请稍后重试",
-                        Constants.RETRY
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        autoReLogin()
-                    }
-                    throw LoginCookieInvalidException()
-                }
+            Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
+            val result = MainActivity.snackBarHostState.showSnackbar(
+                NETWORK_CONNECT_ERROR,
+                RETRY
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                return retry(call.clone())
             } else {
-                responseHandler.handleSuccess(response.body()!!)
+                return null
             }
-        } catch (e: Exception) {
-            responseHandler.handleException(e)
         }
     }
 
-    suspend fun getGrades(): Resource<GradeResponse> {
-        return normalHandle(::getGrades, chaoxingService.getGrades())
-    }
+    suspend fun getGrades(): GradeResponse? = retry(chaoxingService.getGrades())
 
-    suspend fun getStudentRankingInfo(semester: String): Resource<String> {
-        return normalHandle(::getStudentRankingInfo, semester, chaoxingService.getStudentRankingInfo(
-            enterUniversityYear = runBlocking { enterUniversityYearStateFlow.value },
+    suspend fun getStudentRankingInfo(semester: String): String? = retry(
+        chaoxingService.getStudentRankingInfo(
+            enterUniversityYear = enterUniversityYearStateFlow.value,
             semester = semester,
-        ))
-    }
+        )
+    )
 
-    suspend fun getSchedule(): Resource<List<Course>> {
-        return normalHandle(::getSchedule, chaoxingService.getSchedule(
-            semesterYearAndNo = semesterYearAndNoStateFlow.value,
+    suspend fun getSchedule(
+        semesterYearAndNo: String = semesterYearAndNoStateFlow.value
+    ): List<Course>? = retry(
+        chaoxingService.getSchedule(
+            semesterYearAndNo = semesterYearAndNo,
             studentId = usernameStateFlow.value,
-            semesterNo = semesterYearAndNoStateFlow.value.last().toString(),
-        ))
-    }
+            semesterNo = semesterYearAndNo.last().toString(),
+        )
+    )
 
-    suspend fun getStudentInfo(): Resource<StudentInfoResponse> {
-        return normalHandle(::getStudentInfo, chaoxingService.getStudentInfo())
-    }
+    suspend fun getStudentInfo(): StudentInfoResponse? = retry(chaoxingService.getStudentInfo())
 
-    suspend fun getWeekInfo(): Resource<WeekInfoResponse> {
-        return normalHandle(::getWeekInfo, chaoxingService.getWeekInfo())
-    }
+    suspend fun getWeekInfo(): WeekInfoResponse? = retry(chaoxingService.getWeekInfo())
 
     suspend fun login(
         username: String,
-        password: String
-    ): Resource<Response<Unit>> {
-        return try {
-            val response = chaoxingService.login(
-                username = username,
-                password = password
-            )
-            if (response.code() == 302) {
-                responseHandler.handleSuccess(response)
+        password: String,
+        showErrorToast: Boolean = false,
+    ): LoginResponse {
+        val call = chaoxingService.login(
+            username = username,
+            password = password,
+        )
+        val reqUrl = call.request().url.toString()
+        Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
+        try {
+            val res = call.awaitResponse()
+            val code = res.code()
+            Log.d("ChaoxingRepository", "Response code: $code")
+            if (code == 200) {
+                return LoginResponse(false, LOGIN_INFO_ERROR)
+            } else if (code == 302) {
+                return LoginResponse(true, null)
             } else {
-                Log.d("ChaoxingRepository", "login: 登录失败")
-                Resource.error(LOGIN_INFO_ERROR, null)
+                throw Exception(NETWORK_CONNECT_ERROR)
             }
         } catch (e: Exception) {
-            responseHandler.handleException(e)
+            Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
+            if (showErrorToast) {
+                val result = MainActivity.snackBarHostState.showSnackbar(
+                    NETWORK_CONNECT_ERROR,
+                    RETRY
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    return login(username, password)
+                } else {
+                    return LoginResponse.error()
+                }
+            } else {
+                return LoginResponse.error()
+            }
         }
     }
 }

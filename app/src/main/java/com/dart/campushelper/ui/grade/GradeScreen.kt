@@ -454,38 +454,31 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                 state = listState,
             ) {
                 itemsIndexed(uiState.grades.toList()) { _, grade ->
-                    Box {
-                        Row(
-                            modifier = Modifier
-                                .clickable {
-                                    viewModel.showGradeDetailDialog()
-                                    viewModel.setContentForGradeDetailDialog(grade)
-                                }
-                                .padding(8.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(4f)) {
-                                Text(
-                                    text = grade.name,
-                                    textAlign = TextAlign.Left,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    softWrap = true,
-                                )
-                                Text(
-                                    text = "学分 ${grade.credit}",
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
+                    ListItem(
+                        modifier = Modifier
+                            .clickable {
+                                viewModel.showGradeDetailDialog()
+                                viewModel.setContentForGradeDetailDialog(grade)
+                            },
+                        headlineContent = {
                             Text(
-                                text = grade.score.toString(),
-                                textAlign = TextAlign.Right,
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .fillMaxWidth()
-                                    .weight(1f),
+                                text = grade.name,
                             )
-                        }
-                        HorizontalDivider()
-                    }
+                        },
+                        supportingContent = {
+                            Text(
+                                text = "成绩 ${grade.score}"
+                            )
+                        },
+                        trailingContent = {
+                            Text(
+                                text = "学分 ${grade.credit}"
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        )
+                    )
                 }
             }
             PullRefreshIndicator(uiState.isGradesLoading, state, Modifier.align(Alignment.TopCenter))

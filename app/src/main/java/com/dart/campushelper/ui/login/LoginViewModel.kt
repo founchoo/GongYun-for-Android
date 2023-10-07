@@ -1,18 +1,13 @@
 package com.dart.campushelper.ui.login
 
 import android.util.Log
-import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES
 import com.dart.campushelper.model.getSemesterStartLocalDate
-import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
-import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
-import com.dart.campushelper.utils.Constants.Companion.RETRY
-import com.dart.campushelper.utils.network.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,61 +38,47 @@ class LoginViewModel @Inject constructor(
     fun login() {
         viewModelScope.launch {
             val loginResource =
-                chaoxingRepository.login(_uiState.value.username, _uiState.value.password)
-            when (loginResource.status) {
-                Status.SUCCESS -> {
-                    val studentInfoResult = chaoxingRepository.getStudentInfo()
-                    if (studentInfoResult.status == Status.SUCCESS) {
-                        Log.d("LoginViewModel", studentInfoResult.data!!.data!!.records[0].dataXnxq!!)
-                        runBlocking {
-                            userPreferenceRepository.changeSemesterYearAndNo(studentInfoResult.data!!.data!!.records[0].dataXnxq!!)
-                        }
-                        Log.d("LoginViewModel", studentInfoResult.data!!.data!!.records[0].rxnj!!)
-                        runBlocking {
-                            userPreferenceRepository.changeEnterUniversityYear(studentInfoResult.data!!.data!!.records[0].rxnj!!)
-                        }
-                    }
-                    val weekInfoResponseResource = chaoxingRepository.getWeekInfo()
-                    if (weekInfoResponseResource.status == Status.SUCCESS) {
-                        Log.d("LoginViewModel", weekInfoResponseResource.data!!.getSemesterStartLocalDate().toString())
-                        runBlocking {
-                            userPreferenceRepository.changeStartLocalDate(
-                                weekInfoResponseResource.data!!.getSemesterStartLocalDate()!!
-                            )
-                        }
-                    }
+                chaoxingRepository.login(_uiState.value.username, _uiState.value.password, true)
+            Log.d("LoginViewModel", loginResource.toString())
+            if (loginResource.isSuccess) {
+                val studentInfoResult = chaoxingRepository.getStudentInfo()
+                if (studentInfoResult != null) {
+                    Log.d("LoginViewModel", studentInfoResult.data!!.records[0].dataXnxq!!)
                     runBlocking {
-                        userPreferenceRepository.changeUsername(_uiState.value.username)
+                        userPreferenceRepository.changeSemesterYearAndNo(studentInfoResult.data!!.records[0].dataXnxq!!)
                     }
+                    Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
                     runBlocking {
-                        userPreferenceRepository.changePassword(_uiState.value.password)
-                    }
-                    runBlocking {
-                        userPreferenceRepository.changeIsLogin(true)
-                    }
-                    _uiState.update { uiState ->
-                        uiState.copy(isShowLoginDialog = false)
+                        userPreferenceRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
                     }
                 }
-
-                Status.ERROR -> {
-                    userPreferenceRepository.changeIsLogin(false)
-                    if (loginResource.message == LOGIN_INFO_ERROR) {
-                        _uiState.update {
-                            it.copy(loginInfoError = true)
-                        }
-                    } else {
-                        val result = MainActivity.snackBarHostState.showSnackbar(
-                            NETWORK_CONNECT_ERROR,
-                            RETRY
+                val weekInfoResponseResource = chaoxingRepository.getWeekInfo()
+                if (weekInfoResponseResource != null) {
+                    Log.d("LoginViewModel", weekInfoResponseResource.getSemesterStartLocalDate().toString())
+                    runBlocking {
+                        userPreferenceRepository.changeStartLocalDate(
+                            weekInfoResponseResource.getSemesterStartLocalDate()!!
                         )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            login()
-                        }
                     }
                 }
-
-                Status.INVALID -> {}
+                runBlocking {
+                    userPreferenceRepository.changeUsername(_uiState.value.username)
+                }
+                runBlocking {
+                    userPreferenceRepository.changePassword(_uiState.value.password)
+                }
+                runBlocking {
+                    userPreferenceRepository.changeIsLogin(true)
+                }
+                _uiState.update { uiState ->
+                    uiState.copy(isShowLoginDialog = false)
+                }
+            } else {
+                if (loginResource.message == LOGIN_INFO_ERROR) {
+                    _uiState.update { uiState ->
+                        uiState.copy(loginInfoError = true)
+                    }
+                }
             }
         }
     }

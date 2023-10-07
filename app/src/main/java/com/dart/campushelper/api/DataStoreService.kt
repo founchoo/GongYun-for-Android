@@ -42,13 +42,13 @@ interface DataStoreService {
     /**
      * Observe section.
      */
-    fun observeIsOtherCourseDisplay(): Flow<Boolean?>
+    fun observeIsOtherCourseDisplay(): Flow<Boolean>
 
-    fun observeIsYearDisplay(): Flow<Boolean?>
+    fun observeIsYearDisplay(): Flow<Boolean>
 
-    fun observeIsDateDisplay(): Flow<Boolean?>
+    fun observeIsDateDisplay(): Flow<Boolean>
 
-    fun observeIsTimeDisplay(): Flow<Boolean?>
+    fun observeIsTimeDisplay(): Flow<Boolean>
 
     fun observeCookies(): Flow<List<Cookie>>
 
@@ -62,7 +62,7 @@ interface DataStoreService {
 
     fun observeEnableSystemColor(): Flow<Boolean?>
 
-    fun observeIsPin(): Flow<Boolean?>
+    fun observeIsPin(): Flow<Boolean>
 
     fun observeUsername(): Flow<String>
 

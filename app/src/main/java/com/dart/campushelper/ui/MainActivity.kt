@@ -18,13 +18,14 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -42,7 +43,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -168,13 +168,18 @@ class MainActivity : ComponentActivity() {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     if (currentDestination?.route == schedule.route) {
-                                        Text(
-                                            text = "当前第 ${scheduleUiState.currentWeek} 周，正在浏览第 ${scheduleUiState.browsedWeek} 周",
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                                            modifier = Modifier.align(Alignment.Bottom)
-                                        )
+                                        Column {
+                                            Text(
+                                                text = scheduleUiState.browsedSemester,
+                                                style = MaterialTheme.typography.labelSmall,
+                                            )
+                                            Text(
+                                                text = "第 ${scheduleUiState.browsedWeek} 周",
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                style = MaterialTheme.typography.labelSmall,
+                                            )
+                                        }
                                     }
                                 }
                             },
@@ -182,6 +187,7 @@ class MainActivity : ComponentActivity() {
                                 if (currentDestination?.route == schedule.route) {
                                     CreateActionsForSchedule(
                                         scheduleViewModel,
+                                        scheduleUiState
                                     )
                                 }
                             },
@@ -317,8 +323,8 @@ private fun PinUnavailableBanner() {
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colors.error)
+            .background(MaterialTheme.colorScheme.error)
             .padding(16.dp),
-        color = MaterialTheme.colors.onError
+        color = MaterialTheme.colorScheme.onError
     )
 }

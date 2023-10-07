@@ -4,7 +4,7 @@ import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.WeekInfoResponse
-import retrofit2.Response
+import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -13,11 +13,10 @@ import retrofit2.http.Query
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-
 interface ChaoxingService {
 
     @GET("xsd/xsdzgcjcx/xsdQueryXszgcjList")
-    suspend fun getGrades(
+    fun getGrades(
         @Query("gridtype") gridType: String? = "jqgrid",
         @Query("queryFields") queryFields: String? = "id,xnxq,kcmc,xf,kcxz,ksxs,xdxz,zhcj,hdxf,",
         @Query("_search") isSearch: String? = "false",
@@ -32,38 +31,38 @@ interface ChaoxingService {
         @Query("query.startXnxq||") queryStartSemester: String? = "001",
         @Query("query.endXnxq||") queryEndSemester: String? = "001",
         @Query("query.sfjg||") querySfjq: String? = "",
-    ): Response<GradeResponse>
+    ): Call<GradeResponse>
 
     @GET("cjgl/xscjbbdy/getXscjpm")
-    suspend fun getStudentRankingInfo(
+    fun getStudentRankingInfo(
         @Query("sznj") enterUniversityYear: String,
         @Query("xnxq") semester: String
-    ): Response<String>
+    ): Call<String>
 
     @GET("pkgl/xskb/sdpkkbList")
-    suspend fun getSchedule(
+    fun getSchedule(
         @Query("xnxq") semesterYearAndNo: String,
         @Query("xhid") studentId: String,
         @Query("xqdm") semesterNo: String,
-    ): Response<List<Course>>
+    ): Call<List<Course>>
 
     @POST("cjgl/xscjbbdy/printdgxscj")
-    suspend fun getStudentInfo(): Response<StudentInfoResponse>
+    fun getStudentInfo(): Call<StudentInfoResponse>
 
     @FormUrlEncoded
     @POST("getXqByZc")
-    suspend fun getWeekInfo(
+    fun getWeekInfo(
         @Field("zc") weekNo: Int = 0
-    ): Response<WeekInfoResponse>
+    ): Call<WeekInfoResponse>
 
     @FormUrlEncoded
     @POST("login")
-    suspend fun login(
+    fun login(
         @Field("username") username: String,
         @Field("password") password: String,
         @Field("jcaptchaCode") jcaptchaCode: String = "",
         @Field("rememberMe") rememberMe: Int = 1,
-    ): Response<Unit>
+    ): Call<Unit>
 
     companion object {
         const val BASE_URL = "https://hbut.jw.chaoxing.com/admin/"

@@ -8,7 +8,6 @@ import com.dart.campushelper.model.Course
 import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.getCurrentNode
 import com.dart.campushelper.utils.getWeekCount
-import com.dart.campushelper.utils.network.Status
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -86,8 +85,8 @@ class AppWidgetViewModel @Inject constructor(
         Log.d("AppWidgetViewModel", "getTodaySchedule: ")
         // TODO
         val result = chaoxingRepository.getSchedule()
-        if (result.status == Status.SUCCESS) {
-            val courses = result.data!!.filter { course ->
+        if (result != null) {
+            val courses = result.filter { course ->
                 course.nodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
                     _uiState.value.currentWeek
                 )

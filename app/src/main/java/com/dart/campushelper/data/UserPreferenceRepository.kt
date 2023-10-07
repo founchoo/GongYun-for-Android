@@ -70,19 +70,19 @@ class UserPreferenceRepository @Inject constructor(
     /**
      * Observe section.
      */
-    override fun observeIsOtherCourseDisplay(): Flow<Boolean?> {
+    override fun observeIsOtherCourseDisplay(): Flow<Boolean> {
         return dataStoreService.observeIsOtherCourseDisplay()
     }
 
-    override fun observeIsYearDisplay(): Flow<Boolean?> {
+    override fun observeIsYearDisplay(): Flow<Boolean> {
         return dataStoreService.observeIsYearDisplay()
     }
 
-    override fun observeIsDateDisplay(): Flow<Boolean?> {
+    override fun observeIsDateDisplay(): Flow<Boolean> {
         return dataStoreService.observeIsDateDisplay()
     }
 
-    override fun observeIsTimeDisplay(): Flow<Boolean?> {
+    override fun observeIsTimeDisplay(): Flow<Boolean> {
         return dataStoreService.observeIsTimeDisplay()
     }
 
@@ -110,7 +110,7 @@ class UserPreferenceRepository @Inject constructor(
         return dataStoreService.observeEnableSystemColor()
     }
 
-    override fun observeIsPin(): Flow<Boolean?> {
+    override fun observeIsPin(): Flow<Boolean> {
         return dataStoreService.observeIsPin()
     }
 
