@@ -77,3 +77,7 @@
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/4edbda39-6365-405a-9b36-eab6203798b2" alt="" height="200">
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/3e113e53-11d6-4341-a6de-bc7d31680301" alt="" height="200">
+
+## 开源协议
+
+本项目使用 GPLv3 协议
