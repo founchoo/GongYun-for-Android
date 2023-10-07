@@ -13,7 +13,7 @@
 本应用基于 `Jetpack Compose` 框架开发，使用 `Kotlin` 语言编写。
 
 本应用通过爬取的 API 与学校教务系统官方服务器进行网络请求的发送，本应用
-仅在本地存储用户敏感数据，这包括：学号、密码、入学年份、当前学年学期。
+运行过程中会在本地存储用户敏感数据，这包括：学号、密码、入学年份、当前学年学期。
 这些信息仅用于与学校官方服务器进行网络请求的发送，不会被用于其他用途。
 
 存储学号和密码的原因如下：学校教务系统进行登录请求时即使勾选了记住我的选项，
@@ -37,9 +37,13 @@
 
 注意：考虑到隐私问题，我们已模糊处理某些信息，当您在实际使用该应用时，不会出现模糊现象。
 
-![Light mode](https://github.com/founchoo/CampusHelper/assets/24630338/c4cf3986-9db7-4f59-9238-c33c530aa430 "Light mode")
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/6cfb4de2-d946-48ba-ab30-307eebd8cd0e" alt="课表" width="300">
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5e51b66e-de49-4d17-adb5-842fc3e8ee9c" alt="成绩" width="300">
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/569e023d-1731-495c-803a-a2046cbc4e69" alt="设置" width="300">
 
-![Dark mode](https://github.com/founchoo/CampusHelper/assets/24630338/8a2751df-5640-4cec-985c-6982837efe2a "Dark mode")
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5bbbc3f4-7ebb-464c-92dc-e9840674e104" alt="课表" width="300">
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/38bd1006-d3e2-48e0-aeeb-4ef597c568d8" alt="成绩" width="300">
+<img src="https://github.com/founchoo/CampusHelper/assets/24630338/2003885d-967a-4cca-802b-870249db0846" alt="设置" width="300">
 
 ## 下载
 
