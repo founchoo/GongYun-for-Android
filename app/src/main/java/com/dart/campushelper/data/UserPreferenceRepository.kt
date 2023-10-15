@@ -4,7 +4,6 @@ import com.dart.campushelper.api.DataStoreService
 import com.dart.campushelper.api.UserPreferenceService
 import kotlinx.coroutines.flow.Flow
 import okhttp3.Cookie
-import java.time.LocalDate
 import javax.inject.Inject
 
 class UserPreferenceRepository @Inject constructor(
@@ -37,10 +36,6 @@ class UserPreferenceRepository @Inject constructor(
 
     override suspend fun changeSelectedDarkMode(darkMode: String) {
         dataStoreService.changeSelectedDarkMode(darkMode)
-    }
-
-    override suspend fun changeStartLocalDate(localDate: LocalDate) {
-        dataStoreService.changeStartLocalDate(localDate)
     }
 
     override suspend fun changeEnableSystemColor(enable: Boolean) {
@@ -96,10 +91,6 @@ class UserPreferenceRepository @Inject constructor(
 
     override fun observeSelectedDarkMode(): Flow<String> {
         return dataStoreService.observeSelectedDarkMode()
-    }
-
-    override fun observeStartLocalDate(): Flow<LocalDate?> {
-        return dataStoreService.observeStartLocalDate()
     }
 
     override fun observeDayOfWeek(): Flow<Int> {

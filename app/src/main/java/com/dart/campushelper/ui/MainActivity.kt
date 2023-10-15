@@ -16,12 +16,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,7 +43,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -69,7 +66,6 @@ import com.dart.campushelper.ui.settings.SettingsViewModel
 import com.dart.campushelper.ui.theme.CampusHelperTheme
 import com.dart.campushelper.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 data class Screen(val route: String, @StringRes val resourceId: Int)
@@ -90,7 +86,6 @@ class MainActivity : ComponentActivity() {
     private val mDateReceiver = DateChangeReceiver()
 
     companion object {
-        lateinit var scope: CoroutineScope
         lateinit var snackBarHostState: SnackbarHostState
     }
 
@@ -110,7 +105,6 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            scope = rememberCoroutineScope()
             snackBarHostState = remember { SnackbarHostState() }
             AddBackHandler()
             CampusHelperApp(mainViewModel)
@@ -313,18 +307,4 @@ fun AppWidgetProviderInfo.pin(context: Context) {
     )
 
     AppWidgetManager.getInstance(context).requestPinAppWidget(provider, null, successCallback)
-}
-
-@Composable
-private fun PinUnavailableBanner() {
-    androidx.compose.material.Text(
-        text = stringResource(
-            id = R.string.placeholder_main_activity_pin_unavailable
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.error)
-            .padding(16.dp),
-        color = MaterialTheme.colorScheme.onError
-    )
 }

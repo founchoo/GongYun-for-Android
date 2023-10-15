@@ -2,7 +2,6 @@ package com.dart.campushelper.api
 
 import kotlinx.coroutines.flow.Flow
 import okhttp3.Cookie
-import java.time.LocalDate
 
 interface UserPreferenceService {
     /**
@@ -21,8 +20,6 @@ interface UserPreferenceService {
     suspend fun changeIsLogin(isLogin: Boolean)
 
     suspend fun changeSelectedDarkMode(darkMode: String)
-
-    suspend fun changeStartLocalDate(localDate: LocalDate)
 
     suspend fun changeEnableSystemColor(enable: Boolean)
 
@@ -52,8 +49,6 @@ interface UserPreferenceService {
     fun observeIsLogin(): Flow<Boolean>
 
     fun observeSelectedDarkMode(): Flow<String>
-
-    fun observeStartLocalDate(): Flow<LocalDate?>
 
     fun observeDayOfWeek(): Flow<Int>
 

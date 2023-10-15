@@ -26,8 +26,8 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class ScheduleUiState(
-    val courses: Map<Pair<Int, Int>, List<Course>> = emptyMap(),
-    val isTimetableLoading: Boolean = false,
+    val courses: List<Course> = emptyList(),
+    val isTimetableLoading: Boolean = true,
     val currentWeek: Int,
     val browsedWeek: Int,
     // Indicate the day of week, 1 for Monday, 7 for Sunday
@@ -38,7 +38,6 @@ data class ScheduleUiState(
     val nodeHeaders: IntRange = (1..10),
     val weekHeaders: List<String> = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
-    val dateHeaders: List<String>? = null,
     val nodeStartHeaders: List<String> = DateUtils.nodeEnds.map {
         LocalTime.of(
             it.split(":")[0].toInt(),
@@ -46,13 +45,13 @@ data class ScheduleUiState(
         ).minusMinutes(45).format(DateTimeFormatter.ofPattern("HH:mm"))
     },
     val nodeEndHeaders: List<String> = DateUtils.nodeEnds,
-    val browsedYear: String = "",
     val isOtherCourseDisplay: Boolean = false,
     val isYearDisplay: Boolean = false,
     val isDateDisplay: Boolean = false,
     val isTimeDisplay: Boolean = false,
     val semesters: List<String> = emptyList(),
     val browsedSemester: String = "",
+    val startLocalDate: LocalDate? = null,
 )
 
 @HiltViewModel
@@ -72,32 +71,28 @@ class ScheduleViewModel @Inject constructor(
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
-    private var backupCourses = emptyList<Course>()
+    /**
+     * 开学日期，如：2021-09-06
+     */
+    private var startLocalDate: LocalDate? = null
 
-    private val isLoginStateFlow: StateFlow<Boolean> =
-        userPreferenceRepository.observeIsLogin().stateIn(
+    private val semesterYearAndNoStateFlow =
+        userPreferenceRepository.observeSemesterYearAndNo().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeIsLogin().first()
+                userPreferenceRepository.observeSemesterYearAndNo().first()
             }
         )
 
-    private val semesterYearAndNoStateFlow = userPreferenceRepository.observeSemesterYearAndNo().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking {
-            userPreferenceRepository.observeSemesterYearAndNo().first()
-        }
-    )
-
-    private val enterUniversityYearStateFlow = userPreferenceRepository.observeEnterUniversityYear().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking {
-            userPreferenceRepository.observeEnterUniversityYear().first()
-        }
-    )
+    private val enterUniversityYearStateFlow =
+        userPreferenceRepository.observeEnterUniversityYear().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeEnterUniversityYear().first()
+            }
+        )
 
     private val isOtherCourseDisplayStateFlow =
         userPreferenceRepository.observeIsOtherCourseDisplay().stateIn(
@@ -132,39 +127,12 @@ class ScheduleViewModel @Inject constructor(
         }
     )
 
-    private val startLocalDateStateFlow = userPreferenceRepository.observeStartLocalDate().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking {
-            userPreferenceRepository.observeStartLocalDate().first()
-        }
-    )
-
     init {
-        viewModelScope.launch {
-            isLoginStateFlow.collect {
-                Log.d("ScheduleViewModel", "isLogin: $it")
-                if (it) {
-                    getCourses()
-                }
-            }
-        }
-        viewModelScope.launch {
-            startLocalDateStateFlow.collect { startLocalDate ->
-                val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
-                _uiState.update { uiState ->
-                    uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
-                }
-                updateDateHeaders()
-                updateBrowsedYear()
-            }
-        }
         viewModelScope.launch {
             isOtherCourseDisplayStateFlow.collect { value ->
                 _uiState.update {
                     it.copy(isOtherCourseDisplay = value)
                 }
-                updateCoursesOnCell()
             }
         }
         viewModelScope.launch {
@@ -211,28 +179,40 @@ class ScheduleViewModel @Inject constructor(
                     _uiState.update { uiState ->
                         uiState.copy(browsedSemester = it[0], semesters = semesters)
                     }
+                    getCourses()
                 }
             }
         }
     }
 
-    private fun updateBrowsedYear() {
-        _uiState.update {
-            it.copy(
-                browsedYear = startLocalDateStateFlow.value?.plusDays(_uiState.value.browsedWeek * 7L)
-                    ?.format(
-                        DateTimeFormatter.ofPattern("yyyy")
-                    )?.takeLast(2) ?: ""
-            )
+    /**
+     * 当切换学年学期时，此方法应该被调用
+     */
+    private suspend fun getStartLocalDate(semesterYearAndNo: String?) {
+        val list = chaoxingRepository.getCalendar(semesterYearAndNo)
+        if (list != null) {
+            val first = list[0]
+            val day = first.monday ?: (first.tuesday ?: (first.wednesday
+                ?: (first.thursday ?: (first.friday ?: (first.saturday ?: first.sunday ?: "")))))
+            val date =
+                first.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day)
+            startLocalDate =
+                LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            _uiState.update {
+                it.copy(
+                    startLocalDate = startLocalDate
+                )
+            }
+            if (semesterYearAndNo == null) {
+                val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
+                _uiState.update { uiState ->
+                    uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
+                }
+            }
         }
     }
 
     fun setBrowsedSemester(value: String) {
-        if (value != _uiState.value.browsedSemester) {
-            viewModelScope.launch {
-                getCourses(value)
-            }
-        }
         _uiState.update {
             it.copy(
                 browsedSemester = value
@@ -245,39 +225,6 @@ class ScheduleViewModel @Inject constructor(
             it.copy(
                 browsedWeek = value
             )
-        }
-        updateDateHeaders()
-        updateBrowsedYear()
-        updateCoursesOnCell()
-    }
-
-    fun resetBrowsedWeek() {
-        _uiState.update {
-            it.copy(
-                browsedWeek = _uiState.value.currentWeek
-            )
-        }
-        updateDateHeaders()
-        updateBrowsedYear()
-    }
-
-    fun resetBrowsedSemester() {
-        _uiState.update {
-            it.copy(browsedSemester = _uiState.value.semesters.last())
-        }
-        viewModelScope.launch {
-            getCourses(_uiState.value.browsedSemester)
-        }
-    }
-
-    private fun updateDateHeaders() {
-        _uiState.update {
-            it.copy(dateHeaders = (0..6).map { day ->
-                startLocalDateStateFlow.value?.plusDays(_uiState.value.browsedWeek * 7 + day.toLong())
-                    ?.format(
-                        DateTimeFormatter.ofPattern("M-d")
-                    ) ?: ""
-            })
         }
     }
 
@@ -299,32 +246,13 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    private fun updateCoursesOnCell() {
-        val coursesOnCell = mutableMapOf<Pair<Int, Int>, List<Course>>()
-        backupCourses.forEach { course ->
-            if ((!isOtherCourseDisplayStateFlow.value && course.weekNoList.contains(
-                    _uiState.value.browsedWeek
-                )) || isOtherCourseDisplayStateFlow.value
-            ) {
-                val key = Pair(course.weekDayNo!!, course.nodeNo!!)
-                if (coursesOnCell.containsKey(key)) {
-                    coursesOnCell[key] = coursesOnCell[key]!! + course
-                } else {
-                    coursesOnCell[key] = listOf(course)
-                }
-            }
-        }
-        _uiState.update { uiState ->
-            uiState.copy(courses = coursesOnCell, isTimetableLoading = false)
-        }
-    }
-
     suspend fun getCourses(semesterYearAndNo: String? = null) {
-        Log.d("ScheduleViewModel", "getCourses")
         _uiState.update { uiState ->
             uiState.copy(isTimetableLoading = true)
         }
-        val resource = if (semesterYearAndNo == null) chaoxingRepository.getSchedule() else chaoxingRepository.getSchedule(semesterYearAndNo)
+        getStartLocalDate(semesterYearAndNo)
+        Log.d("ScheduleViewModel", "getCourses")
+        val resource = chaoxingRepository.getSchedule(semesterYearAndNo)
         Log.d("ScheduleViewModel", "getCourses: resource: $resource")
         if (resource != null) {
             val courses = resource.filter {
@@ -332,8 +260,9 @@ class ScheduleViewModel @Inject constructor(
             }.map {
                 it.copy(nodeNo = (it.nodeNo!! + 1) / 2)
             }
-            backupCourses = courses
-            updateCoursesOnCell()
+            _uiState.update { uiState ->
+                uiState.copy(isTimetableLoading = false, courses = courses)
+            }
         }
     }
 }

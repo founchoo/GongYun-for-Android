@@ -1,23 +1,14 @@
 package com.dart.campushelper.utils
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -42,7 +33,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dart.campushelper.ui.rememberNoAccounts
 
 fun Modifier.fadingEdge(brush: Brush) = this
     .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -215,51 +205,9 @@ fun PreferenceHeader(text: String) {
     Text(
         text = text,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 25.dp, top = 10.dp, bottom = 10.dp),
+        modifier = Modifier.padding(start = 15.dp, top = 10.dp, bottom = 10.dp),
         fontSize = 14.sp
     )
-}
-
-@Composable
-fun NoLoginPlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.align(Alignment.Center)
-        ) {
-            Icon(
-                imageVector = rememberNoAccounts(),
-                contentDescription = null,
-                modifier = Modifier.size(150.dp)
-            )
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = "您未登录",
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        }
-    }
-}
-
-@Composable
-fun AddAnimatedCircularProgressIndicator(value: Boolean) {
-    AnimatedVisibility(
-        visible = value,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            CircularProgressIndicator(modifier = Modifier)
-        }
-    }
 }
 
 @Composable

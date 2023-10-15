@@ -19,7 +19,6 @@ import com.dart.campushelper.data.KEYS.KEY_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_PASSWORD
 import com.dart.campushelper.data.KEYS.KEY_SELECTED_DARK_MODE
 import com.dart.campushelper.data.KEYS.KEY_SEMESTER_YEAR_AND_NO
-import com.dart.campushelper.data.KEYS.KEY_START_LOCALDATE
 import com.dart.campushelper.data.KEYS.KEY_USERNAME
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_COOKIES
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_DAY_OF_WEEK
@@ -110,14 +109,6 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
-    override suspend fun changeStartLocalDate(localDate: LocalDate) {
-        mutex.withLock {
-            dataStore.edit {
-                it[KEY_START_LOCALDATE] = localDate.toString()
-            }
-        }
-    }
-
     override suspend fun changeEnableSystemColor(enable: Boolean) {
         mutex.withLock {
             dataStore.edit {
@@ -198,10 +189,6 @@ class DataStoreRepository @Inject constructor(
 
     override fun observeSelectedDarkMode(): Flow<String> =
         dataStore.data.map { it[KEY_SELECTED_DARK_MODE] ?: DEFAULT_VALUE_SELECTED_DARK_MODE }
-
-    override fun observeStartLocalDate(): Flow<LocalDate?> = dataStore.data.map {
-        LocalDate.parse(it[KEY_START_LOCALDATE] ?: LocalDate.now().toString())
-    }
 
     override fun observeDayOfWeek(): Flow<Int> =
         dataStore.data.map { it[KEY_DAY_OF_WEEK] ?: DEFAULT_VALUE_DAY_OF_WEEK }

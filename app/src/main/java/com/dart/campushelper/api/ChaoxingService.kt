@@ -1,19 +1,25 @@
 package com.dart.campushelper.api
 
+import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.StudentInfoResponse
-import com.dart.campushelper.model.WeekInfoResponse
 import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 interface ChaoxingService {
+
+    @GET("system/zy/xlgl/getData/{semesterYearAndNo}")
+    fun getCalendar(
+        @Path("semesterYearAndNo") semesterYearAndNo: String,
+    ): Call<List<CalendarItem>>
 
     @GET("xsd/xsdzgcjcx/xsdQueryXszgcjList")
     fun getGrades(
@@ -48,12 +54,6 @@ interface ChaoxingService {
 
     @POST("cjgl/xscjbbdy/printdgxscj")
     fun getStudentInfo(): Call<StudentInfoResponse>
-
-    @FormUrlEncoded
-    @POST("getXqByZc")
-    fun getWeekInfo(
-        @Field("zc") weekNo: Int = 0
-    ): Call<WeekInfoResponse>
 
     @FormUrlEncoded
     @POST("login")

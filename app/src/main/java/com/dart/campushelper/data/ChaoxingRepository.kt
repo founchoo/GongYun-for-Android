@@ -3,11 +3,11 @@ package com.dart.campushelper.data
 import android.util.Log
 import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.api.ChaoxingService
+import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.LoginResponse
 import com.dart.campushelper.model.StudentInfoResponse
-import com.dart.campushelper.model.WeekInfoResponse
 import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
 import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
@@ -104,6 +104,12 @@ class ChaoxingRepository @Inject constructor(
         }
     }
 
+    suspend fun getCalendar(
+        semesterYearAndNo: String?
+    ): List<CalendarItem>? = retry(
+        chaoxingService.getCalendar(semesterYearAndNo ?: semesterYearAndNoStateFlow.value)
+    )?.filter { it.weekNo?.toInt() != 0 }
+
     suspend fun getGrades(): GradeResponse? = retry(chaoxingService.getGrades())
 
     suspend fun getStudentRankingInfo(semester: String): String? = retry(
@@ -114,18 +120,16 @@ class ChaoxingRepository @Inject constructor(
     )
 
     suspend fun getSchedule(
-        semesterYearAndNo: String = semesterYearAndNoStateFlow.value
+        semesterYearAndNo: String?
     ): List<Course>? = retry(
         chaoxingService.getSchedule(
-            semesterYearAndNo = semesterYearAndNo,
+            semesterYearAndNo = semesterYearAndNo ?: semesterYearAndNoStateFlow.value,
             studentId = usernameStateFlow.value,
-            semesterNo = semesterYearAndNo.last().toString(),
+            semesterNo = semesterYearAndNo ?: (semesterYearAndNoStateFlow.value.lastOrNull() ?: "").toString(),
         )
     )
 
     suspend fun getStudentInfo(): StudentInfoResponse? = retry(chaoxingService.getStudentInfo())
-
-    suspend fun getWeekInfo(): WeekInfoResponse? = retry(chaoxingService.getWeekInfo())
 
     suspend fun login(
         username: String,

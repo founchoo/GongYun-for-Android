@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES
-import com.dart.campushelper.model.getSemesterStartLocalDate
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.time.LocalDate
 import javax.inject.Inject
 
 data class LoginUiState(
@@ -50,15 +48,6 @@ class LoginViewModel @Inject constructor(
                     Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
                     runBlocking {
                         userPreferenceRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
-                    }
-                }
-                val weekInfoResponseResource = chaoxingRepository.getWeekInfo()
-                if (weekInfoResponseResource != null) {
-                    Log.d("LoginViewModel", weekInfoResponseResource.getSemesterStartLocalDate().toString())
-                    runBlocking {
-                        userPreferenceRepository.changeStartLocalDate(
-                            weekInfoResponseResource.getSemesterStartLocalDate()!!
-                        )
                     }
                 }
                 runBlocking {
@@ -114,7 +103,6 @@ class LoginViewModel @Inject constructor(
             userPreferenceRepository.changeEnterUniversityYear(VALUES.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
             userPreferenceRepository.changeSemesterYearAndNo(VALUES.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO)
             userPreferenceRepository.changeIsLogin(false)
-            userPreferenceRepository.changeStartLocalDate(LocalDate.now())
             userPreferenceRepository.changeCookies(emptyList())
         }
     }

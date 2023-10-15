@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -27,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.model.Grade
+import com.dart.campushelper.ui.rememberCheck
+import com.dart.campushelper.ui.rememberCheckIndeterminateSmall
 import com.dart.campushelper.ui.rememberFilterAlt
 import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
@@ -92,7 +92,7 @@ fun GradeScreen(
             ) {
                 Text("筛选成绩", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(15.dp))
-                OutlinedTextField(
+                TextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = uiState.searchKeyword,
                     onValueChange = { viewModel.changeSearchKeyword(it) },
@@ -128,13 +128,19 @@ fun GradeScreen(
                                 leadingIcon = if (uiState.semestersSelected[i] == true) {
                                     {
                                         Icon(
-                                            imageVector = Icons.Filled.Done,
+                                            imageVector = rememberCheck(),
                                             contentDescription = "Localized Description",
                                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                                         )
                                     }
                                 } else {
-                                    null
+                                    {
+                                        Icon(
+                                            imageVector = rememberCheckIndeterminateSmall(),
+                                            contentDescription = "Localized Description",
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        )
+                                    }
                                 }
                             )
                         }
@@ -168,13 +174,19 @@ fun GradeScreen(
                                 leadingIcon = if (uiState.courseSortsSelected[i] == true) {
                                     {
                                         Icon(
-                                            imageVector = Icons.Filled.Done,
+                                            imageVector = rememberCheck(),
                                             contentDescription = "Localized Description",
                                             modifier = Modifier.size(FilterChipDefaults.IconSize)
                                         )
                                     }
                                 } else {
-                                    null
+                                    {
+                                        Icon(
+                                            imageVector = rememberCheckIndeterminateSmall(),
+                                            contentDescription = "Localized Description",
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                        )
+                                    }
                                 }
                             )
                         }
@@ -230,14 +242,16 @@ fun GradeDetailDialog(
             Text(text = "成绩详情")
         },
         text = {
-            Text(
-                text = "课程名称: ${grade.name}\n" +
-                        "课程代码: ${grade.kcid}\n" +
-                        "课程性质: ${grade.courseSort}\n" +
-                        "学分: ${grade.credit}\n" +
-                        "学年学期: ${grade.xnxq}\n" +
-                        "成绩: ${grade.score}\n" +
-                        "绩点: ${grade.gp}"
+            ListItem(
+                headlineContent = {
+                    Text("${grade.name}")
+                },
+                supportingContent = {
+                    Text("成绩 ${grade.score} / 绩点 ${grade.gp}")
+                },
+                trailingContent = {
+                    Text("${grade.xnxq}\n${grade.courseSort}\n学分 ${grade.credit}")
+                },
             )
         },
         confirmButton = {},
@@ -292,30 +306,36 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
         viewModel.getGrades()
         viewModel.getStudentRankingInfo()
     }
+
     val state = rememberPullRefreshState(uiState.isGradesLoading, ::refresh)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Spacer(Modifier.width(10.dp))
         // Grade gpa and ranking info section.
         Box(
             modifier = Modifier
+                .padding(top = 10.dp)
                 .fadingEdge(
                     Brush.horizontalGradient(
                         0f to Color.Transparent,
-                        0.1f to Color.Red,
-                        0.9f to Color.Red,
+                        0.05f to Color.Black,
+                        0.95f to Color.Black,
                         1f to Color.Transparent
                     )
                 )
         ) {
             LazyRow {
                 item {
-                    Spacer(Modifier.width(25.dp))
+                    Spacer(Modifier.width(10.dp))
                 }
                 item {
-                    Card {
+                    Card(
+                        modifier = Modifier.placeholder(
+                            visible = uiState.isGradesLoading,
+                            highlight = PlaceholderHighlight.shimmer()
+                        )
+                    ) {
                         Column(
                             modifier = Modifier.padding(10.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -439,7 +459,7 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                     }
                 }
                 item {
-                    Spacer(Modifier.width(25.dp))
+                    Spacer(Modifier.width(10.dp))
                 }
             }
         }
@@ -449,7 +469,11 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .padding(25.dp, 0.dp, 25.dp, 10.dp),
+                    .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                    .placeholder(
+                        visible = uiState.isGradesLoading,
+                        highlight = PlaceholderHighlight.shimmer()
+                    ),
                 verticalArrangement = Arrangement.SpaceAround,
                 state = listState,
             ) {
@@ -481,7 +505,11 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                     )
                 }
             }
-            PullRefreshIndicator(uiState.isGradesLoading, state, Modifier.align(Alignment.TopCenter))
+            PullRefreshIndicator(
+                uiState.isGradesLoading,
+                state,
+                Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }

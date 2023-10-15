@@ -47,7 +47,7 @@ fun SettingsScreen(
     val loginUiState by loginViewModel.uiState.collectAsState()
     val settingsUiState by settingsViewModel.uiState.collectAsState()
 
-    LazyColumn() {
+    LazyColumn {
         item {
             PreferenceHeader(text = "账户")
             TextPreference(

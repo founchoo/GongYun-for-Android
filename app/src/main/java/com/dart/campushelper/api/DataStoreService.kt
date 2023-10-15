@@ -2,7 +2,6 @@ package com.dart.campushelper.api
 
 import kotlinx.coroutines.flow.Flow
 import okhttp3.Cookie
-import java.time.LocalDate
 
 /**
  * Interface to the Interests data layer.
@@ -24,8 +23,6 @@ interface DataStoreService {
     suspend fun changeIsLogin(isLogin: Boolean)
 
     suspend fun changeSelectedDarkMode(darkMode: String)
-
-    suspend fun changeStartLocalDate(localDate: LocalDate)
 
     suspend fun changeEnableSystemColor(enable: Boolean)
 
@@ -55,8 +52,6 @@ interface DataStoreService {
     fun observeIsLogin(): Flow<Boolean>
 
     fun observeSelectedDarkMode(): Flow<String>
-
-    fun observeStartLocalDate(): Flow<LocalDate?>
 
     fun observeDayOfWeek(): Flow<Int>
 

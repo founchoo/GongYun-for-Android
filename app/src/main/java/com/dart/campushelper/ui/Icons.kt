@@ -19,6 +19,140 @@ import androidx.compose.ui.unit.dp
 // defaultHeight = 24.dp
 
 @Composable
+fun rememberAdd(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "add",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(18.25f, 31.875f)
+                verticalLineTo(21.75f)
+                horizontalLineTo(8.083f)
+                verticalLineToRelative(-3.542f)
+                horizontalLineTo(18.25f)
+                verticalLineTo(8.083f)
+                horizontalLineToRelative(3.542f)
+                verticalLineToRelative(10.125f)
+                horizontalLineToRelative(10.125f)
+                verticalLineToRelative(3.542f)
+                horizontalLineTo(21.792f)
+                verticalLineToRelative(10.125f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
+fun rememberRemove(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "remove",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(8.083f, 21.75f)
+                verticalLineToRelative(-3.542f)
+                horizontalLineToRelative(23.834f)
+                verticalLineToRelative(3.542f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
+fun rememberCheck(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "check",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(15.833f, 30.292f)
+                lineTo(6f, 20.458f)
+                lineToRelative(2.542f, -2.541f)
+                lineToRelative(7.291f, 7.291f)
+                lineTo(31.417f, 9.625f)
+                lineToRelative(2.541f, 2.542f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
+fun rememberCheckIndeterminateSmall(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "check_indeterminate_small",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(11.292f, 21.75f)
+                verticalLineToRelative(-3.542f)
+                horizontalLineToRelative(17.416f)
+                verticalLineToRelative(3.542f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
 fun rememberDoNotDisturbOn(): ImageVector {
     return remember {
         ImageVector.Builder(
