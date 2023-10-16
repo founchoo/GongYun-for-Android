@@ -257,8 +257,10 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                     for (node in 1..5) {
                                         // 筛选出当前遍历的星期号和节次的课程
                                         val courses = coursesOnCell[Pair(week, node)]
+                                        val currentWeekCourse =
+                                            courses?.find { it.weekNoList.contains(uiState.browsedWeek) }
                                         val alpha =
-                                            if (courses?.find { it.weekNoList.contains(uiState.browsedWeek) } != null)
+                                            if (currentWeekCourse != null)
                                                 1f
                                             else if (courses.isNullOrEmpty())
                                                 0f
@@ -306,8 +308,10 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         .align(Alignment.Center),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
+                                                    val displayedCourse =
+                                                        currentWeekCourse ?: courses.first()
                                                     Text(
-                                                        text = courses.first().courseName
+                                                        text = displayedCourse.courseName
                                                             ?: "",
                                                         style = MaterialTheme.typography.bodySmall.merge(
                                                             fontWeight = FontWeight.Bold
@@ -316,7 +320,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         color = foreground,
                                                     )
                                                     Text(
-                                                        text = courses.first().classroomName
+                                                        text = displayedCourse.classroomName
                                                             ?: "",
                                                         style = MaterialTheme.typography.bodySmall,
                                                         textAlign = TextAlign.Center,
