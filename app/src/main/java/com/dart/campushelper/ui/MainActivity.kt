@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
         CampusHelperTheme(themeViewModel) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.background
+                color = MaterialTheme.colorScheme.background
             ) {
 
                 val navController = rememberNavController()
@@ -189,7 +189,7 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        NavigationBar {
+                        NavigationBar() {
                             (if (mainUiState.isLogin)
                                 listOf(
                                     schedule,

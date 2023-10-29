@@ -130,6 +130,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
 
     val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, ::refresh)
     val nodeColumnWeight = 0.65F
+    val unimportantAlpha = 0.3f
 
     val coursesOnCell =
         mutableMapOf<Pair<Int, Int>, List<Course>>()
@@ -149,6 +150,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
     }
 
     Column(Modifier.padding(5.dp)) {
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
@@ -186,7 +188,9 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                             modifier = Modifier.align(Alignment.Center)
                         ) {
                             val color =
-                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else Color.Unspecified
+                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else Color.Unspecified.copy(
+                                    alpha = unimportantAlpha
+                                )
                             Text(
                                 text = week,
                                 color = color,
@@ -225,12 +229,14 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     val color =
-                                        if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified
+                                        if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified.copy(
+                                            alpha = unimportantAlpha
+                                        )
                                     Text(
                                         color = color,
                                         text = node.toString(),
                                         textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyMedium
+                                        style = MaterialTheme.typography.bodyMedium,
                                     )
                                     if (uiState.isTimeDisplay) {
                                         Text(
@@ -265,11 +271,13 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                             else if (courses.isNullOrEmpty())
                                                 0f
                                             else
-                                                0.3f
+                                                unimportantAlpha
                                         val foreground =
                                             MaterialTheme.colorScheme.secondary.copy(alpha = alpha)
                                         val background =
-                                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = alpha)
+                                            MaterialTheme.colorScheme.secondaryContainer.copy(
+                                                alpha = alpha
+                                            )
                                         Box(
                                             modifier = Modifier
                                                 .weight(1F)
@@ -294,7 +302,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         .clip(CutCornerShape(topStart = 15.dp))
                                                         .background(
                                                             if (courses.count() > 1)
-                                                                MaterialTheme.colorScheme.primary.copy(
+                                                                foreground.copy(
                                                                     alpha = alpha
                                                                 )
                                                             else
@@ -342,6 +350,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                 Modifier.align(Alignment.TopCenter)
             )
         }
+
     }
 }
 

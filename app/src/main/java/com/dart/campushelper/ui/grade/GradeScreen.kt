@@ -468,7 +468,6 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()
                     .padding(10.dp, 0.dp, 10.dp, 0.dp)
                     .placeholder(
                         visible = uiState.isGradesLoading,
