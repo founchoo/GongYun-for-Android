@@ -188,7 +188,8 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                             modifier = Modifier.align(Alignment.Center)
                         ) {
                             val color =
-                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else Color.Unspecified.copy(
+                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
+                                    .copy(
                                     alpha = unimportantAlpha
                                 )
                             Text(
@@ -229,7 +230,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     val color =
-                                        if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else Color.Unspecified.copy(
+                                        if (uiState.currentNode - 1 == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                             alpha = unimportantAlpha
                                         )
                                     Text(
