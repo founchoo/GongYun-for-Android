@@ -55,7 +55,7 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 参与开发
 
-欢迎提出 issue 或 pull request。也欢迎加入我们的 QQ 交流反馈群：[点此链接加入](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=VLnZWjYQIT2laeBM4b3YXXrsAqyG9Igd&authKey=I%2FuZwBycJTU04QvDVyU1%2FbtjesWFu%2FP5eNOQl0mMxeuo8fD%2Bn8%2BtcY50K8TpNFSg&noverify=0&group_code=422915042)
+欢迎提出 issue 或 pull request。
 
 ## 鸣谢
 
@@ -73,12 +73,6 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 - https://github.com/harmittaa/KoinExample Retrofit 错误处理。
 
-## 支持开发者
-
-如果您觉得此项目对您有所帮助，可以考虑捐赠支持我们，我们将十分感谢您的支持。
-
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/4edbda39-6365-405a-9b36-eab6203798b2" alt="" height="200">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/3e113e53-11d6-4341-a6de-bc7d31680301" alt="" height="200">
 
 ## 开源协议
 
