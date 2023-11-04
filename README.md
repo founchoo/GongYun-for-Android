@@ -55,7 +55,7 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 参与开发
 
-欢迎提出 issue 或 pull request。也欢迎加入我们的 QQ 交流反馈群：[点此链接加入](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=VLnZWjYQIT2laeBM4b3YXXrsAqyG9Igd&authKey=I%2FuZwBycJTU04QvDVyU1%2FbtjesWFu%2FP5eNOQl0mMxeuo8fD%2Bn8%2BtcY50K8TpNFSg&noverify=0&group_code=422915042)
+欢迎提出 issue 或 pull request。
 
 ## 鸣谢
 
