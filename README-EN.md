@@ -1,4 +1,4 @@
-[点此跳转至中文说明](https://github.com/founchoo/CampusHelper/blob/main/README-ZH.md)
+[点此跳转至中文说明](https://github.com/founchoo/CampusHelper/blob/main/README.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
