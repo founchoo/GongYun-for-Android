@@ -1,3 +1,4 @@
+[Click here to see English edition](https://github.com/founchoo/CampusHelper/edit/main/README-EN.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
