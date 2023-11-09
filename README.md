@@ -10,7 +10,9 @@
 
 Hello, there!
 
-Welcome to CampusHelper, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) for **Android**.
+Welcome to CampusHelper, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) **only** for **Android**.
+
+If you are searching for another platform, please refer to my another edition, [campus_helper_flutter](https://github.com/founchoo/campus_helper_flutter).
 
 ## Functions
 
