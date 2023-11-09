@@ -155,6 +155,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
         ) {
+            // 年份标识
             Box(
                 modifier = Modifier
                     .weight(nodeColumnWeight)
@@ -173,6 +174,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                     )
                 }
             }
+            // 星期表头
             Row(
                 modifier = Modifier
                     .weight(7F)

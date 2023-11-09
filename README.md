@@ -1,80 +1,61 @@
-[Click here to see English edition](https://github.com/founchoo/CampusHelper/blob/main/README-EN.md)
+[点此跳转至中文说明](https://github.com/founchoo/CampusHelper/blob/main/README.ZH.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
 
-# 校园助手
+# CampusHelper
 </div>
 
-## 简介
+## Introduction
 
-欢迎来到校园助手的 Github 开源页面, 这是一款专为**湖北工业大学**在校学生编写的
-第三方教务管理系统，运行于 **Android** 平台，支持的最低版本为 **Android 8.0 (API level 26)**
+Hello, there!
 
-本应用基于 Jetpack Compose 框架开发，使用 Kotlin 语言编写。
+Welcome to CampusHelper, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) for **Android**.
 
-本应用通过爬取的 API 与学校教务系统官方服务器进行网络请求的发送，本应用
-运行过程中会在本地存储用户敏感数据，这包括：学号、密码、入学年份、当前学年学期。
-这些信息仅用于与学校官方服务器进行网络请求的发送，不会被用于其他用途。
+## Functions
 
-存储学号和密码的原因如下：学校教务系统进行登录请求时即使勾选了记住我的选项，
-接收到的网络返回中的 cookie 到期日期仅为登录时刻之后的两小时，
-为了避免用户在间隔两小时之后使用本应用时需要重复输入学号和密码进行登录获取登录状态，
-本应用将它们存储在本地，当网络请求由于登录状态失效而失败时，本应用将会自动为用户进行登录操作。
+Currently, we provide the following functions:
 
-如果您所在的学校使用的教务系统为超星（以湖北工业大学为例，教务系统地址为：**hbut.jw.chaoxing.com**），那么此开源项目或许将对您有所帮助。
+- Check schedule/timetable
+  - Other weeks are also available
+- Check grades
+  - Ranking info
+  - Automatic calculation of GPA and average score
+  - Grade filter
 
-## 功能一览
+## Screenshots
 
-目前，该应用提供如下功能：
+Note: considering the private information, we have make student id number covered with black line by photo editor. In our real app, there is no covery on the personal information.
 
-- 查看课表
-  - 切换到其他周查看其他周的课程
-  - 提供桌面小组件显示当天课程
-- 成绩查询
-  - 排名查询（包括年级、专业、班级排名）
-  - GPA 及算术平均分的自动计算
-  - 成绩筛选（学年、课程类型）
+![Light mode](https://github.com/founchoo/CampusHelper/assets/24630338/c4cf3986-9db7-4f59-9238-c33c530aa430 "Light mode")
 
-## 屏幕截图
+![Dark mode](https://github.com/founchoo/CampusHelper/assets/24630338/8a2751df-5640-4cec-985c-6982837efe2a "Dark mode")
 
-注意：考虑到隐私问题，我们已模糊处理某些信息，当您在实际使用该应用时，不会出现模糊现象。
+## Download
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/6cfb4de2-d946-48ba-ab30-307eebd8cd0e" alt="课表" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5e51b66e-de49-4d17-adb5-842fc3e8ee9c" alt="成绩" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/569e023d-1731-495c-803a-a2046cbc4e69" alt="设置" width="300">
+Go to [release page](https://github.com/founchoo/CampusHelper/releases/latest) to download `.apk` file.
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5bbbc3f4-7ebb-464c-92dc-e9840674e104" alt="课表" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/38bd1006-d3e2-48e0-aeeb-4ef597c568d8" alt="成绩" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/2003885d-967a-4cca-802b-870249db0846" alt="设置" width="300">
+## Contributions
 
-## 下载
+If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Also, you can [click here](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=VLnZWjYQIT2laeBM4b3YXXrsAqyG9Igd&authKey=I%2FuZwBycJTU04QvDVyU1%2FbtjesWFu%2FP5eNOQl0mMxeuo8fD%2Bn8%2BtcY50K8TpNFSg&noverify=0&group_code=422915042) to join our QQ group. Any help would be appreciated!
 
-Github release: [点此](https://github.com/founchoo/CampusHelper/releases/latest)链接跳转到下载页面，页面下方的 `.apk` 文件即是安装包，下载安装即可。
+## Thanks
 
-Google Play Store: [点此前往谷歌应用商店下载](https://play.google.com/store/apps/details?id=com.dart.campushelper)
+During the development, we have used the following projects/websites which are helpful:
 
-## 参与开发
+- https://www.composables.com/icons A website generating **Material Symbols for Jetpack Compose**.
 
-欢迎提出 issue 或 pull request。
+  You just need to copy it and paste to you `.kt` file. It will generate a function named `rememberIconName`, and to use it, just call the function, so easy and simple.
 
-## 鸣谢
+- https://stackoverflow.com/ StackOverflow of course, a knowledge sharing community which gained a lot of population.
+  In the development, there are so many times when we refer to it and seek suggestions.
 
-- https://www.composables.com/icons **Material Symbols for Jetpack Compose**。
+- https://m3.material.io/ Material Design guidelines.
 
-- https://stackoverflow.com/ StackOverflow。
-
-- https://m3.material.io/ Material Design 指南。
-
-- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档。
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary Official development document.
 
 - https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
 
-- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件。
+- https://json2kt.com/ Convert `JSON` to `.kt` file
 
-- https://github.com/harmittaa/KoinExample Retrofit 错误处理。
-
-
-## 开源协议
-
-本项目使用 GPLv3 协议
+- https://github.com/harmittaa/KoinExample Grate help in retrofit error handler
