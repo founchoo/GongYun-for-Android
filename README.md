@@ -3,16 +3,16 @@
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
 
-# CampusHelper
+# GongYun
 </div>
 
 ## Introduction
 
 Hello, there!
 
-Welcome to CampusHelper, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) **only** for **Android**.
+Welcome to GongYun, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) for **Android**.
 
-If you are searching for another platform, please refer to my another edition, [campus_helper_flutter](https://github.com/founchoo/campus_helper_flutter).
+If you are searching for another platform, please refer to my another edition, [GongYun](https://github.com/founchoo/GongYun), which supports all platforms.
 
 ## Functions
 
