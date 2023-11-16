@@ -3,12 +3,12 @@
 
 <img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
 
-# 校园助手
+# 工韵
 </div>
 
 ## 简介
 
-欢迎来到校园助手的 Github 开源页面, 这是一款专为**湖北工业大学**在校学生编写的
+欢迎来到**工韵**的 Github 开源页面, 这是一款专为**湖北工业大学**在校学生服务的
 第三方教务管理系统，运行于 **Android** 平台，支持的最低版本为 **Android 8.0 (API level 26)**
 
 本应用基于 Jetpack Compose 框架开发，使用 Kotlin 语言编写。
