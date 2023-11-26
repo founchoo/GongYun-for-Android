@@ -73,4 +73,4 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 开源协议
 
-本项目使用 GPLv3 协议
+本项目使用 Apache License 2.0
