@@ -29,9 +29,7 @@ Currently, we provide the following functions:
 
 Note: considering the private information, we have make student id number covered with black line by photo editor. In our real app, there is no covery on the personal information.
 
-![Light mode](https://github.com/founchoo/CampusHelper/assets/24630338/c4cf3986-9db7-4f59-9238-c33c530aa430 "Light mode")
-
-![Dark mode](https://github.com/founchoo/CampusHelper/assets/24630338/8a2751df-5640-4cec-985c-6982837efe2a "Dark mode")
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/adb2383f-de53-4b37-8c23-3c54175e7fca">
 
 ## Download
 
