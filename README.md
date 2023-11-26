@@ -1,7 +1,7 @@
-[Click here to see English edition](https://github.com/founchoo/CampusHelper/blob/main/README.md)
+[Click here to see English edition](https://github.com/founchoo/CampusHelper/blob/main/README.EN.md)
 <div align="center">
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/dc2346ad-033f-475f-a533-e4d1f5b5a16d" alt="Logo" width="100">
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/3d5c2914-0592-4058-9b54-00e958c62b63" alt="Logo" width="100">
 
 # 工韵
 </div>
