@@ -40,13 +40,7 @@
 
 注意：考虑到隐私问题，我们已模糊处理某些信息，当您在实际使用该应用时，不会出现模糊现象。
 
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/6cfb4de2-d946-48ba-ab30-307eebd8cd0e" alt="课表" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5e51b66e-de49-4d17-adb5-842fc3e8ee9c" alt="成绩" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/569e023d-1731-495c-803a-a2046cbc4e69" alt="设置" width="300">
-
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/5bbbc3f4-7ebb-464c-92dc-e9840674e104" alt="课表" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/38bd1006-d3e2-48e0-aeeb-4ef597c568d8" alt="成绩" width="300">
-<img src="https://github.com/founchoo/CampusHelper/assets/24630338/2003885d-967a-4cca-802b-870249db0846" alt="设置" width="300">
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/adb2383f-de53-4b37-8c23-3c54175e7fca">
 
 ## 下载
 
