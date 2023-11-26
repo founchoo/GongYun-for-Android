@@ -23,8 +23,6 @@ interface UserPreferenceService {
 
     suspend fun changeEnableSystemColor(enable: Boolean)
 
-    suspend fun changeIsPin(isPin: Boolean)
-
     suspend fun changeUsername(username: String)
 
     suspend fun changePassword(password: String)
@@ -53,9 +51,7 @@ interface UserPreferenceService {
     fun observeDayOfWeek(): Flow<Int>
 
     fun observeEnableSystemColor(): Flow<Boolean?>
-
-    fun observeIsPin(): Flow<Boolean?>
-
+    
     fun observeUsername(): Flow<String>
 
     fun observePassword(): Flow<String>

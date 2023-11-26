@@ -1,6 +1,5 @@
 package com.dart.campushelper.di
 
-import android.util.Log
 import com.dart.campushelper.api.ChaoxingService
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
@@ -83,7 +82,7 @@ class ChaoxingCookieJar @Inject constructor(
     init {
         cookies = runBlocking { cookiesStateFlow.first() }
         scope.launch {
-            Log.d("okhttp.OkHttpClient", "init: cookies.size: ${cookies.size}")
+            // Log.d("okhttp.OkHttpClient", "init: cookies.size: ${cookies.size}")
             userPreferenceRepository.observeCookies().collect {
                 cookies = it
             }
@@ -91,17 +90,17 @@ class ChaoxingCookieJar @Inject constructor(
     }
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        Log.d(
+        /*Log.d(
             "okhttp.OkHttpClient",
             "loadForRequest: cookies.size: ${cookies.size}"
-        )
+        )*/
         return cookies
     }
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         val count = cookies.count { it.name == "rememberMe" }
         if (url.toString() == "${ChaoxingService.BASE_URL}login" && count == 2) {
-            Log.d("okhttp.OkHttpClient", "saveFromResponse: cookies.size: ${cookies.size}")
+            // Log.d("okhttp.OkHttpClient", "saveFromResponse: cookies.size: ${cookies.size}")
             this@ChaoxingCookieJar.cookies = cookies
             scope.launch {
                 this@ChaoxingCookieJar.userPreferenceRepository.changeCookies(cookies)

@@ -1,6 +1,5 @@
 package com.dart.campushelper.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.UserPreferenceRepository
@@ -40,7 +39,7 @@ class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             isLoginStateFlow.collect {
-                Log.d("MainViewModel", "isLogin: $it")
+                // Log.d("MainViewModel", "isLogin: $it")
                 _uiState.update { mainUiState ->
                     mainUiState.copy(isLogin = it)
                 }

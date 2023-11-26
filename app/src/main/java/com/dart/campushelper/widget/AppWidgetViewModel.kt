@@ -1,6 +1,5 @@
 package com.dart.campushelper.widget
 
-import android.util.Log
 import androidx.annotation.WorkerThread
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.model.Course
@@ -38,7 +37,7 @@ class AppWidgetViewModel @Inject constructor(
     @WorkerThread
     suspend fun getTodaySchedule() {
         getCurrentWeek(null)
-        Log.d("AppWidgetViewModel", "getTodaySchedule: ")
+        // Log.d("AppWidgetViewModel", "getTodaySchedule: ")
         val result = chaoxingRepository.getSchedule(null)
         if (result != null) {
             val courses = result.filter { course ->
@@ -46,7 +45,7 @@ class AppWidgetViewModel @Inject constructor(
                     _uiState.value.currentWeek
                 )
             }
-            Log.d("AppWidgetViewModel", "courses.size: ${courses.size}")
+            // Log.d("AppWidgetViewModel", "courses.size: ${courses.size}")
             _uiState.update { uiState ->
                 uiState.copy(courses = courses)
             }

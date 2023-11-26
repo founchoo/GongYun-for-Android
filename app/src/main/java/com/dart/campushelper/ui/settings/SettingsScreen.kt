@@ -99,13 +99,12 @@ fun SettingsScreen(
                 }
             )
             // Pin course info widget to desktop
-            SwitchPreference(
+            TextPreference(
                 imageVector = rememberPushPin(),
-                value = settingsUiState.isPin,
                 title = "（实验性）固定课程到桌面",
                 description = "请确保已授予\"桌面快捷方式\"权限",
-                onValueChanged = {
-                    settingsViewModel.changeIsPin(it)
+                onClick = {
+                    settingsViewModel.pin()
                 }
             )
             PreferenceHeader(text = "主题")
@@ -133,7 +132,7 @@ fun SettingsScreen(
             )
             PreferenceHeader(text = "关于")
             TextPreference(
-                title = "校园助手",
+                title = "工韵",
                 description = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
                 imageVector = rememberInfo()
             ) {

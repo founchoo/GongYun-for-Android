@@ -16,11 +16,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,6 +57,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
+import com.dart.campushelper.ui.grade.CreateActionsForGrade
 import com.dart.campushelper.ui.grade.CreateFloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
 import com.dart.campushelper.ui.grade.GradeViewModel
@@ -118,8 +122,10 @@ class MainActivity : ComponentActivity() {
 
         val mainUiState by mainViewModel.uiState.collectAsState()
         val scheduleUiState by scheduleViewModel.uiState.collectAsState()
+        val gradeUiState by gradeViewModel.uiState.collectAsState()
 
         val schedule = Screen("课表", R.string.schedule_label)
+        val program = Screen("培养方案", R.string.program_label)
         val grade = Screen("成绩", R.string.grade_label)
         val settings = Screen("设置", R.string.settings_label)
 
@@ -162,7 +168,13 @@ class MainActivity : ComponentActivity() {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     if (currentDestination?.route == schedule.route) {
-                                        Column {
+                                        Column(
+                                            Modifier
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .clickable {
+                                                    scheduleViewModel.setIsShowWeekSliderDialog(true)
+                                                },
+                                        ) {
                                             Text(
                                                 text = scheduleUiState.browsedSemester,
                                                 style = MaterialTheme.typography.labelSmall,
@@ -183,13 +195,19 @@ class MainActivity : ComponentActivity() {
                                         scheduleViewModel,
                                         scheduleUiState
                                     )
+                                } else if (currentDestination?.route == grade.route) {
+                                    CreateActionsForGrade(
+                                        viewModel = gradeViewModel,
+                                        uiState = gradeUiState
+                                    )
                                 }
                             },
                             scrollBehavior = scrollBehavior
                         )
                     },
                     bottomBar = {
-                        NavigationBar() {
+                        NavigationBar(
+                        ) {
                             (if (mainUiState.isLogin)
                                 listOf(
                                     schedule,

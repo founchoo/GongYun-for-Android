@@ -94,7 +94,7 @@ fun CampusHelperTheme(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    Log.d("Theme", "uiState: $uiState")
+    // Log.d("Theme", "uiState: $uiState")
 
     val darkTheme = when (uiState.darkMode) {
         "开启" -> true

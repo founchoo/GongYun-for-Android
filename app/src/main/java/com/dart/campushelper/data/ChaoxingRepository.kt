@@ -1,10 +1,10 @@
 package com.dart.campushelper.data
 
-import android.util.Log
 import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.api.ChaoxingService
 import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.LoginResponse
 import com.dart.campushelper.model.StudentInfoResponse
@@ -74,11 +74,11 @@ class ChaoxingRepository @Inject constructor(
 
     private suspend fun <T> retry(call: Call<T>): T? {
         val reqUrl = call.request().url.toString()
-        Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
+        // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
             val code = res.code()
-            Log.d("ChaoxingRepository", "Response code: $code")
+            // Log.d("ChaoxingRepository", "Response code: $code")
             if (code == 200) {
                 return res.body()
             } else if (code == 303) {
@@ -91,7 +91,7 @@ class ChaoxingRepository @Inject constructor(
                 throw Exception(NETWORK_CONNECT_ERROR)
             }
         } catch (e: Exception) {
-            Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
+            // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
             val result = MainActivity.snackBarHostState.showSnackbar(
                 NETWORK_CONNECT_ERROR,
                 RETRY
@@ -125,9 +125,31 @@ class ChaoxingRepository @Inject constructor(
         chaoxingService.getSchedule(
             semesterYearAndNo = semesterYearAndNo ?: semesterYearAndNoStateFlow.value,
             studentId = usernameStateFlow.value,
-            semesterNo = semesterYearAndNo ?: (semesterYearAndNoStateFlow.value.lastOrNull() ?: "").toString(),
+            semesterNo = ((semesterYearAndNo ?: semesterYearAndNoStateFlow.value).lastOrNull()
+                ?: "").toString(),
         )
     )
+
+    suspend fun getGlobalSchedule(
+        semesterYearAndNo: String,
+        startWeekNo: String,
+        endWeekNo: String,
+        startDayOfWeek: String,
+        endDayOfWeek: String,
+        startNode: String,
+        endNode: String,
+    ): GlobalCourseResponse? =
+        retry(
+            chaoxingService.getGlobalSchedule(
+                semesterYearAndNo = semesterYearAndNo,
+                startWeekNo = startWeekNo,
+                endWeekNo = endWeekNo,
+                startDayOfWeek = startDayOfWeek,
+                endDayOfWeek = endDayOfWeek,
+                startNode = startNode,
+                endNode = endNode,
+            )
+        )
 
     suspend fun getStudentInfo(): StudentInfoResponse? = retry(chaoxingService.getStudentInfo())
 
@@ -141,11 +163,11 @@ class ChaoxingRepository @Inject constructor(
             password = password,
         )
         val reqUrl = call.request().url.toString()
-        Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
+        // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
             val code = res.code()
-            Log.d("ChaoxingRepository", "Response code: $code")
+            // Log.d("ChaoxingRepository", "Response code: $code")
             if (code == 200) {
                 return LoginResponse(false, LOGIN_INFO_ERROR)
             } else if (code == 302) {
@@ -154,7 +176,7 @@ class ChaoxingRepository @Inject constructor(
                 throw Exception(NETWORK_CONNECT_ERROR)
             }
         } catch (e: Exception) {
-            Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
+            // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
             if (showErrorToast) {
                 val result = MainActivity.snackBarHostState.showSnackbar(
                     NETWORK_CONNECT_ERROR,

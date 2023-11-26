@@ -13,7 +13,6 @@ import com.dart.campushelper.data.KEYS.KEY_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.KEYS.KEY_ENTER_UNIVERSITY_YEAR
 import com.dart.campushelper.data.KEYS.KEY_IS_DATE_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_IS_OTHER_COURSE_DISPLAY
-import com.dart.campushelper.data.KEYS.KEY_IS_PIN
 import com.dart.campushelper.data.KEYS.KEY_IS_TIME_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_PASSWORD
@@ -25,7 +24,6 @@ import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_DAY_OF_WEEK
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_DATE_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_PIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_TIME_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_PASSWORD
@@ -117,14 +115,6 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
-    override suspend fun changeIsPin(isPin: Boolean) {
-        mutex.withLock {
-            dataStore.edit {
-                it[KEY_IS_PIN] = isPin
-            }
-        }
-    }
-
     override suspend fun changeUsername(username: String) {
         mutex.withLock {
             dataStore.edit {
@@ -197,10 +187,6 @@ class DataStoreRepository @Inject constructor(
         it[KEY_ENABLE_SYSTEM_COLOR] ?: false
     }
 
-    override fun observeIsPin(): Flow<Boolean> = dataStore.data.map {
-        it[KEY_IS_PIN] ?: DEFAULT_VALUE_IS_PIN
-    }
-
     override fun observeUsername(): Flow<String> = dataStore.data.map {
         it[KEY_USERNAME] ?: DEFAULT_VALUE_USERNAME
     }
@@ -234,7 +220,6 @@ object KEYS {
     val KEY_ENABLE_SYSTEM_COLOR = booleanPreferencesKey("enable_system_color")
     val KEY_SELECTED_DARK_MODE = stringPreferencesKey("selected_dark_mode")
     val KEY_START_LOCALDATE = stringPreferencesKey("start_localdate")
-    val KEY_IS_PIN = booleanPreferencesKey("is_pin")
     val KEY_USERNAME = stringPreferencesKey("username")
     val KEY_PASSWORD = stringPreferencesKey("password")
     val KEY_SEMESTER_YEAR_AND_NO = stringPreferencesKey("semester_year_and_no")
@@ -253,7 +238,6 @@ object VALUES {
     val DEFAULT_VALUE_ENABLE_SYSTEM_COLOR = false
     val DEFAULT_VALUE_SELECTED_DARK_MODE = "跟随系统"
     val DEFAULT_VALUE_START_LOCALDATE = LocalDate.now()
-    val DEFAULT_VALUE_IS_PIN = false
     val DEFAULT_VALUE_USERNAME = ""
     val DEFAULT_VALUE_PASSWORD = ""
     val DEFAULT_VALUE_SEMESTER_YEAR_AND_NO = ""

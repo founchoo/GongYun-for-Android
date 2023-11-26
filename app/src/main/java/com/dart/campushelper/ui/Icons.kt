@@ -19,6 +19,107 @@ import androidx.compose.ui.unit.dp
 // defaultHeight = 24.dp
 
 @Composable
+fun rememberShowChart(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "show_chart",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(5.583f, 31.292f)
+                lineToRelative(-2.625f, -2.625f)
+                lineTo(15.875f, 15.75f)
+                lineToRelative(6.583f, 6.542f)
+                lineTo(34.542f, 8.667f)
+                lineToRelative(2.5f, 2.5f)
+                lineTo(22.5f, 27.583f)
+                lineTo(15.875f, 21f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
+fun rememberChevronRight(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "chevron_right",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(15.667f, 30.458f)
+                lineToRelative(-2.5f, -2.5f)
+                lineToRelative(8f, -8f)
+                lineToRelative(-8f, -7.958f)
+                lineToRelative(2.5f, -2.5f)
+                lineToRelative(10.5f, 10.458f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
+fun rememberChevronLeft(): ImageVector {
+    return remember {
+        ImageVector.Builder(
+            name = "chevron_left",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 40.0f,
+            viewportHeight = 40.0f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillAlpha = 1f,
+                stroke = null,
+                strokeAlpha = 1f,
+                strokeLineWidth = 1.0f,
+                strokeLineCap = StrokeCap.Butt,
+                strokeLineJoin = StrokeJoin.Miter,
+                strokeLineMiter = 1f,
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(23.333f, 30.458f)
+                lineToRelative(-10.5f, -10.5f)
+                lineTo(23.333f, 9.5f)
+                lineToRelative(2.5f, 2.5f)
+                lineToRelative(-8f, 7.958f)
+                lineToRelative(8f, 8f)
+                close()
+            }
+        }.build()
+    }
+}
+
+@Composable
 fun rememberAdd(): ImageVector {
     return remember {
         ImageVector.Builder(

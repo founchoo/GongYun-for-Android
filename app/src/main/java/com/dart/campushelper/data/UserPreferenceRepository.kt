@@ -42,10 +42,6 @@ class UserPreferenceRepository @Inject constructor(
         dataStoreService.changeEnableSystemColor(enable)
     }
 
-    override suspend fun changeIsPin(isPin: Boolean) {
-        dataStoreService.changeIsPin(isPin)
-    }
-
     override suspend fun changeUsername(username: String) {
         dataStoreService.changeUsername(username)
     }
@@ -99,10 +95,6 @@ class UserPreferenceRepository @Inject constructor(
 
     override fun observeEnableSystemColor(): Flow<Boolean?> {
         return dataStoreService.observeEnableSystemColor()
-    }
-
-    override fun observeIsPin(): Flow<Boolean> {
-        return dataStoreService.observeIsPin()
     }
 
     override fun observeUsername(): Flow<String> {

@@ -1,7 +1,7 @@
 package com.dart.campushelper.model
 
+import com.dart.campushelper.utils.parseHtml
 import com.google.gson.annotations.SerializedName
-import org.jsoup.Jsoup
 import java.util.*
 
 data class Course(
@@ -37,10 +37,6 @@ data class Course(
     @SerializedName("jxbid")
     val classId: String?,
 
-    // 教学班名称
-    @SerializedName("jxbmc")
-    val className: String?,
-
     // 课程名称（包含HTML）
     @SerializedName("kcmc")
     val courseNameHtml: String?,
@@ -64,6 +60,9 @@ data class Course(
     // 教师名称（包含HTML）
     @SerializedName("tmc")
     val teacherNameHtml: String?,
+
+    @SerializedName("jxbzc")
+    val classNameHtml: String?,
 
     // 校区ID
     @SerializedName("xqid")
@@ -152,8 +151,7 @@ data class Course(
         null,
         null,
         null
-    ) {
-    }
+    )
 
     // 课程名称
     val courseName: String?
@@ -180,9 +178,6 @@ data class Course(
     val teacherName: String?
         get() = teacherNameHtml?.let { parseHtml(it) }
 
-    // 解析HTML
-    private fun parseHtml(html: String): String {
-        val htmlDoc = Jsoup.parse(html)
-        return htmlDoc.text()
-    }
+    val className: String?
+        get() = classNameHtml?.let { parseHtml(it) }
 }

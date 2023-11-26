@@ -1,15 +1,19 @@
 package com.dart.campushelper.ui.schedule
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,15 +23,19 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -51,8 +60,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.ui.rememberTune
+import com.dart.campushelper.ui.rememberChevronLeft
+import com.dart.campushelper.ui.rememberChevronRight
 import com.dart.campushelper.utils.PreferenceHeader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,12 +85,12 @@ fun ScheduleScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton({
-                    viewModel.hideCourseDetailDialog()
+                    viewModel.setIsCourseDetailDialogOpen(false)
                 }) {
                     Text("关闭")
                 }
             },
-            onDismissRequest = { viewModel.hideCourseDetailDialog() },
+            onDismissRequest = { viewModel.setIsCourseDetailDialogOpen(false) },
             title = { Text("课程详情") },
             text = {
                 Column {
@@ -118,17 +129,22 @@ fun ScheduleScreen(
 }
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class
+)
 @Composable
 fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
 
     val refreshScope = rememberCoroutineScope()
 
-    fun refresh() = refreshScope.launch {
-        viewModel.getCourses()
-    }
+    var isShowNonEmptyClassroomSheet by remember { mutableStateOf(false) }
 
-    val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, ::refresh)
+    val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, {
+        refreshScope.launch {
+            viewModel.getCourses(uiState.browsedSemester)
+        }
+    })
     val nodeColumnWeight = 0.65F
     val unimportantAlpha = 0.3f
 
@@ -148,9 +164,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
             }
         }
     }
-
     Column(Modifier.padding(5.dp)) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
@@ -192,8 +206,8 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                             val color =
                                 if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
                                     .copy(
-                                    alpha = unimportantAlpha
-                                )
+                                        alpha = unimportantAlpha
+                                    )
                             Text(
                                 text = week,
                                 color = color,
@@ -264,6 +278,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                         .weight(1F)
                                 ) {
                                     for (node in 1..5) {
+                                        var expanded by remember { mutableStateOf(false) }
                                         // 筛选出当前遍历的星期号和节次的课程
                                         val courses = coursesOnCell[Pair(week, node)]
                                         val currentWeekCourse =
@@ -288,15 +303,24 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                 .padding(3.dp)
                                                 .clip(RoundedCornerShape(5.dp))
                                                 .background(background)
-                                                .clickable(
-                                                    enabled = courses?.isNotEmpty() ?: false,
+                                                .combinedClickable(
+                                                    interactionSource = remember {
+                                                        MutableInteractionSource()
+                                                    },
+                                                    indication = rememberRipple(bounded = true),
                                                     onClick = {
-                                                        viewModel.setContentInCourseDetailDialog(
-                                                            courses?.toList() ?: emptyList()
-                                                        )
-                                                        viewModel.showCourseDetailDialog()
-                                                    }
-                                                )
+                                                        if (courses?.isNotEmpty() == true) {
+                                                            viewModel.setContentInCourseDetailDialog(
+                                                                courses.toList()
+                                                            )
+                                                            viewModel.setIsCourseDetailDialogOpen(
+                                                                true
+                                                            )
+                                                        }
+                                                    },
+                                                    onLongClick = {
+                                                        expanded = true
+                                                    })
                                         ) {
                                             if (!courses.isNullOrEmpty()) {
                                                 Box(
@@ -339,6 +363,24 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                     )
                                                 }
                                             }
+                                            DropdownMenu(
+                                                expanded = expanded,
+                                                onDismissRequest = { expanded = false },
+                                            ) {
+                                                DropdownMenuItem(
+                                                    text = { Text("查找该时间段上课的教室") },
+                                                    onClick = {
+                                                        expanded = false
+                                                        viewModel.viewModelScope.launch {
+                                                            viewModel.getNonEmptyClassrooms(
+                                                                week,
+                                                                node
+                                                            )
+                                                        }
+                                                        isShowNonEmptyClassroomSheet = true
+                                                    },
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -353,7 +395,44 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                 Modifier.align(Alignment.TopCenter)
             )
         }
+    }
 
+    if (isShowNonEmptyClassroomSheet) {
+        ModalBottomSheet(
+            windowInsets = WindowInsets.navigationBars,
+            onDismissRequest = {
+                isShowNonEmptyClassroomSheet = false
+                viewModel.clearNonEmptyClassrooms()
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 15.dp),
+                ) {
+                    Text(
+                        "有课的教室",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 15.dp)
+                    )
+                    if (uiState.isNonEmptyClrLoading) {
+                        Spacer(modifier = Modifier.height(5.dp))
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    LazyColumn(Modifier.padding(horizontal = 15.dp)) {
+                        items(uiState.nonEmptyClassrooms.size) {
+                            ListItem(
+                                headlineContent = { Text(text = "${uiState.nonEmptyClassrooms[it].classroomNameHtml ?: ""} | ${uiState.nonEmptyClassrooms[it].courseName ?: ""}") },
+                                trailingContent = { Text(text = "${uiState.nonEmptyClassrooms[it].teacherName ?: ""}") },
+                                supportingContent = { Text(text = uiState.nonEmptyClassrooms[it].className?.replace(",", " | ") ?: "") },
+                            )
+                        }
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -363,23 +442,36 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
 fun CreateActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
 
     val scope = CoroutineScope(Dispatchers.IO)
-    var showWeekSliderDialog by remember { mutableStateOf(false) }
 
-    IconButton(onClick = {
-        showWeekSliderDialog = true
-    }) {
+    IconButton(
+        onClick = {
+            viewModel.setBrowsedWeek(uiState.browsedWeek - 1)
+        },
+        enabled = uiState.browsedWeek > 1
+    ) {
         Icon(
-            imageVector = rememberTune(),
-            contentDescription = null
+            imageVector = rememberChevronLeft(),
+            contentDescription = null,
+        )
+    }
+    IconButton(
+        onClick = {
+            viewModel.setBrowsedWeek(uiState.browsedWeek + 1)
+        },
+        enabled = uiState.browsedWeek < 20
+    ) {
+        Icon(
+            imageVector = rememberChevronRight(),
+            contentDescription = null,
         )
     }
 
-    var weekSliderPosition by remember { mutableFloatStateOf(uiState.currentWeek.toFloat()) }
+    var weekSliderPosition by remember { mutableFloatStateOf(uiState.browsedWeek.toFloat()) }
     var semesterDropdownMenuExpanded by remember { mutableStateOf(false) }
     var selectedSemester by remember { mutableStateOf(uiState.browsedSemester) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    if (showWeekSliderDialog) {
+    if (uiState.isShowWeekSliderDialog) {
         AlertDialog(
             confirmButton = {
                 TextButton({
@@ -390,7 +482,7 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiSt
                         }
                     }
                     viewModel.setBrowsedSemester(selectedSemester)
-                    showWeekSliderDialog = false
+                    viewModel.setIsShowWeekSliderDialog(false)
                 }) {
                     Text("应用")
                 }
@@ -406,7 +498,7 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiSt
                         }
                     }
                     viewModel.setBrowsedSemester(uiState.semesters.last().toString())
-                    showWeekSliderDialog = false
+                    viewModel.setIsShowWeekSliderDialog(false)
                 }) {
                     Text("重置")
                 }
@@ -414,7 +506,7 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiSt
             onDismissRequest = {
                 weekSliderPosition = uiState.browsedWeek.toFloat()
                 selectedSemester = uiState.browsedSemester
-                showWeekSliderDialog = false
+                viewModel.setIsShowWeekSliderDialog(false)
             },
             title = { Text("切换课表") },
             text = {

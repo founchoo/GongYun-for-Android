@@ -1,6 +1,5 @@
 package com.dart.campushelper.ui.grade
 
-import android.util.Log
 import androidx.compose.runtime.toMutableStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +7,7 @@ import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.RankingInfo
+import com.patrykandpatrick.vico.core.entry.FloatEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +22,7 @@ import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import javax.inject.Inject
 
-data class GradesUiState(
+data class GradeUiState(
     val rankingAvailable: Boolean = true,
     val rankingInfo: RankingInfo = RankingInfo(),
     val isRankingInfoLoading: Boolean = true,
@@ -37,7 +37,10 @@ data class GradesUiState(
     val averageScore: Double = 0.0,
     val searchKeyword: String = "",
     val isGradeDetailDialogOpen: Boolean = false,
+    val isShowLineChart: Boolean = false,
+    val isLineChartLoading: Boolean = true,
     val contentForGradeDetailDialog: Grade = Grade(),
+    val chartData: List<FloatEntry> = emptyList(),
 )
 
 @HiltViewModel
@@ -47,8 +50,8 @@ class GradeViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state exposed to the UI
-    private val _uiState = MutableStateFlow(GradesUiState())
-    val uiState: StateFlow<GradesUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(GradeUiState())
+    val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
 
     private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
         .stateIn(
@@ -88,7 +91,7 @@ class GradeViewModel @Inject constructor(
             ) { isLogin, username, enterUniversityYear ->
                 listOf(isLogin.toString(), username, enterUniversityYear)
             }.collect {
-                Log.d("GradeViewModel", "observeIsLogin: $it")
+                // Log.d("GradeViewModel", "observeIsLogin: $it")
                 _uiState.update { uiState ->
                     uiState.copy(showLoginPlaceholder = it[1].isEmpty())
                 }
@@ -100,15 +103,9 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun showGradeDetailDialog() {
+    fun setIsGradeDetailDialogOpen(value: Boolean) {
         _uiState.update {
-            it.copy(isGradeDetailDialogOpen = true)
-        }
-    }
-
-    fun hideGradeDetailDialog() {
-        _uiState.update {
-            it.copy(isGradeDetailDialogOpen = false)
+            it.copy(isGradeDetailDialogOpen = value)
         }
     }
 
@@ -121,6 +118,39 @@ class GradeViewModel @Inject constructor(
     fun setContentForGradeDetailDialog(value: Grade) {
         _uiState.update {
             it.copy(contentForGradeDetailDialog = value)
+        }
+    }
+
+    fun setIsShowLineChart(value: Boolean) {
+        _uiState.update {
+            it.copy(isShowLineChart = value)
+        }
+    }
+
+    suspend fun loadLineChart() {
+        _uiState.update {
+            it.copy(isLineChartLoading = true)
+        }
+        val gradesResult = chaoxingRepository.getGrades()
+        if (gradesResult != null) {
+            val sorted = gradesResult.results.sortedBy { grade -> grade.semesterYearAndNo } + Grade()
+            var flag = sorted.first().semesterYearAndNo
+            val grades = mutableListOf<Grade>()
+            val model = mutableListOf<FloatEntry>()
+            var no = 1
+
+            sorted.forEach {
+                if (it.semesterYearAndNo != flag) {
+                    model.add(FloatEntry(no.toFloat(), calculateGPA(grades).toFloat()))
+                    grades.clear()
+                    no++
+                    flag = it.semesterYearAndNo
+                }
+                grades.add(it)
+            }
+            _uiState.update {
+                it.copy(chartData = model, isLineChartLoading = false)
+            }
         }
     }
 
@@ -140,10 +170,10 @@ class GradeViewModel @Inject constructor(
                 updateGPA()
                 updateAverageScore()
                 val courseSortList = grades.map {
-                    it.courseSort ?: ""
+                    it.courseType
                 }.toSet().toList()
                 val semesterList = grades.map { grade ->
-                    grade.xnxq ?: ""
+                    grade.semesterYearAndNo ?: ""
                 }.toSet().toList().sorted()
                 _uiState.update {
                     it.copy(
@@ -162,14 +192,24 @@ class GradeViewModel @Inject constructor(
         }
     }
 
+    private fun calculateGPA(grades: List<Grade>): Double {
+        return grades.sumOf { grade ->
+            (grade.score / 10.0 - 5) * grade.credit
+        } / grades.sumOf { grade ->
+            grade.credit
+        }
+    }
+
+    private fun calculateAverageScore(grades: List<Grade>): Double {
+        return grades.sumOf { grade ->
+            grade.score.toDouble()
+        } / grades.size
+    }
+
     private fun updateGPA() {
         _uiState.update {
             it.copy(
-                gradePointAverage = it.grades.sumOf { grade ->
-                    (grade.score / 10.0 - 5) * grade.credit
-                } / it.grades.sumOf { grade ->
-                    grade.credit
-                },
+                gradePointAverage = calculateGPA(it.grades),
             )
         }
     }
@@ -177,9 +217,7 @@ class GradeViewModel @Inject constructor(
     private fun updateAverageScore() {
         _uiState.update {
             it.copy(
-                averageScore = it.grades.sumOf { grade ->
-                    grade.score.toDouble()
-                } / it.grades.size,
+                averageScore = calculateAverageScore(it.grades),
             )
         }
     }
@@ -244,8 +282,8 @@ class GradeViewModel @Inject constructor(
             it.copy(
                 grades = _backupGrades.filter { grade ->
                     grade.name.contains(text) && courseSortsSelectedMapKey.contains(
-                        grade.courseSort
-                    ) && semestersSelectedMapKey.contains(grade.xnxq ?: "")
+                        grade.courseType
+                    ) && semestersSelectedMapKey.contains(grade.semesterYearAndNo ?: "")
                 },
                 rankingAvailable = !_uiState.value.courseSortsSelected.containsValue(false) && text == ""
             )

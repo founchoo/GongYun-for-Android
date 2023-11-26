@@ -1,6 +1,5 @@
 package com.dart.campushelper.ui.login
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
@@ -37,15 +36,15 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             val loginResource =
                 chaoxingRepository.login(_uiState.value.username, _uiState.value.password, true)
-            Log.d("LoginViewModel", loginResource.toString())
+            // Log.d("LoginViewModel", loginResource.toString())
             if (loginResource.isSuccess) {
                 val studentInfoResult = chaoxingRepository.getStudentInfo()
                 if (studentInfoResult != null) {
-                    Log.d("LoginViewModel", studentInfoResult.data!!.records[0].dataXnxq!!)
+                    // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].dataXnxq!!)
                     runBlocking {
                         userPreferenceRepository.changeSemesterYearAndNo(studentInfoResult.data!!.records[0].dataXnxq!!)
                     }
-                    Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
+                    // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
                     runBlocking {
                         userPreferenceRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
                     }

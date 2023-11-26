@@ -16,32 +16,27 @@ data class GradeResponse(
 
 data class Grade(
 
-    @SerializedName("id") var id: String? = null,
-    @SerializedName("xhid") var xhid: String? = null,
-    @SerializedName("xnxq") var xnxq: String? = null,
-    @SerializedName("xf") var xf: String? = null,
-    @SerializedName("kcmc") var kcmc: String? = null,
-    @SerializedName("kcxz") var kcxz: String? = null,
-    @SerializedName("zhcj") var zhcj: String? = null,
-    @SerializedName("hdxf") var hdxf: Double? = null,
-    @SerializedName("xfjd") var xfjd: String? = null,
-    @SerializedName("jd") var gp: Double? = null,
-    @SerializedName("xdxz") var xdxz: String? = null,
-    @SerializedName("ksxs") var ksxs: String? = null,
-    @SerializedName("kcid") var kcid: String? = null,
+    @SerializedName("xnxq") var semesterYearAndNo: String? = null,
+    @SerializedName("xf") var creditRaw: String? = null,
+    @SerializedName("kcmc") var courseNameRaw: String? = null,
+    @SerializedName("kcxz") var courseTypeRaw: String? = null,
+    @SerializedName("zhcj") var scoreRaw: String? = null,
+    @SerializedName("jd") var gradePoint: Double? = null,
+    @SerializedName("kcid") var courseId: String? = null,
+    @SerializedName("cjfxms") var detail: String? = null,
 
     ) {
     val score: Int
-        get() = zhcj.orEmpty().toIntOrNull() ?: 0
+        get() = scoreRaw.orEmpty().toIntOrNull() ?: 0
 
     val credit: Double
-        get() = xf.orEmpty().toDoubleOrNull() ?: 0.0
+        get() = creditRaw.orEmpty().toDoubleOrNull() ?: 0.0
 
     val name: String
-        get() = kcmc?.replace("[${kcid}]", "") ?: ""
+        get() = courseNameRaw?.replace("[${courseId}]", "") ?: ""
 
-    val courseSort: String?
-        get() = when (kcxz) {
+    val courseType: String
+        get() = when (courseTypeRaw) {
             "50" -> "基础实践"
             "51" -> "专业实践"
             "99" -> "公共选修课"

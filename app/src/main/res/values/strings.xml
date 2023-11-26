@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">校园助手</string>
+    <string name="app_name">工韵</string>
     <string name="grade_label">成绩</string>
     <string name="settings_label">设置</string>
     <string name="schedule_label">课表</string>
+    <string name="program_label">培养方案</string>
     <string name="placeholder_main_activity_pin_unavailable">启动器不支持固定微件</string>
 </resources>

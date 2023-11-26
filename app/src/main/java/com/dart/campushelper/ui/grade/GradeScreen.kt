@@ -5,11 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -24,26 +26,35 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.ui.rememberCheck
 import com.dart.campushelper.ui.rememberCheckIndeterminateSmall
 import com.dart.campushelper.ui.rememberFilterAlt
 import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
+import com.dart.campushelper.ui.rememberShowChart
 import com.dart.campushelper.ui.rememberSort
 import com.dart.campushelper.ui.rememberTimeline
 import com.dart.campushelper.utils.fadingEdge
 import com.dart.campushelper.utils.isScrollingUp
+import com.dart.campushelper.utils.rememberMarker
+import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.entry.entryModelOf
 import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
 import io.github.fornewid.placeholder.material3.placeholder
 import io.github.fornewid.placeholder.material3.shimmer
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
-var openBottomSheet by mutableStateOf(false)
-
 @OptIn(ExperimentalMaterial3Api::class)
 lateinit var bottomSheetState: SheetState
+
+var openFilterSheet by mutableStateOf(false)
+var openChartSheet by mutableStateOf(false)
 
 var fabVisibility: Boolean? by mutableStateOf(null)
 
@@ -71,17 +82,17 @@ fun GradeScreen(
         GradeDetailDialog(
             grade = uiState.contentForGradeDetailDialog,
             onDismissRequest = {
-                viewModel.hideGradeDetailDialog()
+                viewModel.setIsGradeDetailDialogOpen(false)
             }
         )
     }
 
     // Sheet content
-    if (openBottomSheet) {
-
+    if (openFilterSheet) {
         ModalBottomSheet(
+            windowInsets = WindowInsets.navigationBars,
             onDismissRequest = {
-                openBottomSheet = false
+                openFilterSheet = false
             },
             sheetState = bottomSheetState,
         ) {
@@ -201,7 +212,7 @@ fun GradeScreen(
                     TextButton(onClick = {
                         scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
                             if (!bottomSheetState.isVisible) {
-                                openBottomSheet = false
+                                openFilterSheet = false
                             }
                         }
                     }) {
@@ -214,7 +225,7 @@ fun GradeScreen(
                         onClick = {
                             scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
                                 if (!bottomSheetState.isVisible) {
-                                    openBottomSheet = false
+                                    openFilterSheet = false
                                 }
                             }
                             viewModel.filterGrades(uiState.searchKeyword)
@@ -239,20 +250,26 @@ fun GradeDetailDialog(
             onDismissRequest()
         },
         title = {
-            Text(text = "成绩详情")
+            Text(text = grade.name)
         },
         text = {
-            ListItem(
-                headlineContent = {
-                    Text("${grade.name}")
-                },
-                supportingContent = {
-                    Text("成绩 ${grade.score} / 绩点 ${grade.gp}")
-                },
-                trailingContent = {
-                    Text("${grade.xnxq}\n${grade.courseSort}\n学分 ${grade.credit}")
-                },
-            )
+            Column {
+                ListItem(
+                    headlineContent = {
+                        Text("成绩 ${grade.score} / 绩点 ${grade.gradePoint}")
+                    },
+                    supportingContent = {
+                        Text(grade.detail ?: "")
+                    },
+                    trailingContent = {
+                        Text(
+                            "${grade.semesterYearAndNo}\n" +
+                                    "${grade.courseType}\n" +
+                                    "学分 ${grade.credit}"
+                        )
+                    },
+                )
+            }
         },
         confirmButton = {},
         dismissButton = {
@@ -282,7 +299,7 @@ fun CreateFloatingActionButtonForGrade() {
     ) {
         FloatingActionButton(
             onClick = {
-                openBottomSheet = true
+                openFilterSheet = true
             }
         ) {
             Icon(
@@ -296,7 +313,7 @@ fun CreateFloatingActionButtonForGrade() {
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
+fun AddContent(uiState: GradeUiState, viewModel: GradeViewModel) {
 
     val listState = rememberLazyListState()
     var isScrollingUp by mutableStateOf(listState.isScrollingUp())
@@ -325,7 +342,7 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                     )
                 )
         ) {
-            LazyRow {
+            LazyRow() {
                 item {
                     Spacer(Modifier.width(10.dp))
                 }
@@ -480,7 +497,7 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                     ListItem(
                         modifier = Modifier
                             .clickable {
-                                viewModel.showGradeDetailDialog()
+                                viewModel.setIsGradeDetailDialogOpen(true)
                                 viewModel.setContentForGradeDetailDialog(grade)
                             },
                         headlineContent = {
@@ -495,7 +512,7 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                         },
                         trailingContent = {
                             Text(
-                                text = "学分 ${grade.credit}"
+                                text = "${grade.semesterYearAndNo}"
                             )
                         },
                         colors = ListItemDefaults.colors(
@@ -510,5 +527,82 @@ fun AddContent(uiState: GradesUiState, viewModel: GradeViewModel) {
                 Modifier.align(Alignment.TopCenter)
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateActionsForGrade(viewModel: GradeViewModel, uiState: GradeUiState) {
+
+    val scope = rememberCoroutineScope()
+    val chartSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    IconButton(
+        onClick = {
+            scope.launch {
+                viewModel.loadLineChart()
+            }
+            openChartSheet = true
+        },
+    ) {
+        Icon(
+            imageVector = rememberShowChart(),
+            contentDescription = "成绩变化曲线",
+        )
+    }
+
+    if (openChartSheet) {
+        ModalBottomSheet(
+            windowInsets = WindowInsets.navigationBars,
+            onDismissRequest = {
+                openChartSheet = false
+            },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 15.dp),
+                ) {
+                    Text(
+                        "绩点曲线", style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 15.dp)
+                    )
+                    if (uiState.isLineChartLoading) {
+                        Spacer(Modifier.height(5.dp))
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                    Chart(
+                        modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
+                            .requiredWidth(uiState.chartData.size * 60.dp)
+                            .align(Alignment.CenterHorizontally),
+                        chart = lineChart(),
+                        model = entryModelOf(
+                            uiState.chartData
+                        ),
+                        startAxis = rememberStartAxis(),
+                        bottomAxis = rememberBottomAxis(
+                            valueFormatter = { value, _ ->
+                                when (value) {
+                                    1f -> "大一上"
+                                    2f -> "大一下"
+                                    3f -> "大二上"
+                                    4f -> "大二下"
+                                    5f -> "大三上"
+                                    6f -> "大三下"
+                                    7f -> "大四上"
+                                    8f -> "大四下"
+                                    else -> ""
+                                }
+                            }
+                        ),
+                        marker = rememberMarker(),
+                    )
+                }
+            },
+            sheetState = chartSheetState,
+        )
     }
 }

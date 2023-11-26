@@ -1,6 +1,5 @@
 package com.dart.campushelper.ui.schedule
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
@@ -35,6 +34,8 @@ data class ScheduleUiState(
     // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
     val currentNode: Int = 1,
     val isCourseDetailDialogOpen: Boolean = false,
+    val isNonEmptyClrLoading: Boolean = true,
+    val isShowWeekSliderDialog: Boolean = false,
     val nodeHeaders: IntRange = (1..10),
     val weekHeaders: List<String> = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
@@ -52,6 +53,7 @@ data class ScheduleUiState(
     val semesters: List<String> = emptyList(),
     val browsedSemester: String = "",
     val startLocalDate: LocalDate? = null,
+    val nonEmptyClassrooms: List<Course> = emptyList(),
 )
 
 @HiltViewModel
@@ -188,7 +190,7 @@ class ScheduleViewModel @Inject constructor(
     /**
      * 当切换学年学期时，此方法应该被调用
      */
-    private suspend fun getStartLocalDate(semesterYearAndNo: String?) {
+    private suspend fun getStartLocalDate(semesterYearAndNo: String? = null) {
         val list = chaoxingRepository.getCalendar(semesterYearAndNo)
         if (list != null) {
             val first = list[0]
@@ -228,15 +230,21 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun showCourseDetailDialog() {
+    fun setIsCourseDetailDialogOpen(value: Boolean) {
         _uiState.update {
-            it.copy(isCourseDetailDialogOpen = true)
+            it.copy(isCourseDetailDialogOpen = value)
         }
     }
 
-    fun hideCourseDetailDialog() {
+    fun setIsNonEmptyClrLoading(value: Boolean) {
         _uiState.update {
-            it.copy(isCourseDetailDialogOpen = false)
+            it.copy(isNonEmptyClrLoading = value)
+        }
+    }
+
+    fun setIsShowWeekSliderDialog(value: Boolean) {
+        _uiState.update {
+            it.copy(isShowWeekSliderDialog = value)
         }
     }
 
@@ -251,9 +259,9 @@ class ScheduleViewModel @Inject constructor(
             uiState.copy(isTimetableLoading = true)
         }
         getStartLocalDate(semesterYearAndNo)
-        Log.d("ScheduleViewModel", "getCourses")
+        // Log.d("ScheduleViewModel", "getCourses")
         val resource = chaoxingRepository.getSchedule(semesterYearAndNo)
-        Log.d("ScheduleViewModel", "getCourses: resource: $resource")
+        // Log.d("ScheduleViewModel", "getCourses: resource: $resource")
         if (resource != null) {
             val courses = resource.filter {
                 (it.nodeNo!! + 1) % 2 == 0
@@ -263,6 +271,82 @@ class ScheduleViewModel @Inject constructor(
             _uiState.update { uiState ->
                 uiState.copy(isTimetableLoading = false, courses = courses)
             }
+        }
+    }
+
+    suspend fun getNonEmptyClassrooms(dayOfWeek: Int, node: Int) {
+        _uiState.update {
+            it.copy(isNonEmptyClrLoading = true)
+        }
+        val startNode = node * 2 - 1
+        val response = chaoxingRepository.getGlobalSchedule(
+            semesterYearAndNo = _uiState.value.browsedSemester,
+            startWeekNo = _uiState.value.browsedWeek.toString(),
+            endWeekNo = _uiState.value.browsedWeek.toString(),
+            startDayOfWeek = dayOfWeek.toString(),
+            endDayOfWeek = dayOfWeek.toString(),
+            startNode = startNode.toString(),
+            endNode = (node * 2).toString(),
+        )
+        if (response != null) {
+            val nonEmptyClassrooms = mutableListOf<Course>()
+            response.results.forEach { course ->
+                val classroomList = course.classroom.split(", ")
+                if (classroomList.size > 1) {
+                    course.sksjdd!!.split("\n").forEach { info ->
+                        val items = info.split(" ")
+                        if (toMachineReadableWeekNoList(items[0]).contains(_uiState.value.browsedWeek)) {
+                            if (when (items[1]) {
+                                "周一" -> 1
+                                "周二" -> 2
+                                "周三" -> 3
+                                "周四" -> 4
+                                "周五" -> 5
+                                "周六" -> 6
+                                "周日" -> 7
+                                else -> 0
+                            } == dayOfWeek) {
+                                if (items[2].replace("小节", "").split("-")[0].toInt() == startNode ) {
+                                    nonEmptyClassrooms.add(Course().copy(
+                                        courseNameHtml = course.courseNameHtml,
+                                        classroomNameHtml = items[3],
+                                        teacherNameHtml = course.teacherNameHtml,
+                                        classNameHtml = course.classNameHtml,
+                                    ))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            _uiState.update {
+                it.copy(
+                    nonEmptyClassrooms = nonEmptyClassrooms.distinct().sortedBy { it.classroomName },
+                    isNonEmptyClrLoading = false,
+                )
+            }
+        }
+    }
+
+    private fun toMachineReadableWeekNoList(humanReadableWeekNoList: String): List<Int> {
+        val list = mutableListOf<Int>()
+        humanReadableWeekNoList.replace("周", "").split(",").forEach { item ->
+            if (item.contains("-")) {
+                val start = item.split("-")[0].toInt()
+                val end = item.split("-")[1].toInt()
+                (start..end).forEach { list.add(it) }
+            } else {
+                list.add(item.toInt())
+            }
+        }
+        return list
+    }
+
+    fun clearNonEmptyClassrooms() {
+        _uiState.update {
+            it.copy(
+                nonEmptyClassrooms = emptyList()
+            )
         }
     }
 }

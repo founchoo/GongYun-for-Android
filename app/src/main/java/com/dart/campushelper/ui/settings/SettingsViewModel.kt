@@ -9,7 +9,6 @@ import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_PIN
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_USERNAME
 import com.dart.campushelper.ui.MainActivity
@@ -35,7 +34,6 @@ data class SettingsUiState(
     val isYearDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isDateDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isTimeDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
-    val isPin: Boolean = DEFAULT_VALUE_IS_PIN,
     val openLogoutConfirmDialog: Boolean = false,
     val openFeedbackUrlConfirmDialog: Boolean = false,
     val openSourceCodeUrlConfirmDialog: Boolean = false,
@@ -80,14 +78,6 @@ class SettingsViewModel @Inject constructor(
                 userPreferenceRepository.observeSelectedDarkMode().first()
             }
         )
-
-    private val isPinStateFlow = userPreferenceRepository.observeIsPin().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        runBlocking {
-            userPreferenceRepository.observeIsPin().first()
-        }
-    )
 
     private val isOtherCourseDisplayStateFlow = userPreferenceRepository.observeIsOtherCourseDisplay().stateIn(
         viewModelScope,
@@ -159,13 +149,6 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            isPinStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isPin = value)
-                }
-            }
-        }
-        viewModelScope.launch {
             isOtherCourseDisplayStateFlow.collect { value ->
                 _uiState.update {
                     it.copy(isOtherCourseDisplay = value)
@@ -214,23 +197,15 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun changeIsPin(isPin: Boolean) {
-        _uiState.update {
-            it.copy(isPin = isPin)
-        }
-        viewModelScope.launch {
-            userPreferenceRepository.changeIsPin(isPin)
-        }
-        if (isPin) {
-            val widgetManager = AppWidgetManager.getInstance(CampusHelperApplication.context)
-            // Get a list of our app widget providers to retrieve their info
-            val widgetProviders =
-                widgetManager.getInstalledProvidersForPackage(
-                    CampusHelperApplication.context.packageName,
-                    null
-                )
-            widgetProviders[0].pin(CampusHelperApplication.context)
-        }
+    fun pin() {
+        val widgetManager = AppWidgetManager.getInstance(CampusHelperApplication.context)
+        // Get a list of our app widget providers to retrieve their info
+        val widgetProviders =
+            widgetManager.getInstalledProvidersForPackage(
+                CampusHelperApplication.context.packageName,
+                null
+            )
+        widgetProviders[0].pin(CampusHelperApplication.context)
     }
 
     fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
