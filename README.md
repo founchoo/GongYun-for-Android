@@ -63,19 +63,23 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 鸣谢
 
-- https://www.composables.com/icons **Material Symbols for Jetpack Compose**。
+- https://www.composables.com/icons Material Symbols for Jetpack Compose
 
-- https://stackoverflow.com/ StackOverflow。
+- https://stackoverflow.com/ StackOverflow
 
-- https://m3.material.io/ Material Design 指南。
+- https://m3.material.io/ Material Design 指南
 
-- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档。
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档
 
-- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
+- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose
 
-- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件。
+- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件
 
-- https://github.com/harmittaa/KoinExample Retrofit 错误处理。
+- https://github.com/harmittaa/KoinExample Retrofit 错误处理
+
+- https://github.com/patrykandpatrick/vico 图表库
+
+- https://plugins.jetbrains.com/plugin/18619-svg-to-compose svg 转 compose
 
 
 ## 开源协议
