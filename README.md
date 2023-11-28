@@ -28,26 +28,28 @@
 
 目前，该应用提供如下功能：
 
-- 查看课表
-  - 切换到其他学年、周数查看其他周的课程
-  - 查看全校某时段上课的教室
-  - 提供桌面小组件显示当天课程
-- 成绩查询
-  - 排名查询（包括年级、专业、班级排名）
-  - GPA 及算术平均分的自动计算
-  - 成绩筛选（学年、课程类型）
-  - 绩点曲线图
+1. 查看课表
+   - 查看其他学年及周数的课程
+   - 提供桌面小组件显示当天课程
+   - 查找同期空闲教室及授课教室
+
+2. 成绩查询
+   - 排名查询（包括年级、专业、班级排名）
+   - 排名柱状图
+   - 绩点及算术平均分的自动计算
+   - 绩点变化曲线查看
+   - 成绩筛选（学年、课程类型）
+   - 成绩分布柱状图
 
 ## TODO
 1. 查看空教室 / 有课教室的 TabRow 与 Horizontal Pager 联动
-2. 成绩模块数据统计增加「成绩分布」图表
-3. 成绩模块增加「按 \*\*\* 排序」功能，例如成绩、学分等
+2. 成绩模块增加「按 \*\*\* 排序」功能，例如成绩、学分等
 
 ## 屏幕截图
 
-注意：考虑到隐私问题，我们已模糊处理某些信息，当您在实际使用该应用时，不会出现模糊现象。
+注意：考虑到隐私问题，我们已星号处理某些信息，当您实际正常使用该应用时，不会出现该现象。
 
-<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/adb2383f-de53-4b37-8c23-3c54175e7fca">
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/4140a910-2893-4889-ad12-5cd8ca0882c0">
 
 ## 下载
 
@@ -61,19 +63,23 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 鸣谢
 
-- https://www.composables.com/icons **Material Symbols for Jetpack Compose**。
+- https://www.composables.com/icons Material Symbols for Jetpack Compose
 
-- https://stackoverflow.com/ StackOverflow。
+- https://stackoverflow.com/ StackOverflow
 
-- https://m3.material.io/ Material Design 指南。
+- https://m3.material.io/ Material Design 指南
 
-- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档。
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档
 
-- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
+- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose
 
-- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件。
+- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件
 
-- https://github.com/harmittaa/KoinExample Retrofit 错误处理。
+- https://github.com/harmittaa/KoinExample Retrofit 错误处理
+
+- https://github.com/patrykandpatrick/vico 图表库
+
+- https://plugins.jetbrains.com/plugin/18619-svg-to-compose svg 转 compose
 
 
 ## 开源协议
