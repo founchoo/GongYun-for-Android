@@ -13,6 +13,7 @@ import com.dart.campushelper.data.KEYS.KEY_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.KEYS.KEY_ENTER_UNIVERSITY_YEAR
 import com.dart.campushelper.data.KEYS.KEY_IS_DATE_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_IS_OTHER_COURSE_DISPLAY
+import com.dart.campushelper.data.KEYS.KEY_IS_SCREENSHOT_MODE
 import com.dart.campushelper.data.KEYS.KEY_IS_TIME_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.KEYS.KEY_PASSWORD
@@ -21,9 +22,11 @@ import com.dart.campushelper.data.KEYS.KEY_SEMESTER_YEAR_AND_NO
 import com.dart.campushelper.data.KEYS.KEY_USERNAME
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_COOKIES
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_DAY_OF_WEEK
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_DATE_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
+import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_SCREENSHOT_MODE
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_TIME_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_YEAR_DISPLAY
 import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_PASSWORD
@@ -147,6 +150,14 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
+    override suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_SCREENSHOT_MODE] = isScreenshotMode
+            }
+        }
+    }
+
     override fun observeIsOtherCourseDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_OTHER_COURSE_DISPLAY] ?: DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
     }
@@ -184,7 +195,7 @@ class DataStoreRepository @Inject constructor(
         dataStore.data.map { it[KEY_DAY_OF_WEEK] ?: DEFAULT_VALUE_DAY_OF_WEEK }
 
     override fun observeEnableSystemColor(): Flow<Boolean> = dataStore.data.map {
-        it[KEY_ENABLE_SYSTEM_COLOR] ?: false
+        it[KEY_ENABLE_SYSTEM_COLOR] ?: DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
     }
 
     override fun observeUsername(): Flow<String> = dataStore.data.map {
@@ -201,6 +212,10 @@ class DataStoreRepository @Inject constructor(
 
     override fun observeEnterUniversityYear(): Flow<String> = dataStore.data.map {
         it[KEY_ENTER_UNIVERSITY_YEAR] ?: DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
+    }
+
+    override fun observeIsScreenshotMode(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_SCREENSHOT_MODE] ?: DEFAULT_VALUE_IS_SCREENSHOT_MODE
     }
 
     companion object {
@@ -224,22 +239,24 @@ object KEYS {
     val KEY_PASSWORD = stringPreferencesKey("password")
     val KEY_SEMESTER_YEAR_AND_NO = stringPreferencesKey("semester_year_and_no")
     val KEY_ENTER_UNIVERSITY_YEAR = stringPreferencesKey("enter_university_year")
+    val KEY_IS_SCREENSHOT_MODE = booleanPreferencesKey("is_screenshot_mode")
 }
 
 object VALUES {
-    val DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY = false
-    val DEFAULT_VALUE_IS_YEAR_DISPLAY = false
-    val DEFAULT_VALUE_IS_DATE_DISPLAY = false
-    val DEFAULT_VALUE_IS_TIME_DISPLAY = false
+    val DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY = true
+    val DEFAULT_VALUE_IS_YEAR_DISPLAY = true
+    val DEFAULT_VALUE_IS_DATE_DISPLAY = true
+    val DEFAULT_VALUE_IS_TIME_DISPLAY = true
     val DEFAULT_VALUE_COOKIES = "[]"
     val DEFAULT_VALUE_IS_LOGIN = false
     val DEFAULT_VALUE_DAY_OF_WEEK = -1
     val DEFAULT_VALUE_DISPLAYED_WEEK = -1
-    val DEFAULT_VALUE_ENABLE_SYSTEM_COLOR = false
+    val DEFAULT_VALUE_ENABLE_SYSTEM_COLOR = true
     val DEFAULT_VALUE_SELECTED_DARK_MODE = "跟随系统"
     val DEFAULT_VALUE_START_LOCALDATE = LocalDate.now()
     val DEFAULT_VALUE_USERNAME = ""
     val DEFAULT_VALUE_PASSWORD = ""
     val DEFAULT_VALUE_SEMESTER_YEAR_AND_NO = ""
     val DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR = ""
+    val DEFAULT_VALUE_IS_SCREENSHOT_MODE = false
 }

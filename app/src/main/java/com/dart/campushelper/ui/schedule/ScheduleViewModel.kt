@@ -1,9 +1,11 @@
 package com.dart.campushelper.ui.schedule
 
+import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.utils.DateUtils
 import com.dart.campushelper.utils.getCurrentNode
@@ -35,6 +37,7 @@ data class ScheduleUiState(
     val currentNode: Int = 1,
     val isCourseDetailDialogOpen: Boolean = false,
     val isNonEmptyClrLoading: Boolean = true,
+    val isEmptyClrLoading: Boolean = true,
     val isShowWeekSliderDialog: Boolean = false,
     val nodeHeaders: IntRange = (1..10),
     val weekHeaders: List<String> = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
@@ -54,6 +57,10 @@ data class ScheduleUiState(
     val browsedSemester: String = "",
     val startLocalDate: LocalDate? = null,
     val nonEmptyClassrooms: List<Course> = emptyList(),
+    val buildingNames: List<String> = emptyList(),
+    val emptyClassrooms: List<Classroom> = emptyList(),
+    val holdingCourseTooltipState: TooltipState = TooltipState(isPersistent = true),
+    val holdingSemesterTooltipState: TooltipState = TooltipState(isPersistent = true),
 )
 
 @HiltViewModel
@@ -236,12 +243,6 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun setIsNonEmptyClrLoading(value: Boolean) {
-        _uiState.update {
-            it.copy(isNonEmptyClrLoading = value)
-        }
-    }
-
     fun setIsShowWeekSliderDialog(value: Boolean) {
         _uiState.update {
             it.copy(isShowWeekSliderDialog = value)
@@ -297,22 +298,27 @@ class ScheduleViewModel @Inject constructor(
                         val items = info.split(" ")
                         if (toMachineReadableWeekNoList(items[0]).contains(_uiState.value.browsedWeek)) {
                             if (when (items[1]) {
-                                "周一" -> 1
-                                "周二" -> 2
-                                "周三" -> 3
-                                "周四" -> 4
-                                "周五" -> 5
-                                "周六" -> 6
-                                "周日" -> 7
-                                else -> 0
-                            } == dayOfWeek) {
-                                if (items[2].replace("小节", "").split("-")[0].toInt() == startNode ) {
-                                    nonEmptyClassrooms.add(Course().copy(
-                                        courseNameHtml = course.courseNameHtml,
-                                        classroomNameHtml = items[3],
-                                        teacherNameHtml = course.teacherNameHtml,
-                                        classNameHtml = course.classNameHtml,
-                                    ))
+                                    "周一" -> 1
+                                    "周二" -> 2
+                                    "周三" -> 3
+                                    "周四" -> 4
+                                    "周五" -> 5
+                                    "周六" -> 6
+                                    "周日" -> 7
+                                    else -> 0
+                                } == dayOfWeek
+                            ) {
+                                if (items[2].replace("小节", "")
+                                        .split("-")[0].toInt() == startNode
+                                ) {
+                                    nonEmptyClassrooms.add(
+                                        Course().copy(
+                                            courseNameHtml = course.courseNameHtml,
+                                            classroomNameHtml = items[3],
+                                            teacherNameHtml = course.teacherNameHtml,
+                                            classNameHtml = course.classNameHtml,
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -321,8 +327,33 @@ class ScheduleViewModel @Inject constructor(
             }
             _uiState.update {
                 it.copy(
-                    nonEmptyClassrooms = nonEmptyClassrooms.distinct().sortedBy { it.classroomName },
+                    buildingNames = nonEmptyClassrooms.map { course ->
+                        course.classroomName?.split("-")?.get(0) ?: ""
+                    }.distinct().sorted(),
+                    nonEmptyClassrooms = nonEmptyClassrooms.distinct()
+                        .sortedBy { item -> item.classroomName },
                     isNonEmptyClrLoading = false,
+                )
+            }
+        }
+    }
+
+    suspend fun getEmptyClassroom(dayOfWeek: Int, node: Int) {
+        _uiState.update {
+            it.copy(isEmptyClrLoading = true)
+        }
+        val response = chaoxingRepository.getEmptyClassroom(
+            weekNo = listOf(_uiState.value.browsedWeek),
+            dayOfWeekNo = listOf(dayOfWeek),
+            nodeNo = listOf(node),
+        )
+        if (response != null) {
+            _uiState.update {
+                it.copy(
+                    buildingNames = response.results.map { course ->
+                        course.buildingName ?: "" }.distinct().sorted(),
+                    emptyClassrooms = response.results,
+                    isEmptyClrLoading = false,
                 )
             }
         }
@@ -346,6 +377,14 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 nonEmptyClassrooms = emptyList()
+            )
+        }
+    }
+
+    fun clearEmptyClassrooms() {
+        _uiState.update {
+            it.copy(
+                emptyClassrooms = emptyList()
             )
         }
     }

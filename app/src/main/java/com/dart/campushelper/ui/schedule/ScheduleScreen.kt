@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -36,35 +37,47 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.ui.rememberChevronLeft
 import com.dart.campushelper.ui.rememberChevronRight
+import com.dart.campushelper.ui.rememberLightbulb
+import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 import com.dart.campushelper.utils.PreferenceHeader
+import com.dart.campushelper.utils.convertDayOfWeekToChinese
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -131,22 +144,32 @@ fun ScheduleScreen(
 @SuppressLint("UnrememberedMutableState")
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
-    ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class
+    ExperimentalMaterial3Api::class
 )
 @Composable
 fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
 
-    val refreshScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     var isShowNonEmptyClassroomSheet by remember { mutableStateOf(false) }
+    var isShowEmptyClassroomSheet by remember { mutableStateOf(false) }
+
+    var buildingIndexSelected by remember { mutableIntStateOf(0) }
 
     val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, {
-        refreshScope.launch {
+        scope.launch {
             viewModel.getCourses(uiState.browsedSemester)
         }
     })
     val nodeColumnWeight = 0.65F
     val unimportantAlpha = 0.3f
+
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
+    var dayOfWeekOnHoldingCourse by remember { mutableIntStateOf(0) }
+    var nodeNoOnHoldingCourse by remember { mutableIntStateOf(0) }
 
     val coursesOnCell =
         mutableMapOf<Pair<Int, Int>, List<Course>>()
@@ -271,7 +294,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                             modifier = Modifier
                                 .weight(7F)
                         ) {
-                            (1..7).forEach { week ->
+                            (1..7).forEach { dayOfWeek ->
                                 Column(
                                     modifier = Modifier
                                         .fillParentMaxHeight()
@@ -280,7 +303,7 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                     for (node in 1..5) {
                                         var expanded by remember { mutableStateOf(false) }
                                         // 筛选出当前遍历的星期号和节次的课程
-                                        val courses = coursesOnCell[Pair(week, node)]
+                                        val courses = coursesOnCell[Pair(dayOfWeek, node)]
                                         val currentWeekCourse =
                                             courses?.find { it.weekNoList.contains(uiState.browsedWeek) }
                                         val alpha =
@@ -296,6 +319,8 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                             MaterialTheme.colorScheme.secondaryContainer.copy(
                                                 alpha = alpha
                                             )
+                                        val isCurrentTimeCourse =
+                                            (uiState.currentNode + 1) / 2 == node && uiState.dayOfWeek == dayOfWeek
                                         Box(
                                             modifier = Modifier
                                                 .weight(1F)
@@ -319,8 +344,12 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         }
                                                     },
                                                     onLongClick = {
+                                                        dayOfWeekOnHoldingCourse = dayOfWeek
+                                                        nodeNoOnHoldingCourse = node
+                                                        buildingIndexSelected = 0
                                                         expanded = true
-                                                    })
+                                                    },
+                                                )
                                         ) {
                                             if (!courses.isNullOrEmpty()) {
                                                 Box(
@@ -368,16 +397,29 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                 onDismissRequest = { expanded = false },
                                             ) {
                                                 DropdownMenuItem(
-                                                    text = { Text("查找该时间段上课的教室") },
+                                                    text = { Text("同期授课教室") },
                                                     onClick = {
                                                         expanded = false
                                                         viewModel.viewModelScope.launch {
                                                             viewModel.getNonEmptyClassrooms(
-                                                                week,
+                                                                dayOfWeek,
                                                                 node
                                                             )
                                                         }
                                                         isShowNonEmptyClassroomSheet = true
+                                                    },
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text("同期空闲教室") },
+                                                    onClick = {
+                                                        expanded = false
+                                                        viewModel.viewModelScope.launch {
+                                                            viewModel.getEmptyClassroom(
+                                                                dayOfWeek,
+                                                                node
+                                                            )
+                                                        }
+                                                        isShowEmptyClassroomSheet = true
                                                     },
                                                 )
                                             }
@@ -397,6 +439,34 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
         }
     }
 
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(
+            min(screenHeight, screenWidth) / 2
+        ),
+        tooltip = {
+            RichTooltip(
+                title = {
+                    Text("查看同期空闲及授课教室", fontWeight = FontWeight.Bold)
+                },
+                action = {
+                    TextButton(
+                        onClick = {
+                            uiState.holdingCourseTooltipState.dismiss()
+                            scope.launch {
+                                uiState.holdingSemesterTooltipState.show()
+                            }
+                        }
+                    ) {
+                        Text("查看下一个提示")
+                    }
+                }) {
+                Text("长按任意课程格子在弹出的菜单中继续操作以查看全校在该课程所处时间段内空闲的教室及授课的教室")
+            }
+        },
+        state = uiState.holdingCourseTooltipState
+    ) {
+    }
+
     if (isShowNonEmptyClassroomSheet) {
         ModalBottomSheet(
             windowInsets = WindowInsets.navigationBars,
@@ -404,35 +474,148 @@ fun AddContent(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                 isShowNonEmptyClassroomSheet = false
                 viewModel.clearNonEmptyClassrooms()
             },
-            content = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 15.dp),
-                ) {
-                    Text(
-                        "有课的教室",
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(horizontal = 15.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = DEFAULT_PADDING),
+            ) {
+                Text(
+                    "授课教室",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
+                )
+                if (uiState.isNonEmptyClrLoading) {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    if (uiState.isNonEmptyClrLoading) {
-                        Spacer(modifier = Modifier.height(5.dp))
-                        LinearProgressIndicator(
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    LazyColumn(Modifier.padding(horizontal = 15.dp)) {
-                        items(uiState.nonEmptyClassrooms.size) {
-                            ListItem(
-                                headlineContent = { Text(text = "${uiState.nonEmptyClassrooms[it].classroomNameHtml ?: ""} | ${uiState.nonEmptyClassrooms[it].courseName ?: ""}") },
-                                trailingContent = { Text(text = "${uiState.nonEmptyClassrooms[it].teacherName ?: ""}") },
-                                supportingContent = { Text(text = uiState.nonEmptyClassrooms[it].className?.replace(",", " | ") ?: "") },
+                } else {
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        "${if (uiState.nonEmptyClassrooms.isEmpty()) "没有" else "以下"}教室在第 ${uiState.browsedWeek} 周，星期${
+                            convertDayOfWeekToChinese(
+                                dayOfWeekOnHoldingCourse
                             )
+                        }，${nodeNoOnHoldingCourse * 2 - 1} - ${nodeNoOnHoldingCourse * 2} 节有课",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
+                    )
+                    if (uiState.nonEmptyClassrooms.isNotEmpty()) {
+                        SecondaryScrollableTabRow(
+                            selectedTabIndex = buildingIndexSelected,
+                        ) {
+                            uiState.buildingNames.forEachIndexed { index, buildingName ->
+                                Tab(
+                                    text = { Text(buildingName) },
+                                    selected = buildingIndexSelected == index,
+                                    onClick = { buildingIndexSelected = index },
+                                )
+                            }
+                        }
+                        LazyColumn(Modifier.padding(horizontal = DEFAULT_PADDING)) {
+                            items(uiState.nonEmptyClassrooms.filter {
+                                (it.classroomName?.split("-")?.get(0)
+                                    ?: "") == uiState.buildingNames[buildingIndexSelected]
+                            }) {
+                                ListItem(
+                                    headlineContent = { Text(text = "${it.classroomNameHtml ?: ""} | ${it.courseName ?: ""}") },
+                                    trailingContent = { Text(text = it.teacherName ?: "") },
+                                    supportingContent = {
+                                        Text(
+                                            text = it.className?.replace(
+                                                ",",
+                                                " | "
+                                            ) ?: ""
+                                        )
+                                    },
+                                )
+                            }
                         }
                     }
                 }
             }
-        )
+        }
+    }
+
+    if (isShowEmptyClassroomSheet) {
+        ModalBottomSheet(
+            windowInsets = WindowInsets.navigationBars,
+            onDismissRequest = {
+                isShowEmptyClassroomSheet = false
+                viewModel.clearEmptyClassrooms()
+            },
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = DEFAULT_PADDING),
+            ) {
+                Text(
+                    "空闲教室",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
+                )
+                if (uiState.isEmptyClrLoading) {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        "${if (uiState.emptyClassrooms.isEmpty()) "没有" else "以下"}教室在第 ${uiState.browsedWeek} 周，星期${
+                            convertDayOfWeekToChinese(
+                                dayOfWeekOnHoldingCourse
+                            )
+                        }，${nodeNoOnHoldingCourse * 2 - 1} - ${nodeNoOnHoldingCourse * 2} 节空闲",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
+                    )
+                    if (uiState.emptyClassrooms.isNotEmpty()) {
+
+                        SecondaryScrollableTabRow(
+                            selectedTabIndex = buildingIndexSelected,
+                        ) {
+                            uiState.buildingNames.forEachIndexed { index, buildingName ->
+                                Tab(
+                                    text = { Text(buildingName) },
+                                    selected = buildingIndexSelected == index,
+                                    onClick = { buildingIndexSelected = index },
+                                )
+                            }
+                        }
+                        LazyColumn(Modifier.padding(horizontal = DEFAULT_PADDING)) {
+                            items(uiState.emptyClassrooms.filter {
+                                it.buildingName == uiState.buildingNames[buildingIndexSelected]
+                            }) {
+                                ListItem(
+                                    headlineContent = { Text(text = it.roomName ?: "") },
+                                    supportingContent = {
+                                        Text(
+                                            text = "${it.buildingName}${
+                                                it.floor.let { floor ->
+                                                    if (floor == null) {
+                                                        ""
+                                                    } else {
+                                                        " | $floor 楼"
+                                                    }
+                                                }
+                                            }"
+                                        )
+                                    },
+                                    trailingContent = {
+                                        Text(
+                                            text = it.functionalAreaName ?: ""
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -443,27 +626,71 @@ fun CreateActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiSt
 
     val scope = CoroutineScope(Dispatchers.IO)
 
-    IconButton(
-        onClick = {
-            viewModel.setBrowsedWeek(uiState.browsedWeek - 1)
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Text("帮助")
+            }
         },
-        enabled = uiState.browsedWeek > 1
+        state = rememberTooltipState()
     ) {
-        Icon(
-            imageVector = rememberChevronLeft(),
-            contentDescription = null,
-        )
+        IconButton(
+            onClick = {
+                scope.launch {
+                    uiState.holdingCourseTooltipState.show()
+                }
+            },
+        ) {
+            Icon(
+                imageVector = rememberLightbulb(),
+                contentDescription = "帮助",
+            )
+        }
     }
-    IconButton(
-        onClick = {
-            viewModel.setBrowsedWeek(uiState.browsedWeek + 1)
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Text("上一周")
+            }
         },
-        enabled = uiState.browsedWeek < 20
+        state = rememberTooltipState()
     ) {
-        Icon(
-            imageVector = rememberChevronRight(),
-            contentDescription = null,
-        )
+        IconButton(
+            onClick = {
+                viewModel.setBrowsedWeek(uiState.browsedWeek - 1)
+            },
+            enabled = uiState.browsedWeek > 1,
+        ) {
+            Icon(
+                imageVector = rememberChevronLeft(),
+                contentDescription = "上一周",
+            )
+        }
+    }
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Text("下一周")
+            }
+        },
+        state = rememberTooltipState()
+    ) {
+        IconButton(
+            onClick = {
+                viewModel.setBrowsedWeek(uiState.browsedWeek + 1)
+            },
+            enabled = uiState.browsedWeek < 20
+        ) {
+            Icon(
+                imageVector = rememberChevronRight(),
+                contentDescription = "下一周",
+            )
+        }
     }
 
     var weekSliderPosition by remember { mutableFloatStateOf(uiState.browsedWeek.toFloat()) }

@@ -2,6 +2,7 @@ package com.dart.campushelper.api
 
 import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.StudentInfoResponse
@@ -72,6 +73,26 @@ interface ChaoxingService {
         @Query("zdjc") endNode: String,
         @Query("query.xnxq||") queryStartSemester: String = semesterYearAndNo,
     ): Call<GlobalCourseResponse>
+
+    @GET("system/jxzy/jsxx/getZyKjs")
+    fun getEmptyClassroom(
+        @Query("gridtype") gridType: String = "jqgrid",
+        @Query("queryFields") queryFields: String = "id,jsbh,jsmc,jslx,zdskrnrs,jxlmc,szlc,gnqmc,xqmc,",
+        @Query("_search") isSearch: String = "false",
+        @Query("nd") nd: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+        @Query("page.size") pageSize: Int = 1000,
+        @Query("page.pn") pagePn: Int = 1,
+        @Query("sort") sort: String = "id",
+        @Query("order") order: String = "asc",
+        @Query("type") type: Int = 1,
+        @Query("xqStr") dayOfWeekNo: String,
+        @Query("jcStr") nodeNo: String,
+        @Query("zcStr") weekNo: String,
+        @Query("query.type||") queryType: Int = type,
+        @Query("query.xqStr||") queryDayOfWeekNo: String = dayOfWeekNo,
+        @Query("query.jcStr||") queryNodeNo: String = nodeNo,
+        @Query("query.zcStr||") queryWeekNo: String = weekNo,
+        ): Call<EmptyClassroomResponse>
 
     @POST("cjgl/xscjbbdy/printdgxscj")
     fun getStudentInfo(): Call<StudentInfoResponse>

@@ -10,10 +10,10 @@ data class GlobalCourseResponse(
     @SerializedName("rows") var rows: Int? = null,
     @SerializedName("total") var total: Int? = null,
     @SerializedName("totalPages") var totalPages: Int? = null,
-    @SerializedName("results") var results: ArrayList<Results> = arrayListOf()
+    @SerializedName("results") var results: ArrayList<GlobalCourse> = arrayListOf()
 )
 
-data class Results(
+data class GlobalCourse(
 
     @SerializedName("currentUserId") var currentUserId: String? = null,
     @SerializedName("userRoleId") var userRoleId: String? = null,

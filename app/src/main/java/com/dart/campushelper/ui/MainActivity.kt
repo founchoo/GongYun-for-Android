@@ -28,14 +28,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,9 +49,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -120,6 +128,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun CampusHelperApp(mainViewModel: MainViewModel) {
 
+        val scope = rememberCoroutineScope()
+
         val mainUiState by mainViewModel.uiState.collectAsState()
         val scheduleUiState by scheduleViewModel.uiState.collectAsState()
         val gradeUiState by gradeViewModel.uiState.collectAsState()
@@ -150,17 +160,19 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
-                var showActions by remember { mutableStateOf(true) }
-
                 val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
                         TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                scrolledContainerColor = MaterialTheme.colorScheme.surface
+                            ),
                             title = {
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = currentDestination?.route ?: "",
@@ -168,23 +180,49 @@ class MainActivity : ComponentActivity() {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     if (currentDestination?.route == schedule.route) {
-                                        Column(
-                                            Modifier
-                                                .clip(RoundedCornerShape(5.dp))
-                                                .clickable {
-                                                    scheduleViewModel.setIsShowWeekSliderDialog(true)
-                                                },
+                                        TooltipBox(
+                                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                            tooltip = {
+                                                RichTooltip(
+                                                    title = {
+                                                        Text("切换课表", fontWeight = FontWeight.Bold)
+                                                    },
+                                                    action = {
+                                                        TextButton(
+                                                            onClick = {
+                                                                scope.launch {
+                                                                    scheduleUiState.holdingSemesterTooltipState.dismiss()
+                                                                }
+                                                            }
+                                                        ) {
+                                                            Text("关闭")
+                                                        }
+                                                    }) {
+                                                    Text("点按上方的双行标签区域以打开对话框切换学年及周数")
+                                                }
+                                            },
+                                            state = scheduleUiState.holdingSemesterTooltipState
                                         ) {
-                                            Text(
-                                                text = scheduleUiState.browsedSemester,
-                                                style = MaterialTheme.typography.labelSmall,
-                                            )
-                                            Text(
-                                                text = "第 ${scheduleUiState.browsedWeek} 周",
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                style = MaterialTheme.typography.labelSmall,
-                                            )
+                                            Column(
+                                                Modifier
+                                                    .clip(RoundedCornerShape(5.dp))
+                                                    .clickable {
+                                                        scheduleViewModel.setIsShowWeekSliderDialog(
+                                                            true
+                                                        )
+                                                    },
+                                            ) {
+                                                Text(
+                                                    text = scheduleUiState.browsedSemester,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                                Text(
+                                                    text = "第 ${scheduleUiState.browsedWeek} 周",
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -206,25 +244,34 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        NavigationBar(
-                        ) {
+                        NavigationBar {
                             (if (mainUiState.isLogin)
                                 listOf(
                                     schedule,
                                     grade,
                                     settings
                                 ) else
-                                listOf(settings)).forEachIndexed { index, screen ->
+                                listOf(settings)).forEach { screen ->
                                 NavigationBarItem(
                                     selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                                     icon = {
-                                        Icon(
-                                            imageVector = when (currentDestination?.route == screen.route) {
-                                                true -> idsFill[screen]!!
-                                                false -> idsOutline[screen]!!
+                                        TooltipBox(
+                                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                            tooltip = {
+                                                PlainTooltip {
+                                                    Text(screen.route)
+                                                }
                                             },
-                                            contentDescription = screen.route
-                                        )
+                                            state = rememberTooltipState()
+                                        ) {
+                                            Icon(
+                                                imageVector = when (currentDestination?.route == screen.route) {
+                                                    true -> idsFill[screen]!!
+                                                    false -> idsOutline[screen]!!
+                                                },
+                                                contentDescription = screen.route
+                                            )
+                                        }
                                     },
                                     label = { Text(screen.route) },
                                     alwaysShowLabel = false,

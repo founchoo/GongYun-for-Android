@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.api.ChaoxingService
 import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.LoginResponse
@@ -150,6 +151,18 @@ class ChaoxingRepository @Inject constructor(
                 endNode = endNode,
             )
         )
+
+    suspend fun getEmptyClassroom(
+        dayOfWeekNo: List<Int>,
+        nodeNo: List<Int>,
+        weekNo: List<Int>,
+    ): EmptyClassroomResponse? = retry(
+        chaoxingService.getEmptyClassroom(
+            dayOfWeekNo = dayOfWeekNo.joinToString(","),
+            nodeNo = nodeNo.joinToString(","),
+            weekNo = weekNo.joinToString(","),
+        )
+    )
 
     suspend fun getStudentInfo(): StudentInfoResponse? = retry(chaoxingService.getStudentInfo())
 

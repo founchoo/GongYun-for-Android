@@ -58,6 +58,10 @@ class UserPreferenceRepository @Inject constructor(
         dataStoreService.changeEnterUniversityYear(enterUniversityYear)
     }
 
+    override suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean) {
+        dataStoreService.changeIsScreenshotMode(isScreenshotMode)
+    }
+
     /**
      * Observe section.
      */
@@ -111,5 +115,9 @@ class UserPreferenceRepository @Inject constructor(
 
     override fun observeEnterUniversityYear(): Flow<String> {
         return dataStoreService.observeEnterUniversityYear()
+    }
+
+    override fun observeIsScreenshotMode(): Flow<Boolean> {
+        return dataStoreService.observeIsScreenshotMode()
     }
 }

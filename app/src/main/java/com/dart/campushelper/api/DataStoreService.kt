@@ -34,6 +34,8 @@ interface DataStoreService {
 
     suspend fun changeEnterUniversityYear(enterUniversityYear: String)
 
+    suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean)
+
     /**
      * Observe section.
      */
@@ -62,4 +64,6 @@ interface DataStoreService {
     fun observeSemesterYearAndNo(): Flow<String>
 
     fun observeEnterUniversityYear(): Flow<String>
+
+    fun observeIsScreenshotMode(): Flow<Boolean>
 }

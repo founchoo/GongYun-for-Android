@@ -28,16 +28,18 @@ import javax.inject.Inject
 data class SettingsUiState(
     val isLogin: Boolean = DEFAULT_VALUE_IS_LOGIN,
     val username: String = DEFAULT_VALUE_USERNAME,
-    val enableSystemColor: Boolean = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR,
+    val isSystemColor: Boolean = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR,
     val selectedDarkMode: String = DEFAULT_VALUE_SELECTED_DARK_MODE,
     val isOtherCourseDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isYearDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isDateDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isTimeDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
+    val isScreenshotMode: Boolean = false,
     val openLogoutConfirmDialog: Boolean = false,
     val openFeedbackUrlConfirmDialog: Boolean = false,
     val openSourceCodeUrlConfirmDialog: Boolean = false,
-    val appVersion: String = ""
+    val appVersion: String = "",
+    val isDevSectionShow: Boolean = false,
 )
 
 @HiltViewModel
@@ -119,6 +121,14 @@ class SettingsViewModel @Inject constructor(
         }
     )
 
+    private val isScreenshotModeStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsScreenshotMode().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            userPreferenceRepository.observeIsScreenshotMode().first()
+        }
+    )
+
     init {
         viewModelScope.launch {
             usernameStateFlow.collect { value ->
@@ -137,7 +147,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             enableSystemColorStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(enableSystemColor = value ?: false)
+                    it.copy(isSystemColor = value ?: DEFAULT_VALUE_ENABLE_SYSTEM_COLOR)
                 }
             }
         }
@@ -176,6 +186,13 @@ class SettingsViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            isScreenshotModeStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isScreenshotMode = value)
+                }
+            }
+        }
     }
 
     fun clearCookies() {
@@ -194,6 +211,12 @@ class SettingsViewModel @Inject constructor(
     fun changeSelectedDarkMode(darkMode: String) {
         viewModelScope.launch {
             userPreferenceRepository.changeSelectedDarkMode(darkMode)
+        }
+    }
+
+    fun changeIsScreenshotMode(isScreenshotMode: Boolean) {
+        viewModelScope.launch {
+            userPreferenceRepository.changeIsScreenshotMode(isScreenshotMode)
         }
     }
 
@@ -265,6 +288,12 @@ class SettingsViewModel @Inject constructor(
     fun onHideSourceCodeUrlConfirmDialogRequest() {
         _uiState.update {
             it.copy(openSourceCodeUrlConfirmDialog = false)
+        }
+    }
+
+    fun changeDevSectionShow(isDevSectionShow: Boolean) {
+        _uiState.update {
+            it.copy(isDevSectionShow = isDevSectionShow)
         }
     }
 }

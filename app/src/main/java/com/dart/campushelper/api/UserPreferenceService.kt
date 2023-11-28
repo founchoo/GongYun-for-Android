@@ -31,6 +31,8 @@ interface UserPreferenceService {
 
     suspend fun changeEnterUniversityYear(enterUniversityYear: String)
 
+    suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean)
+
     /**
      * Observe section.
      */
@@ -59,4 +61,6 @@ interface UserPreferenceService {
     fun observeSemesterYearAndNo(): Flow<String>
 
     fun observeEnterUniversityYear(): Flow<String>
+
+    fun observeIsScreenshotMode(): Flow<Boolean>
 }

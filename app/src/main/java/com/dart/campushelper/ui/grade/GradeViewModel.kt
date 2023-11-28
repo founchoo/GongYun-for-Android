@@ -6,8 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.ChaoxingRepository
 import com.dart.campushelper.data.UserPreferenceRepository
 import com.dart.campushelper.model.Grade
+import com.dart.campushelper.model.HostRankingType
+import com.dart.campushelper.model.Ranking
 import com.dart.campushelper.model.RankingInfo
+import com.dart.campushelper.model.SubRankingType
+import com.patrykandpatrick.vico.core.chart.composed.ComposedChartEntryModel
+import com.patrykandpatrick.vico.core.entry.ChartEntryModel
 import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.patrykandpatrick.vico.core.entry.composed.plus
+import com.patrykandpatrick.vico.core.entry.entryModelOf
+import com.patrykandpatrick.vico.core.entry.entryOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,7 +48,10 @@ data class GradeUiState(
     val isShowLineChart: Boolean = false,
     val isLineChartLoading: Boolean = true,
     val contentForGradeDetailDialog: Grade = Grade(),
-    val chartData: List<FloatEntry> = emptyList(),
+    val overallScoreData: List<FloatEntry> = emptyList(),
+    val gradeDistribution: List<Int> = emptyList(),
+    val rankingData: ComposedChartEntryModel<ChartEntryModel>? = null,
+    val isScreenshotMode: Boolean = false,
 )
 
 @HiltViewModel
@@ -80,6 +91,15 @@ class GradeViewModel @Inject constructor(
             }
         )
 
+    private val isScreenshotModeStateFlow: StateFlow<Boolean> =
+        userPreferenceRepository.observeIsScreenshotMode().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                userPreferenceRepository.observeIsScreenshotMode().first()
+            }
+        )
+
     private var _backupGrades = emptyList<Grade>()
 
     init {
@@ -98,6 +118,13 @@ class GradeViewModel @Inject constructor(
                 if (it[0] == true.toString() && it[1].isNotEmpty() && it[2].isNotEmpty()) {
                     getGrades()
                     getStudentRankingInfo()
+                }
+            }
+        }
+        viewModelScope.launch {
+            isScreenshotModeStateFlow.collect { value ->
+                _uiState.update {
+                    it.copy(isScreenshotMode = value)
                 }
             }
         }
@@ -121,19 +148,14 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun setIsShowLineChart(value: Boolean) {
-        _uiState.update {
-            it.copy(isShowLineChart = value)
-        }
-    }
-
     suspend fun loadLineChart() {
         _uiState.update {
             it.copy(isLineChartLoading = true)
         }
         val gradesResult = chaoxingRepository.getGrades()
         if (gradesResult != null) {
-            val sorted = gradesResult.results.sortedBy { grade -> grade.semesterYearAndNo } + Grade()
+            val sorted =
+                gradesResult.results.sortedBy { grade -> grade.semesterYearAndNo } + Grade()
             var flag = sorted.first().semesterYearAndNo
             val grades = mutableListOf<Grade>()
             val model = mutableListOf<FloatEntry>()
@@ -149,9 +171,31 @@ class GradeViewModel @Inject constructor(
                 grades.add(it)
             }
             _uiState.update {
-                it.copy(chartData = model, isLineChartLoading = false)
+                it.copy(overallScoreData = model, isLineChartLoading = false)
             }
         }
+    }
+
+    private fun getScoreRangeIndex(score: Int): Int {
+        return when (score) {
+            in 0..59 -> 0
+            in 60..69 -> 1
+            in 70..79 -> 2
+            in 80..89 -> 3
+            in 90..100 -> 4
+            else -> 0
+        }
+    }
+
+    fun parseScoreRangeIndex(index: Int): String {
+        return when (index) {
+            0 -> "0-59"
+            1 -> "60-69"
+            2 -> "70-79"
+            3 -> "80-89"
+            4 -> "90-100"
+            else -> "0-59"
+        } + "分"
     }
 
     suspend fun getGrades() {
@@ -169,6 +213,7 @@ class GradeViewModel @Inject constructor(
                 }
                 updateGPA()
                 updateAverageScore()
+                updateGradeDistribution()
                 val courseSortList = grades.map {
                     it.courseType
                 }.toSet().toList()
@@ -222,6 +267,19 @@ class GradeViewModel @Inject constructor(
         }
     }
 
+    private fun updateGradeDistribution() {
+        val tmp = mutableListOf(0, 0, 0, 0, 0)
+        _uiState.value.grades.forEach {
+            tmp[getScoreRangeIndex(it.score)]++
+        }
+        _uiState.update {
+            it.copy(
+                gradeDistribution = tmp
+            )
+        }
+        // Log.d("GradeViewModel", "updateGradeDistribution: ${_uiState.value.gradeDistribution}")
+    }
+
     suspend fun getStudentRankingInfo() {
         _uiState.update {
             it.copy(isRankingInfoLoading = true)
@@ -238,32 +296,37 @@ class GradeViewModel @Inject constructor(
         if (stuRankInfoResult != null) {
             val rankingInfo = RankingInfo()
             Jsoup.parse(stuRankInfoResult).run {
-                select("table")[1].select("td").forEachIndexed { index, element ->
-                    val value = element.text().contains("/").run {
-                        if (this) {
-                            element.text().split("/").let {
-                                if (it[0] == "" || it[1] == "") {
-                                    Pair(0, 0)
-                                } else {
-                                    Pair(it[0].toInt(), it[1].toInt())
-                                }
+                select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
+                    hostElement.select("td")
+                        .forEachIndexed { subRankingType, subElement ->
+                            if (subRankingType > 0) {
+                                rankingInfo.setRanking(
+                                    HostRankingType.values()[hostRankingType - 1],
+                                    SubRankingType.values()[subRankingType - 1],
+                                    subElement.text().split("/").let {
+                                        if (it[0] == "" || it[1] == "") {
+                                            Ranking()
+                                        } else {
+                                            Ranking(it[0].toInt(), it[1].toInt())
+                                        }
+                                    }
+                                )
                             }
-                        } else {
-                            Pair(0, 0)
                         }
-                    }
-                    when (index) {
-                        1 -> rankingInfo.byGPAByInstitute = value
-                        2 -> rankingInfo.byGPAByMajor = value
-                        3 -> rankingInfo.byGPAByClass = value
-                        5 -> rankingInfo.byScoreByInstitute = value
-                        6 -> rankingInfo.byScoreByMajor = value
-                        7 -> rankingInfo.byScoreByClass = value
-                    }
                 }
             }
             _uiState.update {
-                it.copy(isRankingInfoLoading = false, rankingInfo = rankingInfo)
+                it.copy(
+                    rankingInfo = rankingInfo,
+                    isRankingInfoLoading = false,
+                )
+            }
+            _uiState.update {
+                it.copy(
+                    rankingData = generateChartModelForGrade(HostRankingType.GPA) + generateChartModelForGrade(
+                        HostRankingType.SCORE
+                    ),
+                )
             }
         }
     }
@@ -290,9 +353,26 @@ class GradeViewModel @Inject constructor(
         }
         updateGPA()
         updateAverageScore()
+        updateGradeDistribution()
         viewModelScope.launch {
             getStudentRankingInfo()
         }
+    }
+
+    fun generateChartModelForGrade(hostRankingType: HostRankingType): ChartEntryModel {
+        return entryModelOf(
+            SubRankingType.values().map { subRankingType ->
+                _uiState.value.rankingInfo.getRanking(
+                    hostRankingType,
+                    subRankingType
+                ).run {
+                    entryOf(
+                        subRankingType.ordinal,
+                        if (this == null) 0 else 1 - this.ranking.toFloat() / this.total
+                    )
+                }
+            }
+        )
     }
 
     fun changeCourseSortSelected(courseSort: String, selected: Boolean) {

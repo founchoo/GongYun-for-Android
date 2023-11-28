@@ -28,6 +28,7 @@ import com.dart.campushelper.ui.rememberInfo
 import com.dart.campushelper.ui.rememberPalette
 import com.dart.campushelper.ui.rememberPushPin
 import com.dart.campushelper.ui.rememberSchedule
+import com.dart.campushelper.ui.rememberScreenshotFrame
 import com.dart.campushelper.ui.rememberToday
 import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
 import com.dart.campushelper.utils.Constants.Companion.QQ_GROUP_NUMBER
@@ -35,6 +36,7 @@ import com.dart.campushelper.utils.DropdownMenuPreference
 import com.dart.campushelper.utils.PreferenceHeader
 import com.dart.campushelper.utils.SwitchPreference
 import com.dart.campushelper.utils.TextPreference
+import com.dart.campushelper.utils.replaceWithStars
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
@@ -52,7 +54,11 @@ fun SettingsScreen(
             PreferenceHeader(text = "账户")
             TextPreference(
                 title = if (settingsUiState.isLogin) "登出" else "登录",
-                description = if (settingsUiState.isLogin) "欢迎 ${settingsUiState.username}" else "请先登录",
+                description = if (settingsUiState.isLogin) "欢迎 ${
+                    settingsUiState.username.replaceWithStars(
+                        settingsUiState.isScreenshotMode
+                    )
+                }" else "请先登录",
                 imageVector = rememberAccountCircle()
             ) {
                 if (settingsUiState.isLogin) {
@@ -112,7 +118,7 @@ fun SettingsScreen(
                 imageVector = rememberPalette(),
                 title = "系统主题色",
                 description = "开启后将跟随系统主题色",
-                value = settingsUiState.enableSystemColor,
+                value = settingsUiState.isSystemColor,
                 onValueChanged = {
                     settingsViewModel.changeEnableSystemColor(it)
                 }
@@ -137,6 +143,7 @@ fun SettingsScreen(
                 imageVector = rememberInfo()
             ) {
                 // settingsViewModel.clearCookies()
+                settingsViewModel.changeDevSectionShow(!settingsUiState.isDevSectionShow)
             }
             TextPreference(
                 title = "反馈",
@@ -151,6 +158,18 @@ fun SettingsScreen(
                 imageVector = rememberCode()
             ) {
                 settingsViewModel.onShowSourceCodeUrlConfirmDialogRequest()
+            }
+            if (settingsUiState.isDevSectionShow) {
+                PreferenceHeader(text = "开发者选项")
+                SwitchPreference(
+                    imageVector = rememberScreenshotFrame(),
+                    title = "截屏模式",
+                    description = "开启后隐私信息将被*替代",
+                    value = settingsUiState.isScreenshotMode,
+                    onValueChanged = {
+                        settingsViewModel.changeIsScreenshotMode(it)
+                    }
+                )
             }
         }
     }
