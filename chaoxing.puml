@@ -1,0 +1,46 @@
+@startuml
+class com.dart.campushelper.data.ChaoxingRepository {
++  scope
+-  semesterYearAndNoStateFlow
+-  enterUniversityYearStateFlow
+- StateFlow<String> usernameStateFlow
+- StateFlow<String> passwordStateFlow
++ void null()
++ void null()
++ void null()
++ void null()
+- Boolean reLogin()
+- T? retry(Call<T>)
++ void getCalendar(void,String?)
++ void null()
++ GradeResponse? getGrades()
++ String? getStudentRankingInfo(String)
++ void getSchedule(void,String?)
++ GlobalCourseResponse? getGlobalSchedule(void,String,void,String,void,String,void,String,void,String,void,String,void,String,void)
++ EmptyClassroomResponse? getEmptyClassroom(void,List<Int>,void,List<Int>,void,List<Int>,void)
++ StudentInfoResponse? getStudentInfo()
++ LoginResponse login(void,String,void,String,void,Boolean,void)
+}
+class com.dart.campushelper.di.ChaoxingModule {
++ void provideChaoxingService(void,UserPreferenceRepository)
++ void null()
+}
+class com.dart.campushelper.di.ChaoxingCookieJar {
+}
+class com.dart.campushelper.api.ChaoxingService$Companion {
++  BASE_URL
+}
+interface com.dart.campushelper.api.ChaoxingService {
++ void getCalendar(void)
++ void getGrades(void)
++ void getStudentRankingInfo(void)
++ void getSchedule(void)
++ void getGlobalSchedule(void)
++ void getEmptyClassroom(void)
++ Call<StudentInfoResponse> getStudentInfo()
++ void login(void)
+}
+
+
+com.dart.campushelper.api.ChaoxingService +.. com.dart.campushelper.api.ChaoxingService$Companion
+@enduml

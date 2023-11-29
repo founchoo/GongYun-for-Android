@@ -1,0 +1,26 @@
+@startuml
+class com.dart.campushelper.ui.MainUiState {
+}
+class com.dart.campushelper.ui.MainViewModel {
+}
+class com.dart.campushelper.ui.schedule.ScheduleUiState {
+}
+class com.dart.campushelper.ui.schedule.ScheduleViewModel {
+}
+class com.dart.campushelper.ui.grade.GradeUiState {
+}
+class com.dart.campushelper.ui.grade.GradeViewModel {
+}
+class com.dart.campushelper.ui.login.LoginUiState {
+}
+class com.dart.campushelper.ui.login.LoginViewModel {
+}
+class com.dart.campushelper.ui.theme.ThemeUiState {
+}
+class com.dart.campushelper.ui.theme.ThemeViewModel {
+}
+class com.dart.campushelper.ui.settings.SettingsUiState {
+}
+class com.dart.campushelper.ui.settings.SettingsViewModel {
+}
+@enduml

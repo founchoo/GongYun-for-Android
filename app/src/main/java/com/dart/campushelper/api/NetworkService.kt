@@ -16,7 +16,7 @@ import retrofit2.http.Query
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-interface ChaoxingService {
+interface NetworkService {
 
     @GET("system/zy/xlgl/getData/{semesterYearAndNo}")
     fun getCalendar(

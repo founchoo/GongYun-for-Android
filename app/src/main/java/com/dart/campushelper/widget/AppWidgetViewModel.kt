@@ -1,7 +1,7 @@
 package com.dart.campushelper.widget
 
 import androidx.annotation.WorkerThread
-import com.dart.campushelper.data.ChaoxingRepository
+import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.utils.getCurrentNode
 import com.dart.campushelper.utils.getWeekCount
@@ -21,7 +21,7 @@ data class AppWidgetUiState(
 )
 
 class AppWidgetViewModel @Inject constructor(
-    private val chaoxingRepository: ChaoxingRepository,
+    private val networkRepository: NetworkRepository,
 ) {
 
     // UI state exposed to the UI
@@ -38,7 +38,7 @@ class AppWidgetViewModel @Inject constructor(
     suspend fun getTodaySchedule() {
         getCurrentWeek(null)
         // Log.d("AppWidgetViewModel", "getTodaySchedule: ")
-        val result = chaoxingRepository.getSchedule(null)
+        val result = networkRepository.getSchedule(null)
         if (result != null) {
             val courses = result.filter { course ->
                 course.nodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
@@ -54,7 +54,7 @@ class AppWidgetViewModel @Inject constructor(
 
     @WorkerThread
     private suspend fun getCurrentWeek(semesterYearAndNo: String?) {
-        val list = chaoxingRepository.getCalendar(semesterYearAndNo)
+        val list = networkRepository.getCalendar(semesterYearAndNo)
         if (list != null) {
             val first = list[0]
             val day = first.monday ?: (first.tuesday ?: (first.wednesday

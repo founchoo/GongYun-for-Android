@@ -3,8 +3,8 @@ package com.dart.campushelper.ui.schedule
 import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.ChaoxingRepository
-import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.utils.DateUtils
@@ -65,8 +65,8 @@ data class ScheduleUiState(
 
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
-    private val chaoxingRepository: ChaoxingRepository,
-    private val userPreferenceRepository: UserPreferenceRepository
+    private val networkRepository: NetworkRepository,
+    private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -86,53 +86,53 @@ class ScheduleViewModel @Inject constructor(
     private var startLocalDate: LocalDate? = null
 
     private val semesterYearAndNoStateFlow =
-        userPreferenceRepository.observeSemesterYearAndNo().stateIn(
+        dataStoreRepository.observeSemesterYearAndNo().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeSemesterYearAndNo().first()
+                dataStoreRepository.observeSemesterYearAndNo().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        userPreferenceRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepository.observeEnterUniversityYear().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeEnterUniversityYear().first()
+                dataStoreRepository.observeEnterUniversityYear().first()
             }
         )
 
     private val isOtherCourseDisplayStateFlow =
-        userPreferenceRepository.observeIsOtherCourseDisplay().stateIn(
+        dataStoreRepository.observeIsOtherCourseDisplay().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                userPreferenceRepository.observeIsOtherCourseDisplay().first()
+                dataStoreRepository.observeIsOtherCourseDisplay().first()
             }
         )
 
-    private val isYearDisplayStateFlow = userPreferenceRepository.observeIsYearDisplay().stateIn(
+    private val isYearDisplayStateFlow = dataStoreRepository.observeIsYearDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsYearDisplay().first()
+            dataStoreRepository.observeIsYearDisplay().first()
         }
     )
 
-    private val isDateDisplayStateFlow = userPreferenceRepository.observeIsDateDisplay().stateIn(
+    private val isDateDisplayStateFlow = dataStoreRepository.observeIsDateDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsDateDisplay().first()
+            dataStoreRepository.observeIsDateDisplay().first()
         }
     )
 
-    private val isTimeDisplayStateFlow = userPreferenceRepository.observeIsTimeDisplay().stateIn(
+    private val isTimeDisplayStateFlow = dataStoreRepository.observeIsTimeDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsTimeDisplay().first()
+            dataStoreRepository.observeIsTimeDisplay().first()
         }
     )
 
@@ -198,7 +198,7 @@ class ScheduleViewModel @Inject constructor(
      * 当切换学年学期时，此方法应该被调用
      */
     private suspend fun getStartLocalDate(semesterYearAndNo: String? = null) {
-        val list = chaoxingRepository.getCalendar(semesterYearAndNo)
+        val list = networkRepository.getCalendar(semesterYearAndNo)
         if (list != null) {
             val first = list[0]
             val day = first.monday ?: (first.tuesday ?: (first.wednesday
@@ -261,7 +261,7 @@ class ScheduleViewModel @Inject constructor(
         }
         getStartLocalDate(semesterYearAndNo)
         // Log.d("ScheduleViewModel", "getCourses")
-        val resource = chaoxingRepository.getSchedule(semesterYearAndNo)
+        val resource = networkRepository.getSchedule(semesterYearAndNo)
         // Log.d("ScheduleViewModel", "getCourses: resource: $resource")
         if (resource != null) {
             val courses = resource.filter {
@@ -280,7 +280,7 @@ class ScheduleViewModel @Inject constructor(
             it.copy(isNonEmptyClrLoading = true)
         }
         val startNode = node * 2 - 1
-        val response = chaoxingRepository.getGlobalSchedule(
+        val response = networkRepository.getGlobalSchedule(
             semesterYearAndNo = _uiState.value.browsedSemester,
             startWeekNo = _uiState.value.browsedWeek.toString(),
             endWeekNo = _uiState.value.browsedWeek.toString(),
@@ -342,7 +342,7 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update {
             it.copy(isEmptyClrLoading = true)
         }
-        val response = chaoxingRepository.getEmptyClassroom(
+        val response = networkRepository.getEmptyClassroom(
             weekNo = listOf(_uiState.value.browsedWeek),
             dayOfWeekNo = listOf(dayOfWeek),
             nodeNo = listOf(node),

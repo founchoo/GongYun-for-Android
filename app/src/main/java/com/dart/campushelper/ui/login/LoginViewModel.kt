@@ -2,9 +2,12 @@ package com.dart.campushelper.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.ChaoxingRepository
-import com.dart.campushelper.data.UserPreferenceRepository
-import com.dart.campushelper.data.VALUES
+import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_PASSWORD
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
+import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +27,8 @@ data class LoginUiState(
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val chaoxingRepository: ChaoxingRepository,
-    private val userPreferenceRepository: UserPreferenceRepository
+    private val networkRepository: NetworkRepository,
+    private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -35,28 +38,28 @@ class LoginViewModel @Inject constructor(
     fun login() {
         viewModelScope.launch {
             val loginResource =
-                chaoxingRepository.login(_uiState.value.username, _uiState.value.password, true)
+                networkRepository.login(_uiState.value.username, _uiState.value.password, true)
             // Log.d("LoginViewModel", loginResource.toString())
             if (loginResource.isSuccess) {
-                val studentInfoResult = chaoxingRepository.getStudentInfo()
+                val studentInfoResult = networkRepository.getStudentInfo()
                 if (studentInfoResult != null) {
                     // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].dataXnxq!!)
                     runBlocking {
-                        userPreferenceRepository.changeSemesterYearAndNo(studentInfoResult.data!!.records[0].dataXnxq!!)
+                        dataStoreRepository.changeSemesterYearAndNo(studentInfoResult.data!!.records[0].dataXnxq!!)
                     }
                     // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
                     runBlocking {
-                        userPreferenceRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
+                        dataStoreRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
                     }
                 }
                 runBlocking {
-                    userPreferenceRepository.changeUsername(_uiState.value.username)
+                    dataStoreRepository.changeUsername(_uiState.value.username)
                 }
                 runBlocking {
-                    userPreferenceRepository.changePassword(_uiState.value.password)
+                    dataStoreRepository.changePassword(_uiState.value.password)
                 }
                 runBlocking {
-                    userPreferenceRepository.changeIsLogin(true)
+                    dataStoreRepository.changeIsLogin(true)
                 }
                 _uiState.update { uiState ->
                     uiState.copy(isShowLoginDialog = false)
@@ -97,12 +100,12 @@ class LoginViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            userPreferenceRepository.changeUsername(VALUES.DEFAULT_VALUE_USERNAME)
-            userPreferenceRepository.changePassword(VALUES.DEFAULT_VALUE_PASSWORD)
-            userPreferenceRepository.changeEnterUniversityYear(VALUES.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
-            userPreferenceRepository.changeSemesterYearAndNo(VALUES.DEFAULT_VALUE_SEMESTER_YEAR_AND_NO)
-            userPreferenceRepository.changeIsLogin(false)
-            userPreferenceRepository.changeCookies(emptyList())
+            dataStoreRepository.changeUsername(DEFAULT_VALUE_USERNAME)
+            dataStoreRepository.changePassword(DEFAULT_VALUE_PASSWORD)
+            dataStoreRepository.changeEnterUniversityYear(DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
+            dataStoreRepository.changeSemesterYearAndNo(DEFAULT_VALUE_SEMESTER_YEAR_AND_NO)
+            dataStoreRepository.changeIsLogin(false)
+            dataStoreRepository.changeCookies(emptyList())
         }
     }
 }

@@ -1,0 +1,6 @@
+@startuml
+class com.dart.campushelper.ui.grade.GradeUiState {
+}
+class com.dart.campushelper.ui.grade.GradeViewModel {
+}
+@enduml

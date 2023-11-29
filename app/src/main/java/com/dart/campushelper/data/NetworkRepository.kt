@@ -1,7 +1,7 @@
 package com.dart.campushelper.data
 
 import androidx.compose.material3.SnackbarResult
-import com.dart.campushelper.api.ChaoxingService
+import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.EmptyClassroomResponse
@@ -15,7 +15,6 @@ import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
 import com.dart.campushelper.utils.Constants.Companion.RETRY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -25,46 +24,46 @@ import retrofit2.Call
 import retrofit2.awaitResponse
 import javax.inject.Inject
 
-class ChaoxingRepository @Inject constructor(
-    private val chaoxingService: ChaoxingService,
-    private val userPreferenceRepository: UserPreferenceRepository,
+class NetworkRepository @Inject constructor(
+    private val networkService: NetworkService,
+    private val dataStoreRepository: DataStoreRepository,
 ) {
 
     val scope = CoroutineScope(Dispatchers.IO)
 
     private val semesterYearAndNoStateFlow =
-        userPreferenceRepository.observeSemesterYearAndNo().stateIn(
+        dataStoreRepository.observeSemesterYearAndNo().stateIn(
             scope = scope,
-            started = SharingStarted.Eagerly,
+            started = Eagerly,
             initialValue = runBlocking {
-                userPreferenceRepository.observeSemesterYearAndNo().first()
+                dataStoreRepository.observeSemesterYearAndNo().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        userPreferenceRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepository.observeEnterUniversityYear().stateIn(
             scope = scope,
-            started = SharingStarted.Eagerly,
+            started = Eagerly,
             initialValue = runBlocking {
-                userPreferenceRepository.observeEnterUniversityYear().first()
+                dataStoreRepository.observeEnterUniversityYear().first()
             }
         )
 
-    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
-        .stateIn(
-            scope = scope,
-            started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
-                userPreferenceRepository.observeUsername().first()
-            }
-        )
-
-    private val passwordStateFlow: StateFlow<String> = userPreferenceRepository.observePassword()
+    private val usernameStateFlow: StateFlow<String> = dataStoreRepository.observeUsername()
         .stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                userPreferenceRepository.observePassword().first()
+                dataStoreRepository.observeUsername().first()
+            }
+        )
+
+    private val passwordStateFlow: StateFlow<String> = dataStoreRepository.observePassword()
+        .stateIn(
+            scope = scope,
+            started = Eagerly,
+            initialValue = runBlocking {
+                dataStoreRepository.observePassword().first()
             }
         )
 
@@ -108,13 +107,13 @@ class ChaoxingRepository @Inject constructor(
     suspend fun getCalendar(
         semesterYearAndNo: String?
     ): List<CalendarItem>? = retry(
-        chaoxingService.getCalendar(semesterYearAndNo ?: semesterYearAndNoStateFlow.value)
+        networkService.getCalendar(semesterYearAndNo ?: semesterYearAndNoStateFlow.value)
     )?.filter { it.weekNo?.toInt() != 0 }
 
-    suspend fun getGrades(): GradeResponse? = retry(chaoxingService.getGrades())
+    suspend fun getGrades(): GradeResponse? = retry(networkService.getGrades())
 
     suspend fun getStudentRankingInfo(semester: String): String? = retry(
-        chaoxingService.getStudentRankingInfo(
+        networkService.getStudentRankingInfo(
             enterUniversityYear = enterUniversityYearStateFlow.value,
             semester = semester,
         )
@@ -123,7 +122,7 @@ class ChaoxingRepository @Inject constructor(
     suspend fun getSchedule(
         semesterYearAndNo: String?
     ): List<Course>? = retry(
-        chaoxingService.getSchedule(
+        networkService.getSchedule(
             semesterYearAndNo = semesterYearAndNo ?: semesterYearAndNoStateFlow.value,
             studentId = usernameStateFlow.value,
             semesterNo = ((semesterYearAndNo ?: semesterYearAndNoStateFlow.value).lastOrNull()
@@ -141,7 +140,7 @@ class ChaoxingRepository @Inject constructor(
         endNode: String,
     ): GlobalCourseResponse? =
         retry(
-            chaoxingService.getGlobalSchedule(
+            networkService.getGlobalSchedule(
                 semesterYearAndNo = semesterYearAndNo,
                 startWeekNo = startWeekNo,
                 endWeekNo = endWeekNo,
@@ -157,21 +156,21 @@ class ChaoxingRepository @Inject constructor(
         nodeNo: List<Int>,
         weekNo: List<Int>,
     ): EmptyClassroomResponse? = retry(
-        chaoxingService.getEmptyClassroom(
+        networkService.getEmptyClassroom(
             dayOfWeekNo = dayOfWeekNo.joinToString(","),
             nodeNo = nodeNo.joinToString(","),
             weekNo = weekNo.joinToString(","),
         )
     )
 
-    suspend fun getStudentInfo(): StudentInfoResponse? = retry(chaoxingService.getStudentInfo())
+    suspend fun getStudentInfo(): StudentInfoResponse? = retry(networkService.getStudentInfo())
 
     suspend fun login(
         username: String,
         password: String,
         showErrorToast: Boolean = false,
     ): LoginResponse {
-        val call = chaoxingService.login(
+        val call = networkService.login(
             username = username,
             password = password,
         )

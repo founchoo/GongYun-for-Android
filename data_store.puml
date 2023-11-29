@@ -1,0 +1,101 @@
+@startuml
+interface com.dart.campushelper.api.DataStoreService {
++ void changeIsOtherCourseDisplay(Boolean)
++ void changeIsYearDisplay(Boolean)
++ void changeIsDateDisplay(Boolean)
++ void changeIsTimeDisplay(Boolean)
++ void changeCookies(List<Cookie>)
++ void changeIsLogin(Boolean)
++ void changeSelectedDarkMode(String)
++ void changeEnableSystemColor(Boolean)
++ void changeUsername(String)
++ void changePassword(String)
++ void changeSemesterYearAndNo(String)
++ void changeEnterUniversityYear(String)
++ void changeIsScreenshotMode(Boolean)
++ Flow<Boolean> observeIsOtherCourseDisplay()
++ Flow<Boolean> observeIsYearDisplay()
++ Flow<Boolean> observeIsDateDisplay()
++ Flow<Boolean> observeIsTimeDisplay()
++ Flow<List<Cookie>> observeCookies()
++ Flow<Boolean> observeIsLogin()
++ Flow<String> observeSelectedDarkMode()
++ Flow<Int> observeDayOfWeek()
++ Flow<Boolean?> observeEnableSystemColor()
++ Flow<String> observeUsername()
++ Flow<String> observePassword()
++ Flow<String> observeSemesterYearAndNo()
++ Flow<String> observeEnterUniversityYear()
++ Flow<Boolean> observeIsScreenshotMode()
+}
+class com.dart.campushelper.data.DataStoreRepository$Companion {
++  PREFS_NAME
++  KEY_IS_OTHER_COURSE_DISPLAY
++  KEY_IS_YEAR_DISPLAY
++  KEY_IS_DATE_DISPLAY
++  KEY_IS_TIME_DISPLAY
++  KEY_COOKIES
++  KEY_IS_LOGIN
++  KEY_DAY_OF_WEEK
++  KEY_ENABLE_SYSTEM_COLOR
++  KEY_SELECTED_DARK_MODE
++  KEY_START_LOCALDATE
++  KEY_USERNAME
++  KEY_PASSWORD
++  KEY_SEMESTER_YEAR_AND_NO
++  KEY_ENTER_UNIVERSITY_YEAR
++  KEY_IS_SCREENSHOT_MODE
++  DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
++  DEFAULT_VALUE_IS_YEAR_DISPLAY
++  DEFAULT_VALUE_IS_DATE_DISPLAY
++  DEFAULT_VALUE_IS_TIME_DISPLAY
++  DEFAULT_VALUE_COOKIES
++  DEFAULT_VALUE_IS_LOGIN
++  DEFAULT_VALUE_DAY_OF_WEEK
++  DEFAULT_VALUE_DISPLAYED_WEEK
++  DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
++  DEFAULT_VALUE_SELECTED_DARK_MODE
++  DEFAULT_VALUE_START_LOCALDATE
++  DEFAULT_VALUE_USERNAME
++  DEFAULT_VALUE_PASSWORD
++  DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
++  DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
++  DEFAULT_VALUE_IS_SCREENSHOT_MODE
+}
+class com.dart.campushelper.data.DataStoreRepository {
+-  mutex
++ void changeIsOtherCourseDisplay(Boolean)
++ void changeIsYearDisplay(Boolean)
++ void changeIsDateDisplay(Boolean)
++ void changeIsTimeDisplay(Boolean)
++ void changeCookies(List<Cookie>)
++ void changeIsLogin(Boolean)
++ void changeSelectedDarkMode(String)
++ void changeEnableSystemColor(Boolean)
++ void changeUsername(String)
++ void changePassword(String)
++ void changeSemesterYearAndNo(String)
++ void changeEnterUniversityYear(String)
++ void changeIsScreenshotMode(Boolean)
++ Flow<Boolean> observeIsOtherCourseDisplay()
++ Flow<Boolean> observeIsYearDisplay()
++ Flow<Boolean> observeIsDateDisplay()
++ Flow<Boolean> observeIsTimeDisplay()
++ Flow<List<Cookie>> observeCookies()
++ Flow<Boolean> observeIsLogin()
++ Flow<String> observeSelectedDarkMode()
++ void null()
++ Flow<Int> observeDayOfWeek()
++ void null()
++ Flow<Boolean> observeEnableSystemColor()
++ Flow<String> observeUsername()
++ Flow<String> observePassword()
++ Flow<String> observeSemesterYearAndNo()
++ Flow<String> observeEnterUniversityYear()
++ Flow<Boolean> observeIsScreenshotMode()
+}
+
+
+com.dart.campushelper.data.DataStoreRepository +.. com.dart.campushelper.data.DataStoreRepository$Companion
+com.dart.campushelper.api.DataStoreService <|.. com.dart.campushelper.data.DataStoreRepository
+@enduml

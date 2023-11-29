@@ -3,8 +3,8 @@ package com.dart.campushelper.ui.grade
 import androidx.compose.runtime.toMutableStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.ChaoxingRepository
-import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.data.NetworkRepository
+import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.Ranking
@@ -56,47 +56,47 @@ data class GradeUiState(
 
 @HiltViewModel
 class GradeViewModel @Inject constructor(
-    private val chaoxingRepository: ChaoxingRepository,
-    private val userPreferenceRepository: UserPreferenceRepository
+    private val networkRepository: NetworkRepository,
+    private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(GradeUiState())
     val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
 
-    private val usernameStateFlow: StateFlow<String> = userPreferenceRepository.observeUsername()
+    private val usernameStateFlow: StateFlow<String> = dataStoreRepository.observeUsername()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeUsername().first()
+                dataStoreRepository.observeUsername().first()
             }
         )
 
     private val isLoginStateFlow: StateFlow<Boolean> =
-        userPreferenceRepository.observeIsLogin().stateIn(
+        dataStoreRepository.observeIsLogin().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeIsLogin().first()
+                dataStoreRepository.observeIsLogin().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        userPreferenceRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepository.observeEnterUniversityYear().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeEnterUniversityYear().first()
+                dataStoreRepository.observeEnterUniversityYear().first()
             }
         )
 
     private val isScreenshotModeStateFlow: StateFlow<Boolean> =
-        userPreferenceRepository.observeIsScreenshotMode().stateIn(
+        dataStoreRepository.observeIsScreenshotMode().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                userPreferenceRepository.observeIsScreenshotMode().first()
+                dataStoreRepository.observeIsScreenshotMode().first()
             }
         )
 
@@ -152,7 +152,7 @@ class GradeViewModel @Inject constructor(
         _uiState.update {
             it.copy(isLineChartLoading = true)
         }
-        val gradesResult = chaoxingRepository.getGrades()
+        val gradesResult = networkRepository.getGrades()
         if (gradesResult != null) {
             val sorted =
                 gradesResult.results.sortedBy { grade -> grade.semesterYearAndNo } + Grade()
@@ -203,7 +203,7 @@ class GradeViewModel @Inject constructor(
             _uiState.update {
                 it.copy(isGradesLoading = true)
             }
-            val gradesResult = chaoxingRepository.getGrades()
+            val gradesResult = networkRepository.getGrades()
             if (gradesResult != null) {
                 val grades = gradesResult.results
                 _uiState.update {
@@ -284,7 +284,7 @@ class GradeViewModel @Inject constructor(
         _uiState.update {
             it.copy(isRankingInfoLoading = true)
         }
-        val stuRankInfoResult = chaoxingRepository.getStudentRankingInfo(
+        val stuRankInfoResult = networkRepository.getStudentRankingInfo(
             _uiState.value.semestersSelected.map {
                 if (it.value) {
                     it.key

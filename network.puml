@@ -1,0 +1,46 @@
+@startuml
+class com.dart.campushelper.api.NetworkService$Companion {
++  BASE_URL
+}
+interface com.dart.campushelper.api.NetworkService {
++ void getCalendar(void)
++ void getGrades(void)
++ void getStudentRankingInfo(void)
++ void getSchedule(void)
++ void getGlobalSchedule(void)
++ void getEmptyClassroom(void)
++ Call<StudentInfoResponse> getStudentInfo()
++ void login(void)
+}
+class com.dart.campushelper.data.NetworkRepository {
++  scope
+-  semesterYearAndNoStateFlow
+-  enterUniversityYearStateFlow
+- StateFlow<String> usernameStateFlow
+- StateFlow<String> passwordStateFlow
++ void null()
++ void null()
++ void null()
++ void null()
+- Boolean reLogin()
+- T? retry(Call<T>)
++ void getCalendar(void,String?)
++ void null()
++ GradeResponse? getGrades()
++ String? getStudentRankingInfo(String)
++ void getSchedule(void,String?)
++ GlobalCourseResponse? getGlobalSchedule(void,String,void,String,void,String,void,String,void,String,void,String,void,String,void)
++ EmptyClassroomResponse? getEmptyClassroom(void,List<Int>,void,List<Int>,void,List<Int>,void)
++ StudentInfoResponse? getStudentInfo()
++ LoginResponse login(void,String,void,String,void,Boolean,void)
+}
+class com.dart.campushelper.di.NetworkModule {
++ void provideNetworkService(void,DataStoreRepository)
++ void null()
+}
+class com.dart.campushelper.di.NetworkCookieJar {
+}
+
+
+com.dart.campushelper.api.NetworkService +.. com.dart.campushelper.api.NetworkService$Companion
+@enduml

@@ -1,7 +1,7 @@
 package com.dart.campushelper.di
 
-import com.dart.campushelper.api.ChaoxingService
-import com.dart.campushelper.data.UserPreferenceRepository
+import com.dart.campushelper.api.NetworkService
+import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
 import dagger.Module
 import dagger.Provides
@@ -28,17 +28,17 @@ import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
-object ChaoxingModule {
+object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideChaoxingService(
-        userPreferenceRepository: UserPreferenceRepository
-    ): ChaoxingService {
+    fun provideNetworkService(
+        dataStoreRepository: DataStoreRepository
+    ): NetworkService {
 
         val client = OkHttpClient.Builder()
             .followRedirects(false)
-            .cookieJar(ChaoxingCookieJar(userPreferenceRepository))
+            .cookieJar(NetworkCookieJar(dataStoreRepository))
             .addInterceptor { chain ->
                 try {
                     chain.proceed(chain.request())
@@ -55,35 +55,35 @@ object ChaoxingModule {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(ChaoxingService.BASE_URL)
+            .baseUrl(NetworkService.BASE_URL)
             .client(client)
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        return retrofit.create(ChaoxingService::class.java)
+        return retrofit.create(NetworkService::class.java)
     }
 }
 
-class ChaoxingCookieJar @Inject constructor(
-    private val userPreferenceRepository: UserPreferenceRepository
+class NetworkCookieJar @Inject constructor(
+    private val dataStoreRepository: DataStoreRepository
 ) : CookieJar {
 
     val scope = CoroutineScope(Dispatchers.IO)
 
     private var cookies: List<Cookie>
 
-    private val cookiesStateFlow = userPreferenceRepository.observeCookies().stateIn(
+    private val cookiesStateFlow = dataStoreRepository.observeCookies().stateIn(
         scope = scope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { userPreferenceRepository.observeCookies().first() }
+        initialValue = runBlocking { dataStoreRepository.observeCookies().first() }
     )
 
     init {
         cookies = runBlocking { cookiesStateFlow.first() }
         scope.launch {
             // Log.d("okhttp.OkHttpClient", "init: cookies.size: ${cookies.size}")
-            userPreferenceRepository.observeCookies().collect {
+            dataStoreRepository.observeCookies().collect {
                 cookies = it
             }
         }
@@ -99,11 +99,11 @@ class ChaoxingCookieJar @Inject constructor(
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         val count = cookies.count { it.name == "rememberMe" }
-        if (url.toString() == "${ChaoxingService.BASE_URL}login" && count == 2) {
+        if (url.toString() == "${NetworkService.BASE_URL}login" && count == 2) {
             // Log.d("okhttp.OkHttpClient", "saveFromResponse: cookies.size: ${cookies.size}")
-            this@ChaoxingCookieJar.cookies = cookies
+            this@NetworkCookieJar.cookies = cookies
             scope.launch {
-                this@ChaoxingCookieJar.userPreferenceRepository.changeCookies(cookies)
+                this@NetworkCookieJar.dataStoreRepository.changeCookies(cookies)
             }
         }
     }

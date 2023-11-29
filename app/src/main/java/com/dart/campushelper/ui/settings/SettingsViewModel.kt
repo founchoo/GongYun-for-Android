@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.CampusHelperApplication
-import com.dart.campushelper.data.UserPreferenceRepository
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_LOGIN
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_SELECTED_DARK_MODE
-import com.dart.campushelper.data.VALUES.DEFAULT_VALUE_USERNAME
+import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
 import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.ui.pin
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,7 +44,7 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userPreferenceRepository: UserPreferenceRepository
+    private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -55,77 +55,77 @@ class SettingsViewModel @Inject constructor(
     )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    private val usernameStateFlow = userPreferenceRepository.observeUsername().stateIn(
+    private val usernameStateFlow = dataStoreRepository.observeUsername().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeUsername().first()
+            dataStoreRepository.observeUsername().first()
         }
     )
 
     private val enableSystemColorStateFlow =
-        userPreferenceRepository.observeEnableSystemColor().stateIn(
+        dataStoreRepository.observeEnableSystemColor().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                userPreferenceRepository.observeEnableSystemColor().first()
+                dataStoreRepository.observeEnableSystemColor().first()
             }
         )
 
     private val selectedDarkModeStateFlow =
-        userPreferenceRepository.observeSelectedDarkMode().stateIn(
+        dataStoreRepository.observeSelectedDarkMode().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                userPreferenceRepository.observeSelectedDarkMode().first()
+                dataStoreRepository.observeSelectedDarkMode().first()
             }
         )
 
-    private val isOtherCourseDisplayStateFlow = userPreferenceRepository.observeIsOtherCourseDisplay().stateIn(
+    private val isOtherCourseDisplayStateFlow = dataStoreRepository.observeIsOtherCourseDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsOtherCourseDisplay().first()
+            dataStoreRepository.observeIsOtherCourseDisplay().first()
         }
     )
 
-    private val isYearDisplayStateFlow = userPreferenceRepository.observeIsYearDisplay().stateIn(
+    private val isYearDisplayStateFlow = dataStoreRepository.observeIsYearDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsYearDisplay().first()
+            dataStoreRepository.observeIsYearDisplay().first()
         }
     )
 
-    private val isDateDisplayStateFlow = userPreferenceRepository.observeIsDateDisplay().stateIn(
+    private val isDateDisplayStateFlow = dataStoreRepository.observeIsDateDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsDateDisplay().first()
+            dataStoreRepository.observeIsDateDisplay().first()
         }
     )
 
-    private val isTimeDisplayStateFlow = userPreferenceRepository.observeIsTimeDisplay().stateIn(
+    private val isTimeDisplayStateFlow = dataStoreRepository.observeIsTimeDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            userPreferenceRepository.observeIsTimeDisplay().first()
+            dataStoreRepository.observeIsTimeDisplay().first()
         }
     )
 
-    private val isLoginStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
-            userPreferenceRepository.observeIsLogin().first()
+            dataStoreRepository.observeIsLogin().first()
         }
     )
 
-    private val isScreenshotModeStateFlow: StateFlow<Boolean> = userPreferenceRepository.observeIsScreenshotMode().stateIn(
+    private val isScreenshotModeStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsScreenshotMode().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
-            userPreferenceRepository.observeIsScreenshotMode().first()
+            dataStoreRepository.observeIsScreenshotMode().first()
         }
     )
 
@@ -197,26 +197,26 @@ class SettingsViewModel @Inject constructor(
 
     fun clearCookies() {
         viewModelScope.launch {
-            userPreferenceRepository.changeCookies(emptyList())
+            dataStoreRepository.changeCookies(emptyList())
             MainActivity.snackBarHostState.showSnackbar("Cookies 已清除，请开始调试")
         }
     }
 
     fun changeEnableSystemColor(enable: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeEnableSystemColor(enable)
+            dataStoreRepository.changeEnableSystemColor(enable)
         }
     }
 
     fun changeSelectedDarkMode(darkMode: String) {
         viewModelScope.launch {
-            userPreferenceRepository.changeSelectedDarkMode(darkMode)
+            dataStoreRepository.changeSelectedDarkMode(darkMode)
         }
     }
 
     fun changeIsScreenshotMode(isScreenshotMode: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsScreenshotMode(isScreenshotMode)
+            dataStoreRepository.changeIsScreenshotMode(isScreenshotMode)
         }
     }
 
@@ -233,25 +233,25 @@ class SettingsViewModel @Inject constructor(
 
     fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsOtherCourseDisplay(isOtherCourseDisplay)
+            dataStoreRepository.changeIsOtherCourseDisplay(isOtherCourseDisplay)
         }
     }
 
     fun changeIsYearDisplay(isYearDisplay: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsYearDisplay(isYearDisplay)
+            dataStoreRepository.changeIsYearDisplay(isYearDisplay)
         }
     }
 
     fun changeIsDateDisplay(isDateDisplay: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsDateDisplay(isDateDisplay)
+            dataStoreRepository.changeIsDateDisplay(isDateDisplay)
         }
     }
 
     fun changeIsTimeDisplay(isTimeDisplay: Boolean) {
         viewModelScope.launch {
-            userPreferenceRepository.changeIsTimeDisplay(isTimeDisplay)
+            dataStoreRepository.changeIsTimeDisplay(isTimeDisplay)
         }
     }
 
