@@ -1,6 +1,7 @@
 package com.dart.campushelper.ui.component
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,19 +47,21 @@ fun <T> BasicBottomSheetWithDataList(
         onDismissRequest = onDismissRequest,
         isContentLoading = isContentLoading,
     ) {
-        if (itemSource.isNullOrEmpty()) {
-            Text(
-                text = descriptionWhenItemSourceIsEmpty,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        } else {
-            if (descriptionWhenItemSourceIsNotEmpty != null) {
+        Column {
+            if (itemSource.isNullOrEmpty()) {
                 Text(
-                    text = descriptionWhenItemSourceIsNotEmpty,
+                    text = descriptionWhenItemSourceIsEmpty,
                     style = MaterialTheme.typography.bodySmall,
                 )
+            } else {
+                if (descriptionWhenItemSourceIsNotEmpty != null) {
+                    Text(
+                        text = descriptionWhenItemSourceIsNotEmpty,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                contentWhenItemSourceIsNotEmpty(itemSource)
             }
-            contentWhenItemSourceIsNotEmpty(itemSource)
         }
     }
 }

@@ -73,12 +73,25 @@ class GradeViewModel @Inject constructor(
             }
         )
 
+    private val isLoginStateFlow: StateFlow<Boolean> =
+        dataStoreRepository.observeIsLogin().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                dataStoreRepository.observeIsLogin().first()
+            }
+        )
+
     private var _backupGrades = emptyList<Grade>()
 
     init {
         viewModelScope.launch {
-            getGrades()
-            getStudentRankingInfo()
+            isLoginStateFlow.collect {
+                if (it) {
+                    getGrades()
+                    getStudentRankingInfo()
+                }
+            }
         }
         viewModelScope.launch {
             isScreenshotModeStateFlow.collect { value ->
@@ -159,10 +172,10 @@ class GradeViewModel @Inject constructor(
     }
 
     suspend fun getGrades() {
+        _uiState.update {
+            it.copy(isGradesLoading = true)
+        }
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(isGradesLoading = true)
-            }
             val gradesResult = networkRepository.getGrades()
             if (gradesResult != null) {
                 val grades = gradesResult.results
