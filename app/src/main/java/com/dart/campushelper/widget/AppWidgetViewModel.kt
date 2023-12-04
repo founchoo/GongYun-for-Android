@@ -53,8 +53,8 @@ class AppWidgetViewModel @Inject constructor(
     }
 
     @WorkerThread
-    private suspend fun getCurrentWeek(semesterYearAndNo: String?) {
-        val list = networkRepository.getCalendar(semesterYearAndNo)
+    private suspend fun getCurrentWeek(yearAndSemester: String?) {
+        val list = networkRepository.getCalendar(yearAndSemester)
         if (list != null) {
             val first = list[0]
             val day = first.monday ?: (first.tuesday ?: (first.wednesday
@@ -63,7 +63,7 @@ class AppWidgetViewModel @Inject constructor(
                 first.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day)
             val startLocalDate =
                 LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            if (semesterYearAndNo == null) {
+            if (yearAndSemester == null) {
                 val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
                 _uiState.update { uiState ->
                     uiState.copy(currentWeek = currentWeek)

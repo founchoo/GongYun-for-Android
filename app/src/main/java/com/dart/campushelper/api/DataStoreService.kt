@@ -16,13 +16,13 @@ interface DataStoreService {
 
     suspend fun changeIsDateDisplay(isDateDisplay: Boolean)
 
-    suspend fun changeIsTimeDisplay(isPin: Boolean)
+    suspend fun changeIsTimeDisplay(isTimeDisplay: Boolean)
 
     suspend fun changeCookies(cookies: List<Cookie>)
 
     suspend fun changeIsLogin(isLogin: Boolean)
 
-    suspend fun changeSelectedDarkMode(darkMode: String)
+    suspend fun changeSelectedDarkMode(darkMode: Int)
 
     suspend fun changeEnableSystemColor(enable: Boolean)
 
@@ -30,7 +30,7 @@ interface DataStoreService {
 
     suspend fun changePassword(password: String)
 
-    suspend fun changeSemesterYearAndNo(semesterYearAndNo: String)
+    suspend fun changeSemesterYearAndNo(yearAndSemester: String)
 
     suspend fun changeEnterUniversityYear(enterUniversityYear: String)
 
@@ -51,7 +51,7 @@ interface DataStoreService {
 
     fun observeIsLogin(): Flow<Boolean>
 
-    fun observeSelectedDarkMode(): Flow<String>
+    fun observeSelectedDarkMode(): Flow<Int>
 
     fun observeDayOfWeek(): Flow<Int>
 
@@ -61,7 +61,7 @@ interface DataStoreService {
 
     fun observePassword(): Flow<String>
 
-    fun observeSemesterYearAndNo(): Flow<String>
+    fun observeYearAndSemester(): Flow<String>
 
     fun observeEnterUniversityYear(): Flow<String>
 

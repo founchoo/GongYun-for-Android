@@ -6,6 +6,7 @@ import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.StudentInfoResponse
+import com.example.example.PlannedScheduleResponse
 import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -18,9 +19,9 @@ import java.time.format.DateTimeFormatter
 
 interface NetworkService {
 
-    @GET("system/zy/xlgl/getData/{semesterYearAndNo}")
+    @GET("system/zy/xlgl/getData/{yearAndSemester}")
     fun getCalendar(
-        @Path("semesterYearAndNo") semesterYearAndNo: String,
+        @Path("yearAndSemester") yearAndSemester: String,
     ): Call<List<CalendarItem>>
 
     @GET("xsd/xsdzgcjcx/xsdQueryXszgcjList")
@@ -33,26 +34,31 @@ interface NetworkService {
         @Query("page.pn") pagePn: String? = "1",
         @Query("sort") sort: String? = "xnxq desc,id",
         @Query("order") order: String? = "asc",
-        @Query("startXnxq") startSemester: String? = "001",
-        @Query("endXnxq") endSemester: String? = "001",
+        @Query("startXnxq") startYearAndSemester: String? = "001",
+        @Query("endXnxq") endYearAndSemester: String? = "001",
         @Query("sfjg") sfjq: String? = "",
-        @Query("query.startXnxq||") queryStartSemester: String? = "001",
-        @Query("query.endXnxq||") queryEndSemester: String? = "001",
+        @Query("query.startXnxq||") queryStartYearAndSemester: String? = "001",
+        @Query("query.endXnxq||") queryEndYearAndSemester: String? = "001",
         @Query("query.sfjg||") querySfjq: String? = "",
     ): Call<GradeResponse>
 
     @GET("cjgl/xscjbbdy/getXscjpm")
-    fun getStudentRankingInfo(
+    fun getStudentRankingInfoRaw(
         @Query("sznj") enterUniversityYear: String,
-        @Query("xnxq") semester: String
+        @Query("xnxq") yearAndSemester: String
     ): Call<String>
 
     @GET("pkgl/xskb/sdpkkbList")
     fun getSchedule(
-        @Query("xnxq") semesterYearAndNo: String,
+        @Query("xnxq") yearAndSemester: String,
         @Query("xhid") studentId: String,
         @Query("xqdm") semesterNo: String,
     ): Call<List<Course>>
+
+    @GET("pkgl/xskb/queryKbForXsd")
+    fun getScheduleNotesRaw(
+        @Query("xnxq") yearAndSemester: String,
+    ): Call<String>
 
     @GET("jsd/qxzkb/querylist")
     fun getGlobalSchedule(
@@ -64,15 +70,27 @@ interface NetworkService {
         @Query("page.pn") pagePn: String? = "1",
         @Query("sort") sort: String? = "kcmc",
         @Query("order") order: String? = "asc",
-        @Query("xnxq") semesterYearAndNo: String,
+        @Query("xnxq") yearAndSemester: String,
         @Query("zxzc") startWeekNo: String,
         @Query("zdzc") endWeekNo: String,
         @Query("zxxq") startDayOfWeek: String,
         @Query("zdxq") endDayOfWeek: String,
         @Query("zxjc") startNode: String,
         @Query("zdjc") endNode: String,
-        @Query("query.xnxq||") queryStartSemester: String = semesterYearAndNo,
+        @Query("query.xnxq||") queryStartYearAndSemester: String = yearAndSemester,
     ): Call<GlobalCourseResponse>
+
+    @GET("xsd/studentpyfa/ajaxList2")
+    fun getPlannedSchedule(
+        @Query("gridtype") gridType: String = "jqgrid",
+        @Query("queryFields") queryFields: String = "id,kcmc,kcxz,sfbx,kcgs,gradename,kkxq,yxxdxq,xf,zongxs,llxs,syxs,shangjxs,shijianxs,qtxs,kkyxmc,kkjysmc,zyfxmc,sfsjhj,sjzs,ksxs,",
+        @Query("_search") isSearch: String = "false",
+        @Query("nd") nd: String = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+        @Query("page.size") pageSize: String = "1000",
+        @Query("page.pn") pagePn: String = "1",
+        @Query("sort") sort: String = "gradename desc, kkxq desc,id",
+        @Query("order") order: String = "asc",
+    ): Call<PlannedScheduleResponse>
 
     @GET("system/jxzy/jsxx/getZyKjs")
     fun getEmptyClassroom(

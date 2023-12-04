@@ -96,8 +96,8 @@ fun CampusHelperTheme(
     // Log.d("Theme", "uiState: $uiState")
 
     val darkTheme = when (uiState.darkMode) {
-        "开启" -> true
-        "关闭" -> false
+        DarkMode.ON.ordinal -> true
+        DarkMode.OFF.ordinal -> false
         else -> isSystemInDarkTheme()
     }
 

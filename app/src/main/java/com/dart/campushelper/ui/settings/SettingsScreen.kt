@@ -4,18 +4,22 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.ui.component.DropdownMenuPreference
+import com.dart.campushelper.ui.component.PreferenceHeader
+import com.dart.campushelper.ui.component.SwitchPreference
+import com.dart.campushelper.ui.component.TextAlertDialog
+import com.dart.campushelper.ui.component.TextPreference
 import com.dart.campushelper.ui.login.LoginViewModel
 import com.dart.campushelper.ui.login.ShowLoginDialog
 import com.dart.campushelper.ui.rememberAccountCircle
@@ -25,17 +29,17 @@ import com.dart.campushelper.ui.rememberClearNight
 import com.dart.campushelper.ui.rememberCode
 import com.dart.campushelper.ui.rememberDoNotDisturbOn
 import com.dart.campushelper.ui.rememberInfo
+import com.dart.campushelper.ui.rememberLanguage
 import com.dart.campushelper.ui.rememberPalette
 import com.dart.campushelper.ui.rememberPushPin
 import com.dart.campushelper.ui.rememberSchedule
 import com.dart.campushelper.ui.rememberScreenshotFrame
 import com.dart.campushelper.ui.rememberToday
-import com.dart.campushelper.utils.Constants.Companion.GITHUB_URL
+import com.dart.campushelper.ui.theme.DarkMode
+import com.dart.campushelper.ui.theme.toStringResourceId
+import com.dart.campushelper.utils.Constants.Companion.DEV_GITHUB_URL
+import com.dart.campushelper.utils.Constants.Companion.PROJECT_GITHUB_URL
 import com.dart.campushelper.utils.Constants.Companion.QQ_GROUP_NUMBER
-import com.dart.campushelper.utils.DropdownMenuPreference
-import com.dart.campushelper.utils.PreferenceHeader
-import com.dart.campushelper.utils.SwitchPreference
-import com.dart.campushelper.utils.TextPreference
 import com.dart.campushelper.utils.replaceWithStars
 import kotlinx.coroutines.launch
 
@@ -51,14 +55,16 @@ fun SettingsScreen(
 
     LazyColumn {
         item {
-            PreferenceHeader(text = "账户")
+            PreferenceHeader(text = stringResource(R.string.account))
             TextPreference(
-                title = if (settingsUiState.isLogin) "登出" else "登录",
-                description = if (settingsUiState.isLogin) "欢迎 ${
+                title = if (settingsUiState.isLogin) stringResource(R.string.logout) else stringResource(
+                    R.string.login
+                ),
+                description = if (settingsUiState.isLogin) "${stringResource(R.string.welcome)} ${
                     settingsUiState.username.replaceWithStars(
                         settingsUiState.isScreenshotMode
                     )
-                }" else "请先登录",
+                }" else stringResource(R.string.unlogin_message),
                 imageVector = rememberAccountCircle()
             ) {
                 if (settingsUiState.isLogin) {
@@ -67,12 +73,12 @@ fun SettingsScreen(
                     loginViewModel.onShowLoginDialogRequest()
                 }
             }
-            PreferenceHeader(text = "课表")
+            PreferenceHeader(text = stringResource(R.string.schedule_label))
             SwitchPreference(
                 imageVector = rememberDoNotDisturbOn(),
                 value = settingsUiState.isOtherCourseDisplay,
-                title = "显示非本周课程",
-                description = "以更高的透明度显示非本周课程",
+                title = stringResource(R.string.show_non_week_course_title),
+                description = stringResource(R.string.show_non_week_course_desc),
                 onValueChanged = {
                     settingsViewModel.changeIsOtherCourseDisplay(it)
                 }
@@ -80,8 +86,8 @@ fun SettingsScreen(
             SwitchPreference(
                 imageVector = rememberCalendarViewDay(),
                 value = settingsUiState.isYearDisplay,
-                title = "显示年份",
-                description = "在左上角显示当前展示周数所属年份",
+                title = stringResource(R.string.show_year_title),
+                description = stringResource(R.string.show_year_desc),
                 onValueChanged = {
                     settingsViewModel.changeIsYearDisplay(it)
                 }
@@ -89,8 +95,8 @@ fun SettingsScreen(
             SwitchPreference(
                 imageVector = rememberToday(),
                 value = settingsUiState.isDateDisplay,
-                title = "显示日期",
-                description = "在星期下方显示对应日期",
+                title = stringResource(R.string.show_date_title),
+                description = stringResource(R.string.show_date_desc),
                 onValueChanged = {
                     settingsViewModel.changeIsDateDisplay(it)
                 }
@@ -98,8 +104,8 @@ fun SettingsScreen(
             SwitchPreference(
                 imageVector = rememberSchedule(),
                 value = settingsUiState.isTimeDisplay,
-                title = "显示时间段",
-                description = "在节次下方显示上课时间段",
+                title = stringResource(R.string.show_node_time_title),
+                description = stringResource(R.string.show_node_time_desc),
                 onValueChanged = {
                     settingsViewModel.changeIsTimeDisplay(it)
                 }
@@ -107,17 +113,17 @@ fun SettingsScreen(
             // Pin course info widget to desktop
             TextPreference(
                 imageVector = rememberPushPin(),
-                title = "（实验性）固定课程到桌面",
-                description = "请确保已授予\"桌面快捷方式\"权限",
+                title = stringResource(R.string.show_pin_title),
+                description = stringResource(R.string.show_pin_desc),
                 onClick = {
                     settingsViewModel.pin()
                 }
             )
-            PreferenceHeader(text = "主题")
+            PreferenceHeader(text = stringResource(R.string.display))
             SwitchPreference(
                 imageVector = rememberPalette(),
-                title = "系统主题色",
-                description = "开启后将跟随系统主题色",
+                title = stringResource(R.string.system_color_title),
+                description = stringResource(R.string.system_color_desc),
                 value = settingsUiState.isSystemColor,
                 onValueChanged = {
                     settingsViewModel.changeEnableSystemColor(it)
@@ -125,20 +131,27 @@ fun SettingsScreen(
             )
             DropdownMenuPreference(
                 imageVector = rememberClearNight(),
-                title = "深色主题",
-                value = settingsUiState.selectedDarkMode,
-                selections = listOf(
-                    "跟随系统",
-                    "开启",
-                    "关闭"
-                ),
-                onValueChanged = {
-                    settingsViewModel.changeSelectedDarkMode(it)
+                title = stringResource(R.string.dark_mode),
+                value = stringResource(DarkMode.values()[settingsUiState.selectedDarkModeIndex].toStringResourceId()),
+                selections = DarkMode.values().map {
+                    stringResource(it.toStringResourceId())
+                },
+                onValueChanged = { index, _ ->
+                    settingsViewModel.changeSelectedDarkModeIndex(index)
                 }
             )
-            PreferenceHeader(text = "关于")
+            DropdownMenuPreference(
+                imageVector = rememberLanguage(),
+                title = stringResource(R.string.language),
+                value = (listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList)[settingsUiState.selectedLanguageIndex],
+                selections = listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList,
+                onValueChanged = { index, item ->
+                    settingsViewModel.changeLanguage(index, item)
+                }
+            )
+            PreferenceHeader(text = stringResource(R.string.about))
             TextPreference(
-                title = "工韵",
+                title = stringResource(R.string.app_name),
                 description = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
                 imageVector = rememberInfo()
             ) {
@@ -146,25 +159,32 @@ fun SettingsScreen(
                 settingsViewModel.changeDevSectionShow(!settingsUiState.isDevSectionShow)
             }
             TextPreference(
-                title = "反馈",
-                description = "加入群聊提供你的意见及建议",
+                title = stringResource(R.string.dev_title),
+                description = stringResource(R.string.dev_name),
+                painter = painterResource(R.drawable.dev_avatar),
+            ) {
+                settingsViewModel.onShowDevProfileUrlConfirmDialogRequest()
+            }
+            TextPreference(
+                title = stringResource(R.string.feedback_title),
+                description = stringResource(R.string.feedback_desc),
                 imageVector = rememberChat()
             ) {
                 settingsViewModel.onShowFeedbackUrlConfirmDialogRequest()
             }
             TextPreference(
-                title = "开源代码",
-                description = "你的开发将为此应用贡献一份力量",
+                title = stringResource(R.string.open_source_code_title),
+                description = stringResource(R.string.open_source_code_desc),
                 imageVector = rememberCode()
             ) {
                 settingsViewModel.onShowSourceCodeUrlConfirmDialogRequest()
             }
             if (settingsUiState.isDevSectionShow) {
-                PreferenceHeader(text = "开发者选项")
+                PreferenceHeader(text = stringResource(R.string.dev))
                 SwitchPreference(
                     imageVector = rememberScreenshotFrame(),
-                    title = "截屏模式",
-                    description = "开启后隐私信息将被*替代",
+                    title = stringResource(R.string.screenshot_mode_title),
+                    description = stringResource(R.string.screenshot_mode_desc),
                     value = settingsUiState.isScreenshotMode,
                     onValueChanged = {
                         settingsViewModel.changeIsScreenshotMode(it)
@@ -178,81 +198,55 @@ fun SettingsScreen(
         ShowLoginDialog(loginViewModel)
     }
 
-    addTextAlertDialog(
+    TextAlertDialog(
         isShowDialog = settingsUiState.openLogoutConfirmDialog,
         actionAfterConfirm = {
             loginViewModel.logout()
             settingsViewModel.onHideLogoutConfirmDialogRequest()
         },
         onDismissRequest = { settingsViewModel.onHideLogoutConfirmDialogRequest() },
-        contentText = "确定要登出吗？"
+        contentText = stringResource(R.string.logout_message)
     )
 
     val clipboardManager = LocalClipboardManager.current
 
-    addTextAlertDialog(
+    TextAlertDialog(
         isShowDialog = settingsUiState.openFeedbackUrlConfirmDialog,
         actionAfterConfirm = {
             settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
             // Copy QQ group number
             clipboardManager.setText(AnnotatedString(QQ_GROUP_NUMBER))
             settingsViewModel.viewModelScope.launch {
-                MainActivity.snackBarHostState.showSnackbar("已复制 QQ 群号码")
+                MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.copy_group_toast))
             }
         },
         onDismissRequest = { settingsViewModel.onHideFeedbackUrlConfirmDialogRequest() },
-        contentText = "您即将复制 QQ 群号码"
+        contentText = stringResource(R.string.copy_group_message)
     )
 
-    addTextAlertDialog(
+    TextAlertDialog(
         isShowDialog = settingsUiState.openSourceCodeUrlConfirmDialog,
         actionAfterConfirm = {
             settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(GITHUB_URL)
-            CampusHelperApplication.context.startActivity(intent)
+            intent.data = Uri.parse(PROJECT_GITHUB_URL)
+            context.startActivity(intent)
         },
         onDismissRequest = { settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest() },
-        contentText = "您即将离开此应用，确认后将跳转到浏览器打开 Github 仓库"
+        contentText = stringResource(R.string.open_source_code_message)
     )
-}
 
-@Composable
-fun addTextAlertDialog(
-    isShowDialog: Boolean,
-    actionAfterConfirm: () -> Unit,
-    onDismissRequest: () -> Unit,
-    titleText: String = "提示",
-    contentText: String
-) {
-    if (isShowDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(
-                    text = titleText,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            },
-            text = {
-                Text(
-                    text = contentText,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    actionAfterConfirm()
-                }) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text("取消")
-                }
-            }
-        )
-    }
+    TextAlertDialog(
+        isShowDialog = settingsUiState.openDevProfileUrlConfirmDialog,
+        actionAfterConfirm = {
+            settingsViewModel.onHideDevProfileUrlConfirmDialogRequest()
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.data = Uri.parse(DEV_GITHUB_URL)
+            context.startActivity(intent)
+        },
+        onDismissRequest = { settingsViewModel.onHideDevProfileUrlConfirmDialogRequest() },
+        contentText = stringResource(R.string.open_dev_profile_message)
+    )
 }

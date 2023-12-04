@@ -1,5 +1,8 @@
 package com.dart.campushelper.model
 
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
+
 class RankingInfo {
     private var data: MutableMap<Pair<HostRankingType, SubRankingType>, Ranking> = mutableMapOf()
 
@@ -22,8 +25,8 @@ enum class HostRankingType {
 
     override fun toString(): String {
         return when (this) {
-            GPA -> "平均学分绩点"
-            SCORE -> "算术平均分"
+            GPA -> context.getString(R.string.gpa_label)
+            SCORE -> context.getString(R.string.arithmetic_mean_score)
         }
     }
 }
@@ -33,9 +36,9 @@ enum class SubRankingType {
 
     override fun toString(): String {
         return when (this) {
-            INSTITUTE -> "学院"
-            MAJOR -> "专业"
-            CLASS -> "班级"
+            INSTITUTE -> context.getString(R.string.institute)
+            MAJOR -> context.getString(R.string.major)
+            CLASS -> context.getString(R.string._class)
         }
     }
 }

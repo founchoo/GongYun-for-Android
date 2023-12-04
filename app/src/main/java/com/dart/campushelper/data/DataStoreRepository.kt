@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dart.campushelper.CampusHelperApplication.Companion.context
 import com.dart.campushelper.api.DataStoreService
+import com.dart.campushelper.ui.theme.DarkMode
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +78,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         }
     }
 
-    override suspend fun changeSelectedDarkMode(darkMode: String) {
+    override suspend fun changeSelectedDarkMode(darkMode: Int) {
         mutex.withLock {
             context.dataStore.edit {
                 it[KEY_SELECTED_DARK_MODE] = darkMode
@@ -109,10 +110,10 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         }
     }
 
-    override suspend fun changeSemesterYearAndNo(semesterYearAndNo: String) {
+    override suspend fun changeSemesterYearAndNo(yearAndSemester: String) {
         mutex.withLock {
             context.dataStore.edit {
-                it[KEY_SEMESTER_YEAR_AND_NO] = semesterYearAndNo
+                it[KEY_SEMESTER_YEAR_AND_NO] = yearAndSemester
             }
         }
     }
@@ -163,7 +164,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         it[KEY_IS_LOGIN] ?: DEFAULT_VALUE_IS_LOGIN
     }
 
-    override fun observeSelectedDarkMode(): Flow<String> =
+    override fun observeSelectedDarkMode(): Flow<Int> =
         context.dataStore.data.map {
             it[KEY_SELECTED_DARK_MODE] ?: DEFAULT_VALUE_SELECTED_DARK_MODE
         }
@@ -183,7 +184,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         it[KEY_PASSWORD] ?: DEFAULT_VALUE_PASSWORD
     }
 
-    override fun observeSemesterYearAndNo(): Flow<String> = context.dataStore.data.map {
+    override fun observeYearAndSemester(): Flow<String> = context.dataStore.data.map {
         it[KEY_SEMESTER_YEAR_AND_NO] ?: DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
     }
 
@@ -206,7 +207,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         val KEY_IS_LOGIN = booleanPreferencesKey("is_login")
         val KEY_DAY_OF_WEEK = intPreferencesKey("day_of_week")
         val KEY_ENABLE_SYSTEM_COLOR = booleanPreferencesKey("enable_system_color")
-        val KEY_SELECTED_DARK_MODE = stringPreferencesKey("selected_dark_mode")
+        val KEY_SELECTED_DARK_MODE = intPreferencesKey("selected_dark_mode")
         val KEY_START_LOCALDATE = stringPreferencesKey("start_localdate")
         val KEY_USERNAME = stringPreferencesKey("username")
         val KEY_PASSWORD = stringPreferencesKey("password")
@@ -223,7 +224,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         const val DEFAULT_VALUE_DAY_OF_WEEK = -1
         const val DEFAULT_VALUE_DISPLAYED_WEEK = -1
         const val DEFAULT_VALUE_ENABLE_SYSTEM_COLOR = true
-        const val DEFAULT_VALUE_SELECTED_DARK_MODE = "跟随系统"
+        val DEFAULT_VALUE_SELECTED_DARK_MODE = DarkMode.SYSTEM.ordinal
         val DEFAULT_VALUE_START_LOCALDATE = LocalDate.now()
         const val DEFAULT_VALUE_USERNAME = ""
         const val DEFAULT_VALUE_PASSWORD = ""

@@ -3,31 +3,40 @@ package com.dart.campushelper.ui
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.annotation.SuppressLint
 import android.app.PendingIntent
-import android.app.UiModeManager
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Scaffold
@@ -43,6 +52,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,22 +62,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.dart.campushelper.CampusHelperApplication.Companion.context
 import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
-import com.dart.campushelper.ui.grade.CreateActionsForGrade
+import com.dart.campushelper.ui.grade.ActionsForGrade
 import com.dart.campushelper.ui.grade.CreateFloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
+import com.dart.campushelper.ui.grade.GradeUiState
 import com.dart.campushelper.ui.grade.GradeViewModel
 import com.dart.campushelper.ui.login.LoginViewModel
 import com.dart.campushelper.ui.schedule.CreateActionsForSchedule
@@ -78,12 +99,15 @@ import com.dart.campushelper.ui.settings.SettingsViewModel
 import com.dart.campushelper.ui.theme.CampusHelperTheme
 import com.dart.campushelper.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+lateinit var focusSearchBarRequester: FocusRequester
 
 data class Screen(val route: String, @StringRes val resourceId: Int)
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val themeViewModel: ThemeViewModel by viewModels()
 
@@ -104,40 +128,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            uiModeManager.setApplicationNightMode(
-                when (themeViewModel.uiState.value.darkMode) {
-                    "开启" -> UiModeManager.MODE_NIGHT_YES
-                    "关闭" -> UiModeManager.MODE_NIGHT_NO
-                    else -> UiModeManager.MODE_NIGHT_AUTO
-                }
-            )
-        }
-
         setContent {
+            val scope = rememberCoroutineScope()
             snackBarHostState = remember { SnackbarHostState() }
-            AddBackHandler()
-            CampusHelperApp(mainViewModel)
+            focusSearchBarRequester = remember { FocusRequester() }
+            CampusHelperApp(mainViewModel, scope)
         }
     }
 
     @SuppressLint("CoroutineCreationDuringComposition", "StateFlowValueCalledInComposition")
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun CampusHelperApp(mainViewModel: MainViewModel) {
+    fun CampusHelperApp(mainViewModel: MainViewModel, scope: CoroutineScope) {
 
-        val scope = rememberCoroutineScope()
+        val density = LocalDensity.current
+
+        val interactionSource = remember { MutableInteractionSource() }
 
         val mainUiState by mainViewModel.uiState.collectAsState()
         val scheduleUiState by scheduleViewModel.uiState.collectAsState()
         val gradeUiState by gradeViewModel.uiState.collectAsState()
 
-        val schedule = Screen("课表", R.string.schedule_label)
-        val program = Screen("培养方案", R.string.program_label)
-        val grade = Screen("成绩", R.string.grade_label)
-        val settings = Screen("设置", R.string.settings_label)
+        val schedule = Screen("schedule", R.string.schedule_label)
+        val program = Screen("program", R.string.program_label)
+        val grade = Screen("grade", R.string.grade_label)
+        val settings = Screen("settings", R.string.settings_label)
 
         val idsOutline = mapOf(
             schedule to rememberViewTimeline(),
@@ -150,12 +165,13 @@ class MainActivity : ComponentActivity() {
             settings to rememberSettingsFilled(),
         )
 
+        BackHandler(gradeUiState, gradeViewModel, scope)
+
         CampusHelperTheme(themeViewModel) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
-
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
@@ -166,63 +182,137 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
                         TopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                scrolledContainerColor = MaterialTheme.colorScheme.surface
-                            ),
                             title = {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text(
-                                        text = currentDestination?.route ?: "",
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    if (currentDestination?.route == schedule.route) {
-                                        TooltipBox(
-                                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                                            tooltip = {
-                                                RichTooltip(
-                                                    title = {
-                                                        Text("切换课表", fontWeight = FontWeight.Bold)
-                                                    },
-                                                    action = {
-                                                        TextButton(
-                                                            onClick = {
-                                                                scope.launch {
-                                                                    scheduleUiState.holdingSemesterTooltipState.dismiss()
+                                    when (currentDestination?.route) {
+                                        schedule.route -> {
+                                            Text(
+                                                text = stringResource(schedule.resourceId),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            TooltipBox(
+                                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                                tooltip = {
+                                                    RichTooltip(
+                                                        title = {
+                                                            Text(
+                                                                stringResource(R.string.switch_schedule),
+                                                                fontWeight = FontWeight.Bold
+                                                            )
+                                                        },
+                                                        action = {
+                                                            TextButton(
+                                                                onClick = {
+                                                                    scope.launch {
+                                                                        scheduleUiState.holdingSemesterTooltipState.dismiss()
+                                                                    }
                                                                 }
+                                                            ) {
+                                                                Text(stringResource(R.string.close))
                                                             }
-                                                        ) {
-                                                            Text("关闭")
-                                                        }
-                                                    }) {
-                                                    Text("点按上方的双行标签区域以打开对话框切换学年及周数")
-                                                }
-                                            },
-                                            state = scheduleUiState.holdingSemesterTooltipState
-                                        ) {
-                                            Column(
-                                                Modifier
-                                                    .clip(RoundedCornerShape(5.dp))
-                                                    .clickable {
-                                                        scheduleViewModel.setIsShowWeekSliderDialog(
-                                                            true
-                                                        )
-                                                    },
+                                                        }) {
+                                                        Text(stringResource(R.string.switch_schedule_hint))
+                                                    }
+                                                },
+                                                state = scheduleUiState.holdingSemesterTooltipState
                                             ) {
+                                                Column(
+                                                    Modifier
+                                                        .clip(RoundedCornerShape(5.dp))
+                                                        .clickable {
+                                                            scheduleViewModel.setIsShowWeekSliderDialog(
+                                                                true
+                                                            )
+                                                        },
+                                                ) {
+                                                    Text(
+                                                        text = scheduleUiState.browsedSemester,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                    )
+                                                    Text(
+                                                        text = String.format(
+                                                            stringResource(
+                                                                R.string.week_indicator
+                                                            ), scheduleUiState.browsedWeek
+                                                        ),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        grade.route -> {
+                                            if (!gradeUiState.isSearchBarShow) {
                                                 Text(
-                                                    text = scheduleUiState.browsedSemester,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                )
-                                                Text(
-                                                    text = "第 ${scheduleUiState.browsedWeek} 周",
+                                                    text = stringResource(grade.resourceId),
                                                     maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    style = MaterialTheme.typography.labelSmall,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
+                                            AnimatedVisibility(
+                                                visible = gradeUiState.isSearchBarShow,
+                                                enter = fadeIn(),
+                                                exit = fadeOut(),
+                                            ) {
+                                                BasicTextField(
+                                                    value = gradeUiState.searchKeyword,
+                                                    onValueChange = {
+                                                        gradeViewModel.setSearchKeyword(it)
+                                                    },
+                                                    interactionSource = interactionSource,
+                                                    textStyle = TextStyle(
+                                                        fontSize = 16.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    ),
+                                                    modifier = Modifier
+                                                        .focusRequester(focusSearchBarRequester),
+                                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                ) {
+                                                    OutlinedTextFieldDefaults.DecorationBox(
+                                                        value = gradeUiState.searchKeyword,
+                                                        innerTextField = it,
+                                                        enabled = true,
+                                                        singleLine = true,
+                                                        interactionSource = interactionSource,
+                                                        visualTransformation = VisualTransformation.None,
+                                                        placeholder = {
+                                                            Text(
+                                                                text = stringResource(R.string.course_name),
+                                                            )
+                                                        },
+                                                        container = {
+                                                            OutlinedTextFieldDefaults.ContainerBox(
+                                                                enabled = true,
+                                                                isError = false,
+                                                                interactionSource = interactionSource,
+                                                                colors = OutlinedTextFieldDefaults.colors(
+                                                                    focusedBorderColor = Color.Transparent,
+                                                                    unfocusedBorderColor = Color.Transparent,
+                                                                ),
+                                                                focusedBorderThickness = 0.dp,
+                                                                unfocusedBorderThickness = 0.dp,
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                                LaunchedEffect(Unit) {
+                                                    focusSearchBarRequester.requestFocus()
+                                                }
+                                            }
+                                        }
+
+                                        settings.route -> {
+                                            Text(
+                                                text = stringResource(settings.resourceId),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
@@ -234,13 +324,36 @@ class MainActivity : ComponentActivity() {
                                         scheduleUiState
                                     )
                                 } else if (currentDestination?.route == grade.route) {
-                                    CreateActionsForGrade(
+                                    ActionsForGrade(
                                         viewModel = gradeViewModel,
                                         uiState = gradeUiState
                                     )
                                 }
                             },
-                            scrollBehavior = scrollBehavior
+                            scrollBehavior = scrollBehavior,
+                            navigationIcon = {
+                                AnimatedVisibility(
+                                    visible = gradeUiState.isSearchBarShow,
+                                    enter = slideInHorizontally {
+                                        with(density) { -80.dp.roundToPx() }
+                                    },
+                                    exit = slideOutHorizontally {
+                                        with(density) { -80.dp.roundToPx() }
+                                    },
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            gradeViewModel.setIsSearchBarShow(false)
+                                            gradeViewModel.setSearchKeyword("")
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.AutoMirrored.Outlined.ArrowBack,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                            }
                         )
                     },
                     bottomBar = {
@@ -259,7 +372,7 @@ class MainActivity : ComponentActivity() {
                                             positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                                             tooltip = {
                                                 PlainTooltip {
-                                                    Text(screen.route)
+                                                    Text(stringResource(screen.resourceId))
                                                 }
                                             },
                                             state = rememberTooltipState()
@@ -269,11 +382,11 @@ class MainActivity : ComponentActivity() {
                                                     true -> idsFill[screen]!!
                                                     false -> idsOutline[screen]!!
                                                 },
-                                                contentDescription = screen.route
+                                                contentDescription = stringResource(screen.resourceId)
                                             )
                                         }
                                     },
-                                    label = { Text(screen.route) },
+                                    label = { Text(stringResource(screen.resourceId)) },
                                     alwaysShowLabel = false,
                                     onClick = {
                                         navController.navigate(screen.route) {
@@ -327,10 +440,18 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AddBackHandler() {
-        val scope = rememberCoroutineScope()
+    fun BackHandler(
+        gradeUiState: GradeUiState,
+        gradeViewModel: GradeViewModel,
+        scope: CoroutineScope
+    ) {
         var showExitHint by remember { mutableStateOf(false) }
         BackHandler(true) {
+            if (gradeUiState.isSearchBarShow) {
+                gradeViewModel.setIsSearchBarShow(false)
+                gradeViewModel.setSearchKeyword("")
+                return@BackHandler
+            }
             if (showExitHint) {
                 scope.launch {
                     ActivityCompat.finishAffinity(this@MainActivity)
@@ -340,7 +461,7 @@ class MainActivity : ComponentActivity() {
             showExitHint = true
             scope.launch {
                 showExitHint =
-                    snackBarHostState.showSnackbar("再按一次以退出") != SnackbarResult.Dismissed
+                    snackBarHostState.showSnackbar(context.getString(R.string.message_befor_exit)) != SnackbarResult.Dismissed
             }
         }
     }

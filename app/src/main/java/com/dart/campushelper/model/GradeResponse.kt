@@ -16,7 +16,7 @@ data class GradeResponse(
 
 data class Grade(
 
-    @SerializedName("xnxq") var semesterYearAndNo: String? = null,
+    @SerializedName("xnxq") var yearAndSemester: String? = null,
     @SerializedName("xf") var creditRaw: String? = null,
     @SerializedName("kcmc") var courseNameRaw: String? = null,
     @SerializedName("kcxz") var courseTypeRaw: String? = null,

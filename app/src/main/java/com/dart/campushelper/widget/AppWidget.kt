@@ -70,7 +70,13 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "第 ${uiState.currentWeek} 周 / 星期${convertDayOfWeekToChinese(uiState.dayOfWeek)} / ${
+                text = "${
+                    String.format(
+                        stringResource(
+                            R.string.week_indicator
+                        ), uiState.currentWeek
+                    )
+                } / ${convertDayOfWeekToChinese(uiState.dayOfWeek)} / ${
                     LocalDate.now().format(
                         DateTimeFormatter.ofPattern("MM-dd")
                     )

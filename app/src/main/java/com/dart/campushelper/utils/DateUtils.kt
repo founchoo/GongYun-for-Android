@@ -1,5 +1,7 @@
 package com.dart.campushelper.utils
 
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.utils.DateUtils.nodeEnds
 import java.time.LocalDate
 import java.time.LocalTime
@@ -44,12 +46,12 @@ fun getCurrentNode(): Int {
 
 fun convertDayOfWeekToChinese(dayOfWeek: Int) =
     when (dayOfWeek) {
-        1 -> "一"
-        2 -> "二"
-        3 -> "三"
-        4 -> "四"
-        5 -> "五"
-        6 -> "六"
-        7 -> "日"
+        1 -> context.getString(R.string.monday)
+        2 -> context.getString(R.string.tuesday)
+        3 -> context.getString(R.string.wednesday)
+        4 -> context.getString(R.string.thursday)
+        5 -> context.getString(R.string.friday)
+        6 -> context.getString(R.string.saturday)
+        7 -> context.getString(R.string.sunday)
         else -> ""
     }

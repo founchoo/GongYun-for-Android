@@ -7,12 +7,18 @@ import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
+import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.LoginResponse
+import com.dart.campushelper.model.Ranking
+import com.dart.campushelper.model.RankingInfo
+import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.model.StudentInfoResponse
+import com.dart.campushelper.model.SubRankingType
 import com.dart.campushelper.ui.MainActivity
 import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
 import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
 import com.dart.campushelper.utils.Constants.Companion.RETRY
+import com.example.example.PlannedScheduleResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -20,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
+import org.jsoup.Jsoup
 import retrofit2.Call
 import retrofit2.awaitResponse
 import javax.inject.Inject
@@ -31,12 +38,12 @@ class NetworkRepository @Inject constructor(
 
     val scope = CoroutineScope(Dispatchers.IO)
 
-    private val semesterYearAndNoStateFlow =
-        dataStoreRepository.observeSemesterYearAndNo().stateIn(
+    private val yearAndSemesterStateFlow =
+        dataStoreRepository.observeYearAndSemester().stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                dataStoreRepository.observeSemesterYearAndNo().first()
+                dataStoreRepository.observeYearAndSemester().first()
             }
         )
 
@@ -73,7 +80,6 @@ class NetworkRepository @Inject constructor(
     ).isSuccess
 
     private suspend fun <T> retry(call: Call<T>): T? {
-        val reqUrl = call.request().url.toString()
         // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
@@ -105,33 +111,89 @@ class NetworkRepository @Inject constructor(
     }
 
     suspend fun getCalendar(
-        semesterYearAndNo: String?
+        yearAndSemester: String?
     ): List<CalendarItem>? = retry(
-        networkService.getCalendar(semesterYearAndNo ?: semesterYearAndNoStateFlow.value)
+        networkService.getCalendar(yearAndSemester ?: yearAndSemesterStateFlow.value)
     )?.filter { it.weekNo?.toInt() != 0 }
 
     suspend fun getGrades(): GradeResponse? = retry(networkService.getGrades())
 
-    suspend fun getStudentRankingInfo(semester: String): String? = retry(
-        networkService.getStudentRankingInfo(
+    private suspend fun getStudentRankingInfoRaw(yearAndSemester: String): String? = retry(
+        networkService.getStudentRankingInfoRaw(
             enterUniversityYear = enterUniversityYearStateFlow.value,
-            semester = semester,
+            yearAndSemester = yearAndSemester,
         )
     )
 
+    suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): RankingInfo? {
+        val stuRankInfoResult = getStudentRankingInfoRaw(
+            yearAndSemesters.joinToString(","),
+        )
+        if (stuRankInfoResult != null) {
+            val rankingInfo = RankingInfo()
+            Jsoup.parse(stuRankInfoResult).run {
+                select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
+                    hostElement.select("td")
+                        .forEachIndexed { subRankingType, subElement ->
+                            if (subRankingType > 0) {
+                                rankingInfo.setRanking(
+                                    HostRankingType.values()[hostRankingType - 1],
+                                    SubRankingType.values()[subRankingType - 1],
+                                    subElement.text().split("/").let {
+                                        if (it[0] == "" || it[1] == "") {
+                                            Ranking()
+                                        } else {
+                                            Ranking(it[0].toInt(), it[1].toInt())
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                }
+            }
+            return rankingInfo
+        }
+        return null
+    }
+
     suspend fun getSchedule(
-        semesterYearAndNo: String?
+        yearAndSemester: String?
     ): List<Course>? = retry(
         networkService.getSchedule(
-            semesterYearAndNo = semesterYearAndNo ?: semesterYearAndNoStateFlow.value,
+            yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
             studentId = usernameStateFlow.value,
-            semesterNo = ((semesterYearAndNo ?: semesterYearAndNoStateFlow.value).lastOrNull()
+            semesterNo = ((yearAndSemester ?: yearAndSemesterStateFlow.value).lastOrNull()
                 ?: "").toString(),
         )
     )
 
+    private suspend fun getScheduleNotesRaw(
+        yearAndSemester: String?
+    ): String? = retry(
+        networkService.getScheduleNotesRaw(
+            yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
+        )
+    )
+
+    suspend fun getScheduleNotes(
+        yearAndSemester: String?
+    ): List<ScheduleNoteItem>? = getScheduleNotesRaw(yearAndSemester)?.let { html ->
+        Jsoup.parse(html).select("td[colspan=8]").first()?.html()?.trim()?.split("<br>")?.dropLast(1)?.map {
+            val openBracketIndex = it.indexOf("【")
+            val closeBracketIndex = it.indexOf("】")
+            if (openBracketIndex == -1 || closeBracketIndex == -1) {
+                ScheduleNoteItem(it.trim(), "")
+            } else {
+                ScheduleNoteItem(
+                    it.substring(0, openBracketIndex).trim(),
+                    it.substring(openBracketIndex + 1, closeBracketIndex).trim()
+                )
+            }
+        }
+    }
+
     suspend fun getGlobalSchedule(
-        semesterYearAndNo: String,
+        yearAndSemester: String,
         startWeekNo: String,
         endWeekNo: String,
         startDayOfWeek: String,
@@ -141,7 +203,7 @@ class NetworkRepository @Inject constructor(
     ): GlobalCourseResponse? =
         retry(
             networkService.getGlobalSchedule(
-                semesterYearAndNo = semesterYearAndNo,
+                yearAndSemester = yearAndSemester,
                 startWeekNo = startWeekNo,
                 endWeekNo = endWeekNo,
                 startDayOfWeek = startDayOfWeek,
@@ -150,6 +212,8 @@ class NetworkRepository @Inject constructor(
                 endNode = endNode,
             )
         )
+
+    suspend fun getPlannedSchedule(): PlannedScheduleResponse? = retry(networkService.getPlannedSchedule())
 
     suspend fun getEmptyClassroom(
         dayOfWeekNo: List<Int>,

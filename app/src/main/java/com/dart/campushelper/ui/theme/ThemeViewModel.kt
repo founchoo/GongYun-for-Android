@@ -2,6 +2,7 @@ package com.dart.campushelper.ui.theme
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
@@ -18,7 +19,7 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 data class ThemeUiState(
-    val darkMode: String = DEFAULT_VALUE_SELECTED_DARK_MODE,
+    val darkMode: Int = DEFAULT_VALUE_SELECTED_DARK_MODE,
     val enableSystemColor: Boolean = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR,
 )
 
@@ -60,5 +61,19 @@ class ThemeViewModel @Inject constructor(
                 _uiState.update { it.copy(darkMode = input) }
             }
         }
+    }
+}
+
+enum class DarkMode {
+    SYSTEM,
+    ON,
+    OFF,
+}
+
+fun DarkMode.toStringResourceId(): Int {
+    return when (this) {
+        DarkMode.SYSTEM -> R.string.follow_system
+        DarkMode.ON -> R.string.turn_on
+        DarkMode.OFF -> R.string.turn_off
     }
 }

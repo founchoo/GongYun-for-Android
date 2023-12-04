@@ -7,7 +7,7 @@ data class CalendarItem(
     /**
      * 学年学期，例如：2020-2021-1
      */
-    @SerializedName("xnxqh") var semesterYearAndNo: String? = null,
+    @SerializedName("xnxqh") var yearAndSemester: String? = null,
     /**
      * 年份月份，例如：2023-08
      */

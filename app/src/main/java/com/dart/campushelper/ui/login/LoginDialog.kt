@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,12 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import com.dart.campushelper.R
 import com.dart.campushelper.ui.rememberVisibility
 import com.dart.campushelper.ui.rememberVisibilityOff
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowLoginDialog(
     loginViewModel: LoginViewModel
@@ -43,47 +43,47 @@ fun ShowLoginDialog(
 
     AlertDialog(
         title = {
-            Text(text = "综合教务管理系统")
+            Text(text = stringResource(R.string.login_dialog_title))
         },
         text = {
             Column(verticalArrangement = Arrangement.SpaceAround) {
                 TextField(
                     value = uiState.username,
                     onValueChange = { loginViewModel.onUsernameChanged(it) },
-                    label = { Text("学号") },
+                    label = { Text(stringResource(R.string.student_number)) },
                     isError = uiState.loginInfoError,
                     supportingText = {
                         if (uiState.loginInfoError) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                text = "学号或密码错误",
+                                text = stringResource(R.string.login_error),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
                     },
                     trailingIcon = {
                         if (uiState.loginInfoError) {
-                            Icon(Icons.Filled.Warning,"error", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Filled.Warning,null, tint = MaterialTheme.colorScheme.error)
                         }
                     },
                 )
                 TextField(
                     value = uiState.password,
                     onValueChange = { loginViewModel.onPasswordChanged(it) },
-                    label = { Text("密码") },
+                    label = { Text(stringResource(R.string.password)) },
                     isError = uiState.loginInfoError,
                     supportingText = {
                         if (uiState.loginInfoError) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                text = "学号或密码错误",
+                                text = stringResource(R.string.login_error),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
                     },
                     trailingIcon = {
                         if (uiState.loginInfoError) {
-                            Icon(Icons.Filled.Warning,"error", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Filled.Warning,null, tint = MaterialTheme.colorScheme.error)
                         } else {
                             IconButton(
                                 onClick = { },
@@ -91,7 +91,7 @@ fun ShowLoginDialog(
                             ) {
                                 Icon(
                                     imageVector = if (displayPassword) rememberVisibility() else rememberVisibilityOff(),
-                                    contentDescription = "密码",
+                                    contentDescription = stringResource(R.string.password),
                                 )
                             }
                         }
@@ -109,7 +109,7 @@ fun ShowLoginDialog(
                     loginViewModel.login()
                 }
             ) {
-                Text("登录")
+                Text(stringResource(R.string.login))
             }
         },
         dismissButton = {
@@ -118,7 +118,7 @@ fun ShowLoginDialog(
                     loginViewModel.onHideLoginDialogRequest()
                 }
             ) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

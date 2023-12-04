@@ -3,11 +3,12 @@ package com.dart.campushelper.ui.grade
 import androidx.compose.runtime.toMutableStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.NetworkRepository
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
-import com.dart.campushelper.model.Ranking
 import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.SubRankingType
 import com.patrykandpatrick.vico.core.chart.composed.ComposedChartEntryModel
@@ -21,13 +22,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.jsoup.Jsoup
 import javax.inject.Inject
 
 data class GradeUiState(
@@ -36,11 +35,10 @@ data class GradeUiState(
     val isRankingInfoLoading: Boolean = true,
     val grades: List<Grade> = emptyList(),
     val isGradesLoading: Boolean = true,
-    val courseSorts: List<String> = emptyList(),
+    val courseTypes: List<String> = emptyList(),
     val semesters: List<String> = emptyList(),
-    val courseSortsSelected: Map<String, Boolean> = emptyMap(),
+    val courseTypesSelected: Map<String, Boolean> = emptyMap(),
     val semestersSelected: Map<String, Boolean> = emptyMap(),
-    val showLoginPlaceholder: Boolean = false,
     val gradePointAverage: Double = 0.0,
     val averageScore: Double = 0.0,
     val searchKeyword: String = "",
@@ -50,8 +48,10 @@ data class GradeUiState(
     val contentForGradeDetailDialog: Grade = Grade(),
     val overallScoreData: List<FloatEntry> = emptyList(),
     val gradeDistribution: List<Int> = emptyList(),
-    val rankingData: ComposedChartEntryModel<ChartEntryModel>? = null,
+    val entryModelForRankingColumnChart: ComposedChartEntryModel<ChartEntryModel>? = null,
     val isScreenshotMode: Boolean = false,
+    val isSearchBarShow: Boolean = false,
+    val isSearchBarActive: Boolean = false,
 )
 
 @HiltViewModel
@@ -63,33 +63,6 @@ class GradeViewModel @Inject constructor(
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(GradeUiState())
     val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
-
-    private val usernameStateFlow: StateFlow<String> = dataStoreRepository.observeUsername()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking {
-                dataStoreRepository.observeUsername().first()
-            }
-        )
-
-    private val isLoginStateFlow: StateFlow<Boolean> =
-        dataStoreRepository.observeIsLogin().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking {
-                dataStoreRepository.observeIsLogin().first()
-            }
-        )
-
-    private val enterUniversityYearStateFlow =
-        dataStoreRepository.observeEnterUniversityYear().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking {
-                dataStoreRepository.observeEnterUniversityYear().first()
-            }
-        )
 
     private val isScreenshotModeStateFlow: StateFlow<Boolean> =
         dataStoreRepository.observeIsScreenshotMode().stateIn(
@@ -104,22 +77,8 @@ class GradeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            combine(
-                isLoginStateFlow,
-                usernameStateFlow,
-                enterUniversityYearStateFlow
-            ) { isLogin, username, enterUniversityYear ->
-                listOf(isLogin.toString(), username, enterUniversityYear)
-            }.collect {
-                // Log.d("GradeViewModel", "observeIsLogin: $it")
-                _uiState.update { uiState ->
-                    uiState.copy(showLoginPlaceholder = it[1].isEmpty())
-                }
-                if (it[0] == true.toString() && it[1].isNotEmpty() && it[2].isNotEmpty()) {
-                    getGrades()
-                    getStudentRankingInfo()
-                }
-            }
+            getGrades()
+            getStudentRankingInfo()
         }
         viewModelScope.launch {
             isScreenshotModeStateFlow.collect { value ->
@@ -136,10 +95,11 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun changeSearchKeyword(keyword: String) {
+    fun setSearchKeyword(keyword: String) {
         _uiState.update {
             it.copy(searchKeyword = keyword)
         }
+        filterGrades(keyword)
     }
 
     fun setContentForGradeDetailDialog(value: Grade) {
@@ -155,18 +115,18 @@ class GradeViewModel @Inject constructor(
         val gradesResult = networkRepository.getGrades()
         if (gradesResult != null) {
             val sorted =
-                gradesResult.results.sortedBy { grade -> grade.semesterYearAndNo } + Grade()
-            var flag = sorted.first().semesterYearAndNo
+                gradesResult.results.sortedBy { grade -> grade.yearAndSemester } + Grade()
+            var flag = sorted.first().yearAndSemester
             val grades = mutableListOf<Grade>()
             val model = mutableListOf<FloatEntry>()
             var no = 1
 
             sorted.forEach {
-                if (it.semesterYearAndNo != flag) {
+                if (it.yearAndSemester != flag) {
                     model.add(FloatEntry(no.toFloat(), calculateGPA(grades).toFloat()))
                     grades.clear()
                     no++
-                    flag = it.semesterYearAndNo
+                    flag = it.yearAndSemester
                 }
                 grades.add(it)
             }
@@ -195,7 +155,7 @@ class GradeViewModel @Inject constructor(
             3 -> "80-89"
             4 -> "90-100"
             else -> "0-59"
-        } + "分"
+        } + context.getString(R.string.score)
     }
 
     suspend fun getGrades() {
@@ -206,32 +166,28 @@ class GradeViewModel @Inject constructor(
             val gradesResult = networkRepository.getGrades()
             if (gradesResult != null) {
                 val grades = gradesResult.results
-                _uiState.update {
-                    it.copy(
-                        grades = grades,
-                    )
-                }
-                updateGPA()
-                updateAverageScore()
-                updateGradeDistribution()
-                val courseSortList = grades.map {
+                _backupGrades = grades
+                val courseTypes = grades.map {
                     it.courseType
                 }.toSet().toList()
-                val semesterList = grades.map { grade ->
-                    grade.semesterYearAndNo ?: ""
+                val semesters = grades.map { grade ->
+                    grade.yearAndSemester ?: ""
                 }.toSet().toList().sorted()
                 _uiState.update {
                     it.copy(
-                        courseSorts = courseSortList,
-                        courseSortsSelected = courseSortList.map { sortName ->
+                        courseTypes = courseTypes,
+                        courseTypesSelected = courseTypes.map { sortName ->
                             sortName to true
                         }.toMutableStateMap(),
-                        semesters = semesterList,
-                        semestersSelected = semesterList.map { semesterName ->
-                            semesterName to true
+                        semesters = semesters,
+                        semestersSelected = semesters.mapIndexed { index, semesterName ->
+                            semesterName to (index == semesters.size - 1)
                         }.toMutableStateMap(),
-                        isGradesLoading = false
                     )
+                }
+                filterGrades()
+                _uiState.update {
+                    it.copy(isGradesLoading = false)
                 }
             }
         }
@@ -280,41 +236,16 @@ class GradeViewModel @Inject constructor(
         // Log.d("GradeViewModel", "updateGradeDistribution: ${_uiState.value.gradeDistribution}")
     }
 
-    suspend fun getStudentRankingInfo() {
+    private suspend fun getStudentRankingInfo() {
         _uiState.update {
             it.copy(isRankingInfoLoading = true)
         }
-        val stuRankInfoResult = networkRepository.getStudentRankingInfo(
-            _uiState.value.semestersSelected.map {
-                if (it.value) {
-                    it.key
-                } else {
-                    ""
-                }
-            }.joinToString(","),
+        val rankingInfo = networkRepository.getStudentRankingInfo(
+            _uiState.value.semestersSelected.filterValues { isSelected ->
+                isSelected
+            }.keys,
         )
-        if (stuRankInfoResult != null) {
-            val rankingInfo = RankingInfo()
-            Jsoup.parse(stuRankInfoResult).run {
-                select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
-                    hostElement.select("td")
-                        .forEachIndexed { subRankingType, subElement ->
-                            if (subRankingType > 0) {
-                                rankingInfo.setRanking(
-                                    HostRankingType.values()[hostRankingType - 1],
-                                    SubRankingType.values()[subRankingType - 1],
-                                    subElement.text().split("/").let {
-                                        if (it[0] == "" || it[1] == "") {
-                                            Ranking()
-                                        } else {
-                                            Ranking(it[0].toInt(), it[1].toInt())
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                }
-            }
+        if (rankingInfo != null) {
             _uiState.update {
                 it.copy(
                     rankingInfo = rankingInfo,
@@ -323,7 +254,7 @@ class GradeViewModel @Inject constructor(
             }
             _uiState.update {
                 it.copy(
-                    rankingData = generateChartModelForGrade(HostRankingType.GPA) + generateChartModelForGrade(
+                    entryModelForRankingColumnChart = generateChartModelForGrade(HostRankingType.GPA) + generateChartModelForGrade(
                         HostRankingType.SCORE
                     ),
                 )
@@ -331,24 +262,19 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun filterGrades(text: String) {
-        if (_backupGrades.isEmpty()) {
-            _backupGrades = _uiState.value.grades
-        }
-        val courseSortsSelectedMapKey = _uiState.value.courseSortsSelected.filter {
-            it.value
-        }.keys.toList()
-        val semestersSelectedMapKey = _uiState.value.semestersSelected.filter {
-            it.value
-        }.keys.toList()
+    fun filterGrades(courseName: String = "") {
         _uiState.update {
             it.copy(
                 grades = _backupGrades.filter { grade ->
-                    grade.name.contains(text) && courseSortsSelectedMapKey.contains(
-                        grade.courseType
-                    ) && semestersSelectedMapKey.contains(grade.semesterYearAndNo ?: "")
+                    grade.name.replace(" ", "").lowercase().contains(
+                        courseName.replace(" ", "").lowercase()
+                    ) && it.courseTypesSelected.filterValues { isSelected -> isSelected }
+                        .containsKey(
+                            grade.courseType
+                        ) && it.semestersSelected.filterValues { isSelected -> isSelected }
+                        .containsKey(grade.yearAndSemester)
                 },
-                rankingAvailable = !_uiState.value.courseSortsSelected.containsValue(false) && text == ""
+                rankingAvailable = !it.courseTypesSelected.containsValue(false) && courseName.isEmpty()
             )
         }
         updateGPA()
@@ -359,7 +285,7 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun generateChartModelForGrade(hostRankingType: HostRankingType): ChartEntryModel {
+    private fun generateChartModelForGrade(hostRankingType: HostRankingType): ChartEntryModel {
         return entryModelOf(
             SubRankingType.values().map { subRankingType ->
                 _uiState.value.rankingInfo.getRanking(
@@ -378,7 +304,7 @@ class GradeViewModel @Inject constructor(
     fun changeCourseSortSelected(courseSort: String, selected: Boolean) {
         _uiState.update {
             it.copy(
-                courseSortsSelected = it.courseSortsSelected.toMutableMap().apply {
+                courseTypesSelected = it.courseTypesSelected.toMutableMap().apply {
                     this[courseSort] = selected
                 }
             )
@@ -392,6 +318,12 @@ class GradeViewModel @Inject constructor(
                     this[semester] = selected
                 }
             )
+        }
+    }
+
+    fun setIsSearchBarShow(value: Boolean) {
+        _uiState.update {
+            it.copy(isSearchBarShow = value)
         }
     }
 }

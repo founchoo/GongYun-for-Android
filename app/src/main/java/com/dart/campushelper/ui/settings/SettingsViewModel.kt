@@ -1,10 +1,13 @@
 package com.dart.campushelper.ui.settings
 
 import android.appwidget.AppWidgetManager
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.BuildConfig
-import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
@@ -29,7 +32,7 @@ data class SettingsUiState(
     val isLogin: Boolean = DEFAULT_VALUE_IS_LOGIN,
     val username: String = DEFAULT_VALUE_USERNAME,
     val isSystemColor: Boolean = DEFAULT_VALUE_ENABLE_SYSTEM_COLOR,
-    val selectedDarkMode: String = DEFAULT_VALUE_SELECTED_DARK_MODE,
+    val selectedDarkModeIndex: Int = DEFAULT_VALUE_SELECTED_DARK_MODE,
     val isOtherCourseDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isYearDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
     val isDateDisplay: Boolean = DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY,
@@ -38,8 +41,11 @@ data class SettingsUiState(
     val openLogoutConfirmDialog: Boolean = false,
     val openFeedbackUrlConfirmDialog: Boolean = false,
     val openSourceCodeUrlConfirmDialog: Boolean = false,
-    val appVersion: String = "",
+    val openDevProfileUrlConfirmDialog: Boolean = false,
+    val appVersion: String = BuildConfig.VERSION_NAME,
     val isDevSectionShow: Boolean = false,
+    val languageList: List<String>,
+    val selectedLanguageIndex: Int,
 )
 
 @HiltViewModel
@@ -47,10 +53,21 @@ class SettingsViewModel @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
+    private val _languageMap = mapOf(
+        "English" to "en-US",
+        "日本語" to "ja",
+        "한국어(특히 한국 관련)" to "ko",
+        "中文（简体）" to "zh-CN",
+        "中文（繁体）" to "zh-TW",
+    )
+
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(
         SettingsUiState(
-            appVersion = BuildConfig.VERSION_NAME
+            languageList = _languageMap.keys.toList(),
+            selectedLanguageIndex = _languageMap.keys.indexOf(getLanguageName(
+                AppCompatDelegate.getApplicationLocales()[0]?.language
+            )) + 1,
         )
     )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -81,13 +98,14 @@ class SettingsViewModel @Inject constructor(
             }
         )
 
-    private val isOtherCourseDisplayStateFlow = dataStoreRepository.observeIsOtherCourseDisplay().stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        runBlocking {
-            dataStoreRepository.observeIsOtherCourseDisplay().first()
-        }
-    )
+    private val isOtherCourseDisplayStateFlow =
+        dataStoreRepository.observeIsOtherCourseDisplay().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            runBlocking {
+                dataStoreRepository.observeIsOtherCourseDisplay().first()
+            }
+        )
 
     private val isYearDisplayStateFlow = dataStoreRepository.observeIsYearDisplay().stateIn(
         viewModelScope,
@@ -121,13 +139,14 @@ class SettingsViewModel @Inject constructor(
         }
     )
 
-    private val isScreenshotModeStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsScreenshotMode().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking {
-            dataStoreRepository.observeIsScreenshotMode().first()
-        }
-    )
+    private val isScreenshotModeStateFlow: StateFlow<Boolean> =
+        dataStoreRepository.observeIsScreenshotMode().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                dataStoreRepository.observeIsScreenshotMode().first()
+            }
+        )
 
     init {
         viewModelScope.launch {
@@ -147,14 +166,16 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             enableSystemColorStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(isSystemColor = value ?: DEFAULT_VALUE_ENABLE_SYSTEM_COLOR)
+                    it.copy(isSystemColor = value)
                 }
             }
         }
         viewModelScope.launch {
             selectedDarkModeStateFlow.collect { value ->
                 _uiState.update {
-                    it.copy(selectedDarkMode = value)
+                    it.copy(
+                        selectedDarkModeIndex = value
+                    )
                 }
             }
         }
@@ -208,9 +229,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun changeSelectedDarkMode(darkMode: String) {
+    fun changeSelectedDarkModeIndex(darkModeIndex: Int) {
         viewModelScope.launch {
-            dataStoreRepository.changeSelectedDarkMode(darkMode)
+            dataStoreRepository.changeSelectedDarkMode(darkModeIndex)
+        }
+        _uiState.update {
+            it.copy(
+                selectedDarkModeIndex = darkModeIndex
+            )
         }
     }
 
@@ -221,14 +247,14 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun pin() {
-        val widgetManager = AppWidgetManager.getInstance(CampusHelperApplication.context)
+        val widgetManager = AppWidgetManager.getInstance(context)
         // Get a list of our app widget providers to retrieve their info
         val widgetProviders =
             widgetManager.getInstalledProvidersForPackage(
-                CampusHelperApplication.context.packageName,
+                context.packageName,
                 null
             )
-        widgetProviders[0].pin(CampusHelperApplication.context)
+        widgetProviders[0].pin(context)
     }
 
     fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
@@ -291,9 +317,47 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onShowDevProfileUrlConfirmDialogRequest() {
+        _uiState.update {
+            it.copy(openDevProfileUrlConfirmDialog = true)
+        }
+    }
+
+    fun onHideDevProfileUrlConfirmDialogRequest() {
+        _uiState.update {
+            it.copy(openDevProfileUrlConfirmDialog = false)
+        }
+    }
+
     fun changeDevSectionShow(isDevSectionShow: Boolean) {
         _uiState.update {
             it.copy(isDevSectionShow = isDevSectionShow)
+        }
+    }
+
+    private fun getLanguageName(code: String?): String {
+        _languageMap.forEach {
+            if (it.value == code) {
+                return it.key
+            }
+        }
+        return context.getString(R.string.follow_system)
+    }
+
+    private fun getLanguageCode(name: String): String {
+        return _languageMap[name] ?: _languageMap.toList()[0].second
+    }
+
+    fun changeLanguage(index: Int, name: String) {
+        AppCompatDelegate.setApplicationLocales(
+            if (index == 0) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(
+                getLanguageCode(name)
+            )
+        )
+        _uiState.update {
+            it.copy(
+                selectedLanguageIndex = index,
+            )
         }
     }
 }

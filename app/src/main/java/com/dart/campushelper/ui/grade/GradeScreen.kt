@@ -2,20 +2,19 @@ package com.dart.campushelper.ui.grade
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -23,26 +22,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.SubRankingType
+import com.dart.campushelper.ui.component.BasicBottomSheet
+import com.dart.campushelper.ui.component.isScrollingUp
+import com.dart.campushelper.ui.component.rememberMarker
 import com.dart.campushelper.ui.rememberCheck
 import com.dart.campushelper.ui.rememberCheckIndeterminateSmall
+import com.dart.campushelper.ui.rememberDeselect
 import com.dart.campushelper.ui.rememberFilterAlt
 import com.dart.campushelper.ui.rememberGlyphs
 import com.dart.campushelper.ui.rememberGroups
 import com.dart.campushelper.ui.rememberLeaderboard
+import com.dart.campushelper.ui.rememberSelectAll
 import com.dart.campushelper.ui.rememberShowChart
 import com.dart.campushelper.ui.rememberSort
 import com.dart.campushelper.ui.rememberTimeline
-import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
-import com.dart.campushelper.utils.isScrollingUp
-import com.dart.campushelper.utils.rememberMarker
+import com.dart.campushelper.utils.combinationOfGradeAndSemesterToText
 import com.dart.campushelper.utils.replaceWithStars
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
@@ -64,7 +71,7 @@ import java.text.DecimalFormat
 lateinit var bottomSheetState: SheetState
 
 var openFilterSheet by mutableStateOf(false)
-var openChartSheet by mutableStateOf(false)
+var openSummarySheet by mutableStateOf(false)
 
 var fabVisibility: Boolean? by mutableStateOf(null)
 
@@ -80,12 +87,6 @@ fun GradeScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    val scope = rememberCoroutineScope()
-
-    bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
     AddContent(uiState, viewModel)
 
     if (uiState.isGradeDetailDialogOpen) {
@@ -98,154 +99,139 @@ fun GradeScreen(
         )
     }
 
-    // Sheet content
-    if (openFilterSheet) {
-        ModalBottomSheet(
-            windowInsets = WindowInsets.navigationBars,
-            onDismissRequest = {
-                openFilterSheet = false
-            },
-            sheetState = bottomSheetState,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(DEFAULT_PADDING, 0.dp, DEFAULT_PADDING, DEFAULT_PADDING),
-            ) {
-                Text("筛选成绩", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(15.dp))
-                TextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = uiState.searchKeyword,
-                    onValueChange = { viewModel.changeSearchKeyword(it) },
-                    label = { Text("课程名称") },
-                    singleLine = true,
-                    placeholder = { Text("留空则不对课程名称进行筛选") },
-                )
-                Spacer(Modifier.height(20.dp))
-                // Semester filter section
-                Column {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(
-                            imageVector = rememberTimeline(),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text("学年学期")
-                    }
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(-5.dp)
-                    ) {
-                        for (i in uiState.semesters) {
-                            FilterChip(
-                                selected = uiState.semestersSelected[i] ?: false,
-                                onClick = {
-                                    viewModel.changeSemesterSelected(
-                                        i,
-                                        !(uiState.semestersSelected[i] ?: false)
-                                    )
-                                },
-                                label = { Text(i) },
-                                leadingIcon = if (uiState.semestersSelected[i] == true) {
-                                    {
-                                        Icon(
-                                            imageVector = rememberCheck(),
-                                            contentDescription = "Localized Description",
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
-                                    }
-                                } else {
-                                    {
-                                        Icon(
-                                            imageVector = rememberCheckIndeterminateSmall(),
-                                            contentDescription = "Localized Description",
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(20.dp))
-                // Course sort section
-                Column {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(
-                            imageVector = rememberSort(),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text("课程性质")
-                    }
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(-5.dp)
-                    ) {
-                        for (i in uiState.courseSorts) {
-                            FilterChip(
-                                selected = uiState.courseSortsSelected[i] ?: false,
-                                onClick = {
-                                    viewModel.changeCourseSortSelected(
-                                        i,
-                                        !(uiState.courseSortsSelected[i] ?: false)
-                                    )
-                                },
-                                label = { Text(i) },
-                                leadingIcon = if (uiState.courseSortsSelected[i] == true) {
-                                    {
-                                        Icon(
-                                            imageVector = rememberCheck(),
-                                            contentDescription = "Localized Description",
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
-                                    }
-                                } else {
-                                    {
-                                        Icon(
-                                            imageVector = rememberCheckIndeterminateSmall(),
-                                            contentDescription = "Localized Description",
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(30.dp))
-                // Button section
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    TextButton(onClick = {
-                        scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
-                            if (!bottomSheetState.isVisible) {
-                                openFilterSheet = false
-                            }
-                        }
-                    }) {
-                        Text("取消")
-                    }
-                    // Apply button
-                    Button(
-                        // Note: If you provide logic outside of onDismissRequest to remove the sheet,
-                        // you must additionally handle intended state cleanup, if any.
+    BasicBottomSheet(
+        isBottomSheetShow = openFilterSheet,
+        title = R.string.filter_grade_title,
+        onDismissRequest = { openFilterSheet = false },
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        ),
+    ) {
+        Column {
+            // Semester filter section
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = rememberTimeline(),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(R.string.semester_title))
+                    Spacer(Modifier.weight(1f))
+                    IconButton(
                         onClick = {
-                            scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) {
-                                    openFilterSheet = false
-                                }
+                            val value = uiState.semestersSelected.containsValue(false)
+                            uiState.semesters.forEach { semester ->
+                                viewModel.changeSemesterSelected(
+                                    semester, value
+                                )
                             }
                             viewModel.filterGrades(uiState.searchKeyword)
                         },
                     ) {
-                        Text("应用筛选")
+                        Icon(
+                            imageVector = if (uiState.semestersSelected.containsValue(false)) rememberSelectAll() else rememberDeselect(),
+                            if (uiState.semestersSelected.containsValue(false))
+                                stringResource(R.string.select_all) else stringResource(R.string.deselect_all),
+                        )
                     }
                 }
-
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(-5.dp)
+                ) {
+                    for (semester in uiState.semesters) {
+                        FilterChip(
+                            selected = uiState.semestersSelected[semester] ?: false,
+                            onClick = {
+                                viewModel.changeSemesterSelected(
+                                    semester,
+                                    !(uiState.semestersSelected[semester] ?: false)
+                                )
+                                viewModel.filterGrades(uiState.searchKeyword)
+                            },
+                            label = { Text(semester) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = if (uiState.semestersSelected[semester] == true) rememberCheck() else rememberCheckIndeterminateSmall(),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+            // Course type section
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = rememberSort(),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(R.string.course_type_title))
+                    Spacer(Modifier.weight(1f))
+                    IconButton(
+                        onClick = {
+                            val value = uiState.courseTypesSelected.containsValue(false)
+                            uiState.courseTypes.forEach { semester ->
+                                viewModel.changeCourseSortSelected(
+                                    semester, value
+                                )
+                            }
+                            viewModel.filterGrades(uiState.searchKeyword)
+                        },
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.courseTypesSelected.containsValue(false))
+                                rememberSelectAll() else rememberDeselect(),
+                            contentDescription = if (uiState.courseTypesSelected.containsValue(
+                                    false
+                                )
+                            )
+                                stringResource(R.string.select_all) else stringResource(R.string.deselect_all),
+                        )
+                    }
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(-5.dp)
+                ) {
+                    for (courseType in uiState.courseTypes) {
+                        FilterChip(
+                            selected = uiState.courseTypesSelected[courseType] ?: false,
+                            onClick = {
+                                viewModel.changeCourseSortSelected(
+                                    courseType,
+                                    !(uiState.courseTypesSelected[courseType] ?: false)
+                                )
+                                viewModel.filterGrades(uiState.searchKeyword)
+                            },
+                            label = { Text(courseType) },
+                            leadingIcon = if (uiState.courseTypesSelected[courseType] == true) {
+                                {
+                                    Icon(
+                                        imageVector = rememberCheck(),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                    )
+                                }
+                            } else {
+                                {
+                                    Icon(
+                                        imageVector = rememberCheckIndeterminateSmall(),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -269,9 +255,9 @@ fun GradeDetailDialog(
                 ListItem(
                     headlineContent = {
                         Text(
-                            "成绩 ${
+                            "${stringResource(R.string.grade_label)} ${
                                 grade.score.toString().replaceWithStars(uiState.isScreenshotMode)
-                            } / 绩点 ${
+                            } / ${stringResource(R.string.gpa_label)} ${
                                 grade.gradePoint.toString()
                                     .replaceWithStars(uiState.isScreenshotMode)
                             }"
@@ -279,14 +265,14 @@ fun GradeDetailDialog(
                     },
                     supportingContent = {
                         Text(
-                            (grade.detail ?: "").replaceWithStars(uiState.isScreenshotMode) ?: ""
+                            (grade.detail ?: "").replaceWithStars(uiState.isScreenshotMode)
                         )
                     },
                     trailingContent = {
                         Text(
-                            "${grade.semesterYearAndNo}\n" +
+                            "${grade.yearAndSemester}\n" +
                                     "${grade.courseType}\n" +
-                                    "学分 ${grade.credit}"
+                                    "${stringResource(R.string.credit_label)} ${grade.credit}"
                         )
                     },
                 )
@@ -299,7 +285,7 @@ fun GradeDetailDialog(
                     onDismissRequest()
                 }
             ) {
-                Text("关闭")
+                Text(stringResource(R.string.close))
             }
         }
     )
@@ -323,7 +309,7 @@ fun CreateFloatingActionButtonForGrade() {
             positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
             tooltip = {
                 PlainTooltip {
-                    Text("筛选成绩")
+                    Text(stringResource(R.string.filter_grade_title))
                 }
             },
             state = rememberTooltipState()
@@ -342,361 +328,329 @@ fun CreateFloatingActionButtonForGrade() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class
+)
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun AddContent(uiState: GradeUiState, viewModel: GradeViewModel) {
 
     val listState = rememberLazyListState()
-    var isScrollingUp by mutableStateOf(listState.isScrollingUp())
+    val isScrollingUp by mutableStateOf(listState.isScrollingUp())
     val scope = rememberCoroutineScope()
     fun refresh() = scope.launch {
         viewModel.getGrades()
-        viewModel.getStudentRankingInfo()
     }
 
     val pullRefreshState = rememberPullRefreshState(uiState.isGradesLoading, ::refresh)
-    val tabs = listOf("课程列表", "数据统计")
-    val pagerState = rememberPagerState(0) { tabs.size }
 
-    fabVisibility = isScrollingUp && pagerState.currentPage == 0
+    fabVisibility = isScrollingUp
 
-    Column {
-        PrimaryTabRow(
-            selectedTabIndex = pagerState.currentPage
+    Box(
+        modifier = Modifier
+            .pullRefresh(pullRefreshState)
+            .semantics { isTraversalGroup = true },
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .placeholder(
+                    visible = uiState.isGradesLoading,
+                    highlight = PlaceholderHighlight.shimmer()
+                ),
+            verticalArrangement = Arrangement.SpaceAround,
+            state = listState,
         ) {
-            tabs.forEachIndexed { index, tab ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(page = index)
-                        }
-                    },
-                    text = { Text(tab) }
-                )
+            if (uiState.grades.isEmpty()) {
+                item {
+                    Text(
+                        text = if (uiState.searchKeyword.isEmpty()) stringResource(R.string.no_grades) else stringResource(
+                            R.string.no_query_grades
+                        ),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            } else {
+                items(uiState.grades) { grade ->
+                    GradeItem(grade, uiState, viewModel)
+                }
             }
         }
-        HorizontalPager(state = pagerState, verticalAlignment = Alignment.Top) {
-            when (it) {
-                0 -> {
-                    // Grades info section.
-                    Box(
-                        modifier = Modifier
-                            .pullRefresh(pullRefreshState),
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .placeholder(
-                                    visible = uiState.isGradesLoading,
-                                    highlight = PlaceholderHighlight.shimmer()
-                                ),
-                            verticalArrangement = Arrangement.SpaceAround,
-                            state = listState,
-                        ) {
-                            itemsIndexed(uiState.grades) { _, grade ->
-                                ListItem(
-                                    modifier = Modifier
-                                        .clickable {
-                                            viewModel.setIsGradeDetailDialogOpen(true)
-                                            viewModel.setContentForGradeDetailDialog(grade)
-                                        }
-                                        .padding(horizontal = 10.dp),
-                                    headlineContent = {
-                                        Text(
-                                            text = grade.name,
-                                        )
-                                    },
-                                    supportingContent = {
-                                        Text(
-                                            text = "成绩 ${
-                                                grade.score.toString()
-                                                    .replaceWithStars(uiState.isScreenshotMode)
-                                            }"
-                                        )
-                                    },
-                                    trailingContent = {
-                                        Text(
-                                            text = "${grade.semesterYearAndNo}"
-                                        )
-                                    },
-                                    colors = ListItemDefaults.colors(
-                                        containerColor = MaterialTheme.colorScheme.surface,
-                                    )
-                                )
-                            }
-                        }
-                        PullRefreshIndicator(
-                            uiState.isGradesLoading,
-                            pullRefreshState,
-                            Modifier.align(Alignment.TopCenter)
-                        )
-                    }
-                }
+        PullRefreshIndicator(
+            uiState.isGradesLoading,
+            pullRefreshState,
+            Modifier.align(Alignment.TopCenter)
+        )
+    }
+}
 
-                1 -> {
-                    // Grade gpa and ranking info section.
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(15.dp),
-                        modifier = Modifier
-                            .padding(horizontal = 15.dp),
-                    ) {
-                        item {}
-                        item {
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .placeholder(
-                                        visible = uiState.isGradesLoading,
-                                        highlight = PlaceholderHighlight.shimmer(),
-                                    )
-                                    .fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = rememberGlyphs(),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        text = "已筛选课程成绩",
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W900
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "平均学分绩点 ${
-                                                DecimalFormat("#.####").format(
-                                                    uiState.gradePointAverage
-                                                ).toString()
-                                                    .replaceWithStars(uiState.isScreenshotMode)
-                                            }",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                        )
-                                        Text(
-                                            text = "算数平均分 ${
-                                                DecimalFormat("#.####").format(
-                                                    uiState.averageScore
-                                                ).toString()
-                                                    .replaceWithStars(uiState.isScreenshotMode)
-                                            }",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {
-                            if (uiState.rankingAvailable) {
-                                ElevatedCard(
-                                    modifier = Modifier
-                                        .placeholder(
-                                            visible = uiState.isRankingInfoLoading,
-                                            highlight = PlaceholderHighlight.shimmer()
-                                        )
-                                        .fillMaxWidth()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalAlignment = Alignment.Start,
-                                    ) {
-                                        Icon(
-                                            imageVector = rememberGroups(),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(Modifier.height(10.dp))
-                                        Text(
-                                            text = "排名信息",
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.W900
-                                        )
-                                        ProvideChartStyle(m3ChartStyle()) {
-                                            if (uiState.rankingData != null) {
-                                                Chart(
-                                                    chart = columnChart(),
-                                                    model = uiState.rankingData,
-                                                    bottomAxis = rememberBottomAxis(
-                                                        guideline = null,
-                                                        valueFormatter = { value, _ ->
-                                                            SubRankingType.values()[value.toInt()].toString()
-                                                        }
-                                                    ),
-                                                    startAxis = rememberStartAxis(
-                                                        guideline = null,
-                                                        valueFormatter = { value, _ ->
-                                                            "${
-                                                                DecimalFormat("#").format((1 - value) * 100)
-                                                                    .toString()
-                                                                    .replaceWithStars(uiState.isScreenshotMode)
-                                                            }%"
-                                                        },
-                                                        horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
-                                                    ),
-                                                    marker = rememberMarker(
-                                                        formatter = { raw ->
-                                                            "位列前 ${
-                                                                DecimalFormat("#.##").format((1 - raw) * 100)
-                                                                    .toString()
-                                                                    .replaceWithStars(uiState.isScreenshotMode)
-                                                            }%"
-                                                        }
-                                                    ),
-                                                )
-                                            }
-                                        }
-                                        HostRankingType.values()
-                                            .forEach { hostRankingType ->
-                                                ListItem(
-                                                    leadingContent = {
-                                                        Box(
-                                                            Modifier
-                                                                .size(10.dp)
-                                                                .background(
-                                                                    color = when (hostRankingType) {
-                                                                        HostRankingType.GPA -> MaterialTheme.colorScheme.primary
-                                                                        HostRankingType.SCORE -> MaterialTheme.colorScheme.secondary
-                                                                    },
-                                                                    shape = MaterialTheme.shapes.small
-                                                                )
-                                                        )
-                                                    },
-                                                    supportingContent = {
-                                                        Text(hostRankingType.run {
-                                                            SubRankingType.values()
-                                                                .joinToString("，") {
-                                                                    uiState.rankingInfo.getRanking(
-                                                                        this,
-                                                                        it
-                                                                    ).run {
-                                                                        "$it ${this?.ranking ?: "-"}/${this?.total ?: "-"}"
-                                                                    }
-                                                                }
-                                                                .replaceWithStars(uiState.isScreenshotMode)
-                                                        })
-                                                    },
-                                                    headlineContent = { Text(hostRankingType.toString()) },
-                                                )
-                                            }
-                                    }
-                                }
-                            } else {
-                                ElevatedCard(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .placeholder(
-                                            visible = uiState.isGradesLoading,
-                                            highlight = PlaceholderHighlight.shimmer()
-                                        ),
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(10.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = rememberGroups(),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                        Text(
-                                            text = "排名信息不可用",
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.W900,
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
-                                            maxLines = 2
-                                        )
-                                        Text(
-                                            text = "当筛选课程性质或课程名称时排名信息不可用",
-                                            textAlign = TextAlign.Center,
-                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp),
-                                    horizontalAlignment = Alignment.Start,
-                                ) {
-                                    Icon(
-                                        imageVector = rememberLeaderboard(),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(Modifier.height(10.dp))
-                                    Text(
-                                        text = "已筛选课程分数统计",
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.W900
-                                    )
-                                    ProvideChartStyle(m3ChartStyle()) {
-                                        Chart(
-                                            chart = columnChart(),
-                                            model = entryModelOf(
-                                                uiState.gradeDistribution.mapIndexed { index, value ->
-                                                    entryOf(index, value)
-                                                }
-                                            ),
-                                            bottomAxis = rememberBottomAxis(
-                                                guideline = null,
-                                                valueFormatter = { value, _ ->
-                                                    viewModel.parseScoreRangeIndex(value.toInt())
-                                                }
-                                            ),
-                                            startAxis = rememberStartAxis(
-                                                guideline = null,
-                                                valueFormatter = { value, _ ->
-                                                    DecimalFormat("#").format(value).toString()
-                                                        .replaceWithStars(uiState.isScreenshotMode)
-                                                },
-                                                horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
-                                            ),
-                                            marker = rememberMarker(
-                                                formatter = { raw ->
-                                                    "${
-                                                        DecimalFormat("#").format(raw).toString()
-                                                            .replaceWithStars(uiState.isScreenshotMode)
-                                                    } 门课位于此区间"
-                                                }
-                                            ),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {}
-                    }
+@Composable
+fun GPAChangeLineChart(uiState: GradeUiState) {
+    ProvideChartStyle(m3ChartStyle()) {
+        Chart(
+            chart = lineChart(),
+            model = entryModelOf(
+                uiState.overallScoreData
+            ),
+            startAxis = rememberStartAxis(
+                valueFormatter = { value, _ ->
+                    DecimalFormat("#.##").format(value).toString()
+                        .replaceWithStars(uiState.isScreenshotMode)
+                },
+            ),
+            bottomAxis = rememberBottomAxis(
+                guideline = null,
+                valueFormatter = { value, _ ->
+                    combinationOfGradeAndSemesterToText(value)
+                        .replaceWithStars(uiState.isScreenshotMode)
+                },
+            ),
+            marker = rememberMarker(
+                formatter = { raw ->
+                    DecimalFormat("#.####").format(raw).toString()
+                        .replaceWithStars(uiState.isScreenshotMode)
                 }
+            ),
+        )
+    }
+}
+
+@Composable
+fun GradeDistributionColumnChart(uiState: GradeUiState, viewModel: GradeViewModel) {
+    val entryModelForGradeDistributionChart = remember(uiState.gradeDistribution) {
+        uiState.gradeDistribution.mapIndexed { index, value ->
+            entryOf(index, value)
+        }
+    }
+
+    return ProvideChartStyle(m3ChartStyle()) {
+        Chart(
+            chart = columnChart(),
+            model = entryModelOf(
+                entryModelForGradeDistributionChart
+            ),
+            bottomAxis = rememberBottomAxis(
+                guideline = null,
+                valueFormatter = { value, _ ->
+                    viewModel.parseScoreRangeIndex(value.toInt())
+                }
+            ),
+            startAxis = rememberStartAxis(
+                guideline = null,
+                valueFormatter = { value, _ ->
+                    DecimalFormat("#").format(value).toString()
+                        .replaceWithStars(uiState.isScreenshotMode)
+                },
+                horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
+            ),
+            marker = rememberMarker(
+                formatter = { raw ->
+                    "${
+                        DecimalFormat("#").format(raw).toString()
+                            .replaceWithStars(uiState.isScreenshotMode)
+                    } ${context.getString(R.string.courses_belong_to_interval)}"
+                }
+            ),
+        )
+    }
+}
+
+@Composable
+fun RankingColumnChart(uiState: GradeUiState) {
+    ProvideChartStyle(m3ChartStyle()) {
+        if (uiState.entryModelForRankingColumnChart != null) {
+            Chart(
+                chart = columnChart(),
+                model = uiState.entryModelForRankingColumnChart,
+                bottomAxis = rememberBottomAxis(
+                    guideline = null,
+                    valueFormatter = { value, _ ->
+                        SubRankingType.values()[value.toInt()].toString()
+                    }
+                ),
+                startAxis = rememberStartAxis(
+                    guideline = null,
+                    valueFormatter = { value, _ ->
+                        "${
+                            DecimalFormat("#").format((1 - value) * 100)
+                                .toString()
+                                .replaceWithStars(uiState.isScreenshotMode)
+                        }%"
+                    },
+                    horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
+                ),
+                marker = rememberMarker(
+                    formatter = { raw ->
+                        "${context.getString(R.string.rank_at)} ${
+                            DecimalFormat("#.##").format((1 - raw) * 100)
+                                .toString()
+                                .replaceWithStars(uiState.isScreenshotMode)
+                        }%"
+                    }
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+fun RankingInfo(uiState: GradeUiState) {
+    return HostRankingType.values()
+        .forEach { hostRankingType ->
+            ListItem(
+                leadingContent = {
+                    Box(
+                        Modifier
+                            .width(4.dp)
+                            .height(40.dp)
+                            .background(
+                                color = when (hostRankingType) {
+                                    HostRankingType.GPA -> MaterialTheme.colorScheme.primary
+                                    HostRankingType.SCORE -> MaterialTheme.colorScheme.secondary
+                                },
+                            )
+                    )
+                },
+                supportingContent = {
+                    Text(hostRankingType.run {
+                        SubRankingType.values()
+                            .joinToString("，") {
+                                uiState.rankingInfo.getRanking(
+                                    this,
+                                    it
+                                ).run {
+                                    "$it ${this?.ranking ?: "-"}/${this?.total ?: "-"}"
+                                }
+                            }
+                            .replaceWithStars(uiState.isScreenshotMode)
+                    })
+                },
+                headlineContent = { Text(hostRankingType.toString()) },
+            )
+        }
+}
+
+@Composable
+fun GradeItem(grade: Grade, uiState: GradeUiState, viewModel: GradeViewModel) {
+    return ListItem(
+        modifier = Modifier
+            .clickable {
+                viewModel.setIsGradeDetailDialogOpen(true)
+                viewModel.setContentForGradeDetailDialog(grade)
             }
+            .padding(horizontal = 10.dp),
+        headlineContent = {
+            Text(
+                text = grade.name,
+            )
+        },
+        supportingContent = {
+            Text(
+                text = "${stringResource(R.string.grade_label)} ${
+                    grade.score.toString()
+                        .replaceWithStars(uiState.isScreenshotMode)
+                }"
+            )
+        },
+        trailingContent = {
+            Text(
+                text = "${grade.yearAndSemester}"
+            )
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        )
+    )
+}
+
+@Composable
+fun ElevatedCardWithIcon(
+    useErrorColor: Boolean = false,
+    isLoadingPlaceholderShow: Boolean = false,
+    icon: ImageVector,
+    title: String,
+    description: String? = null,
+    content: @Composable () -> Unit
+) {
+    return ElevatedCard(
+        colors = if (useErrorColor) CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+        ) else CardDefaults.elevatedCardColors(),
+        modifier = Modifier
+            .placeholder(
+                visible = isLoadingPlaceholderShow,
+                highlight = PlaceholderHighlight.shimmer(),
+            )
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (useErrorColor) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = title,
+                fontWeight = FontWeight.W900,
+                color = if (useErrorColor) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.primary
+            )
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            content()
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateActionsForGrade(viewModel: GradeViewModel, uiState: GradeUiState) {
+fun ActionsForGrade(
+    viewModel: GradeViewModel,
+    uiState: GradeUiState,
+) {
 
     val scope = rememberCoroutineScope()
 
+    AnimatedVisibility(
+        visible = !uiState.isSearchBarShow,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+            tooltip = {
+                PlainTooltip {
+                    Text(stringResource(R.string.search))
+                }
+            },
+            state = rememberTooltipState()
+        ) {
+            IconButton(
+                onClick = {
+                    viewModel.setIsSearchBarShow(true)
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = stringResource(R.string.search),
+                )
+            }
+        }
+    }
     TooltipBox(
         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
         tooltip = {
             PlainTooltip {
-                Text("绩点曲线")
+                Text(stringResource(R.string.data_summary))
             }
         },
         state = rememberTooltipState()
@@ -706,81 +660,100 @@ fun CreateActionsForGrade(viewModel: GradeViewModel, uiState: GradeUiState) {
                 scope.launch {
                     viewModel.loadLineChart()
                 }
-                openChartSheet = true
+                openSummarySheet = true
             },
         ) {
             Icon(
                 imageVector = rememberShowChart(),
-                contentDescription = "绩点曲线",
+                contentDescription = stringResource(R.string.data_summary),
             )
         }
     }
 
-    if (openChartSheet) {
-        ModalBottomSheet(
-            windowInsets = WindowInsets.navigationBars,
-            onDismissRequest = {
-                openChartSheet = false
-            },
-            content = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = DEFAULT_PADDING),
+    BasicBottomSheet(
+        isBottomSheetShow = openSummarySheet,
+        title = R.string.data_summary,
+        onDismissRequest = { openSummarySheet = false },
+    ) {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(15.dp),
+        ) {
+            item {
+                ElevatedCardWithIcon(
+                    isLoadingPlaceholderShow = uiState.isGradesLoading,
+                    icon = rememberGlyphs(),
+                    title = stringResource(R.string.course_grade),
+                    description = stringResource(R.string.course_grades_desc)
                 ) {
+                    Spacer(Modifier.height(10.dp))
                     Text(
-                        "绩点曲线", style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
+                        text = "${stringResource(R.string.gpa_label)} ${
+                            DecimalFormat("#.####").format(
+                                uiState.gradePointAverage
+                            ).toString()
+                                .replaceWithStars(uiState.isScreenshotMode)
+                        }",
+                        textAlign = TextAlign.Center,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
                     )
-                    if (uiState.isLineChartLoading) {
-                        Spacer(Modifier.height(5.dp))
-                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text(
+                        text = "${stringResource(R.string.arithmetic_mean_score)} ${
+                            DecimalFormat("#.####").format(
+                                uiState.averageScore
+                            ).toString()
+                                .replaceWithStars(uiState.isScreenshotMode)
+                        }",
+                        textAlign = TextAlign.Center,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                    )
+                }
+            }
+            item {
+                if (uiState.rankingAvailable) {
+                    ElevatedCardWithIcon(
+                        isLoadingPlaceholderShow = uiState.isRankingInfoLoading,
+                        icon = rememberGroups(),
+                        title = stringResource(R.string.rank_title),
+                        description = stringResource(R.string.rank_desc)
+                    ) {
+                        RankingInfo(uiState)
+                        RankingColumnChart(uiState)
                     }
-                    ProvideChartStyle(m3ChartStyle()) {
-                        Chart(
-                            modifier = Modifier
-                                .horizontalScroll(rememberScrollState())
-                                .requiredWidth(uiState.overallScoreData.size * 60.dp)
-                                .align(Alignment.CenterHorizontally),
-                            chart = lineChart(),
-                            model = entryModelOf(
-                                uiState.overallScoreData
-                            ),
-                            startAxis = rememberStartAxis(
-                                valueFormatter = { value, _ ->
-                                    DecimalFormat("#.##").format(value).toString()
-                                        .replaceWithStars(uiState.isScreenshotMode)
-                                },
-                            ),
-                            bottomAxis = rememberBottomAxis(
-                                guideline = null,
-                                valueFormatter = { value, _ ->
-                                    when (value) {
-                                        1f -> "大一上"
-                                        2f -> "大一下"
-                                        3f -> "大二上"
-                                        4f -> "大二下"
-                                        5f -> "大三上"
-                                        6f -> "大三下"
-                                        7f -> "大四上"
-                                        8f -> "大四下"
-                                        else -> ""
-                                    }
-                                },
-                            ),
-                            marker = rememberMarker(
-                                formatter = { raw ->
-                                    DecimalFormat("#.####").format(raw).toString()
-                                        .replaceWithStars(uiState.isScreenshotMode)
-                                }
-                            ),
+                } else {
+                    ElevatedCardWithIcon(
+                        useErrorColor = true,
+                        isLoadingPlaceholderShow = uiState.isGradesLoading,
+                        icon = rememberGroups(),
+                        title = stringResource(R.string.rank_not_available_title),
+                    ) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = stringResource(R.string.rank_not_available_desc),
+                            textAlign = TextAlign.Center,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
-            },
-            sheetState = rememberModalBottomSheetState(
-                skipPartiallyExpanded = true
-            ),
-        )
+            }
+            item {
+                ElevatedCardWithIcon(
+                    icon = rememberLeaderboard(),
+                    title = stringResource(R.string.course_score_summary),
+                    description = stringResource(R.string.course_score_desc)
+                ) {
+                    GradeDistributionColumnChart(uiState, viewModel)
+                }
+            }
+            item {
+                ElevatedCardWithIcon(
+                    isLoadingPlaceholderShow = uiState.isLineChartLoading,
+                    icon = rememberTimeline(),
+                    title = stringResource(R.string.performance_curve),
+                ) {
+                    GPAChangeLineChart(uiState = uiState)
+                }
+            }
+        }
     }
 }

@@ -44,7 +44,7 @@
     <string name="feedback_desc">加入群聊提供你的意见及建议</string>
     <string name="open_source_code_title">开源代码</string>
     <string name="open_source_code_desc">你的开发将为此应用贡献一份力量</string>
-    <string name="open_source_code_message">您即将离开此应用，确认后将跳转到浏览器打开 GitHub 仓库</string>
+    <string name="open_source_code_message">您即将离开此应用，确认后将跳转到浏览器打开 Github 仓库</string>
     <string name="dev">开发者选项</string>
     <string name="screenshot_mode_title">截屏模式</string>
     <string name="screenshot_mode_desc">开启后隐私信息将被*替代</string>
@@ -61,7 +61,7 @@
     <string name="show_node_time_title">显示时间段</string>
     <string name="show_node_time_desc">在节次下方显示上课时间段</string>
     <string name="show_pin_title">（实验性）固定课程到桌面</string>
-    <string name="show_pin_desc">请确保已授予"桌面快捷方式"权限</string>
+    <string name="show_pin_desc">请确保已授予\"桌面快捷方式\"权限</string>
     <string name="display">显示</string>
     <string name="system_color_title">系统主题色</string>
     <string name="system_color_desc">开启后将跟随系统主题色</string>
