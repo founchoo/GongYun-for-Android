@@ -1,4 +1,4 @@
-[点此跳转至中文说明](https://github.com/founchoo/CampusHelper/blob/main/README.md)
+[English version may not be updated in time, click here for Chinese version. / 英文版本更新可能不及时，点此查看中文版本](https://github.com/founchoo/CampusHelper/blob/main/README.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/3d5c2914-0592-4058-9b54-00e958c62b63" alt="Logo" width="100">
