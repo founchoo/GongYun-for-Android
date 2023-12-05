@@ -99,7 +99,7 @@
     <string name="major">专业</string>
     <string name="_class">班级</string>
     <string name="course_name">课程名称</string>
-    <string name="week_indicator">第 %s 周</string>
+    <string name="week_indicator">第 %1$s 周</string>
     <string name="monday">周一</string>
     <string name="tuesday">周二</string>
     <string name="wednesday">周三</string>
@@ -108,11 +108,11 @@
     <string name="saturday">周六</string>
     <string name="sunday">周日</string>
     <string name="switch_schedule_hint">点按上方的双行标签区域以打开对话框切换学年及周数</string>
-    <string name="occupied_room_with_content_desc">以下教室在第 %s 周，%s，%s 节有课</string>
-    <string name="occupied_room_without_content_desc">未找到在第 %s 周，%s，%s 节有课的教室</string>
-    <string name="empty_room_with_content_desc">以下教室在第 %s 周，%s，%s 节空闲</string>
-    <string name="empty_room_without_content_desc">未找到在第 %s 周，%s，%s 节空闲的教室</string>
-    <string name="year_indicator">%s\n年</string>
+    <string name="occupied_room_with_content_desc">以下教室在第 %1$s 周，%2$s，%3$s 节有课</string>
+    <string name="occupied_room_without_content_desc">未找到在第 %1$s 周，%2$s，%3$s 节有课的教室</string>
+    <string name="empty_room_with_content_desc">以下教室在第 %1$s 周，%2$s，%3$s 节空闲</string>
+    <string name="empty_room_without_content_desc">未找到在第 %1$s 周，%2$s，%3$s 节空闲的教室</string>
+    <string name="year_indicator">%1$s\n年</string>
     <string name="switch_year_semester">切换学年学期</string>
     <string name="selected_year_semester">当前选择的学年学期</string>
     <string name="dev_title">开发人员</string>
@@ -125,4 +125,8 @@
     <string name="schedule_other_info_empty">暂无课表备注信息</string>
     <string name="planned_schedule_info_title">课程计划</string>
     <string name="planned_schedule_info_empty">暂无课程计划</string>
+    <string name="qq_group_number" translatable="false">422915042</string>
+    <string name="dev_github_url" translatable="false">https://github.com/founchoo</string>
+    <string name="project_github_url" translatable="false">https://github.com/founchoo/GongYun-for-Android</string>
+    <string name="sort_title">排序</string>
 </resources>

@@ -18,9 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import com.dart.campushelper.utils.Constants
+import com.dart.campushelper.R
+import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,21 +41,23 @@ fun BasicBottomSheet(
         ) {
             Column(
                 modifier = Modifier
+                    .padding(bottom = DEFAULT_PADDING)
                     .fillMaxWidth()
-                    .padding(bottom = Constants.DEFAULT_PADDING),
             ) {
                 Text(
                     stringResource(title),
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(horizontal = Constants.DEFAULT_PADDING)
+                    modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
                 )
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacer)))
                 if (isContentLoading) {
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth()
                     )
                 } else {
-                    Box(Modifier.padding(horizontal = Constants.DEFAULT_PADDING)) {
+                    Box(
+                        Modifier.padding(horizontal = DEFAULT_PADDING)
+                    ) {
                         content()
                     }
                 }

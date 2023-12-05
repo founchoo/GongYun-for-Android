@@ -30,6 +30,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.DriveFileRenameOutline
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material.icons.outlined.DriveFileRenameOutline
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ViewTimeline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -86,18 +92,19 @@ import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
 import com.dart.campushelper.ui.grade.ActionsForGrade
-import com.dart.campushelper.ui.grade.CreateFloatingActionButtonForGrade
+import com.dart.campushelper.ui.grade.FloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
-import com.dart.campushelper.ui.grade.GradeUiState
-import com.dart.campushelper.ui.grade.GradeViewModel
-import com.dart.campushelper.ui.login.LoginViewModel
-import com.dart.campushelper.ui.schedule.CreateActionsForSchedule
+import com.dart.campushelper.ui.schedule.ActionsForSchedule
 import com.dart.campushelper.ui.schedule.ScheduleScreen
-import com.dart.campushelper.ui.schedule.ScheduleViewModel
 import com.dart.campushelper.ui.settings.SettingsScreen
-import com.dart.campushelper.ui.settings.SettingsViewModel
 import com.dart.campushelper.ui.theme.CampusHelperTheme
-import com.dart.campushelper.ui.theme.ThemeViewModel
+import com.dart.campushelper.viewmodel.GradeUiState
+import com.dart.campushelper.viewmodel.GradeViewModel
+import com.dart.campushelper.viewmodel.LoginViewModel
+import com.dart.campushelper.viewmodel.MainViewModel
+import com.dart.campushelper.viewmodel.ScheduleViewModel
+import com.dart.campushelper.viewmodel.SettingsViewModel
+import com.dart.campushelper.viewmodel.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -155,14 +162,14 @@ class MainActivity : AppCompatActivity() {
         val settings = Screen("settings", R.string.settings_label)
 
         val idsOutline = mapOf(
-            schedule to rememberViewTimeline(),
-            grade to rememberDriveFileRenameOutline(),
-            settings to rememberSettings()
+            schedule to Icons.Outlined.ViewTimeline,
+            grade to Icons.Outlined.DriveFileRenameOutline,
+            settings to Icons.Outlined.Settings
         )
         val idsFill = mapOf(
-            schedule to rememberViewTimelineFilled(),
-            grade to rememberDriveFileRenameOutlineFilled(),
-            settings to rememberSettingsFilled(),
+            schedule to Icons.Filled.ViewTimeline,
+            grade to Icons.Filled.DriveFileRenameOutline,
+            settings to Icons.Filled.Settings,
         )
 
         BackHandler(gradeUiState, gradeViewModel, scope)
@@ -319,7 +326,7 @@ class MainActivity : AppCompatActivity() {
                             },
                             actions = {
                                 if (currentDestination?.route == schedule.route) {
-                                    CreateActionsForSchedule(
+                                    ActionsForSchedule(
                                         scheduleViewModel,
                                         scheduleUiState
                                     )
@@ -407,7 +414,7 @@ class MainActivity : AppCompatActivity() {
                     floatingActionButton = {
                         if (mainUiState.isLogin) {
                             when (currentDestination?.route) {
-                                grade.route -> CreateFloatingActionButtonForGrade()
+                                grade.route -> FloatingActionButtonForGrade(gradeUiState, gradeViewModel)
                                 else -> null
                             }
                         }

@@ -253,18 +253,18 @@ class NetworkRepository @Inject constructor(
             }
         } catch (e: Exception) {
             // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
-            if (showErrorToast) {
+            return if (showErrorToast) {
                 val result = MainActivity.snackBarHostState.showSnackbar(
                     NETWORK_CONNECT_ERROR,
                     RETRY
                 )
                 if (result == SnackbarResult.ActionPerformed) {
-                    return login(username, password)
+                    login(username, password)
                 } else {
-                    return LoginResponse.error()
+                    LoginResponse.error()
                 }
             } else {
-                return LoginResponse.error()
+                LoginResponse.error()
             }
         }
     }

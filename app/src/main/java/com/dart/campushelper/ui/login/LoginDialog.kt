@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,11 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.dart.campushelper.R
-import com.dart.campushelper.ui.rememberVisibility
-import com.dart.campushelper.ui.rememberVisibilityOff
+import com.dart.campushelper.viewmodel.LoginViewModel
 
 @Composable
-fun ShowLoginDialog(
+fun LoginDialog(
     loginViewModel: LoginViewModel
 ) {
 
@@ -90,7 +91,7 @@ fun ShowLoginDialog(
                                 interactionSource = interactionSource
                             ) {
                                 Icon(
-                                    imageVector = if (displayPassword) rememberVisibility() else rememberVisibilityOff(),
+                                    imageVector = if (displayPassword) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                                     contentDescription = stringResource(R.string.password),
                                 )
                             }

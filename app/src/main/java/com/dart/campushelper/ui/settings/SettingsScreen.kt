@@ -4,6 +4,20 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.CalendarViewDay
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.DoNotDisturbOn
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Nightlight
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Screenshot
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,27 +34,12 @@ import com.dart.campushelper.ui.component.PreferenceHeader
 import com.dart.campushelper.ui.component.SwitchPreference
 import com.dart.campushelper.ui.component.TextAlertDialog
 import com.dart.campushelper.ui.component.TextPreference
-import com.dart.campushelper.ui.login.LoginViewModel
-import com.dart.campushelper.ui.login.ShowLoginDialog
-import com.dart.campushelper.ui.rememberAccountCircle
-import com.dart.campushelper.ui.rememberCalendarViewDay
-import com.dart.campushelper.ui.rememberChat
-import com.dart.campushelper.ui.rememberClearNight
-import com.dart.campushelper.ui.rememberCode
-import com.dart.campushelper.ui.rememberDoNotDisturbOn
-import com.dart.campushelper.ui.rememberInfo
-import com.dart.campushelper.ui.rememberLanguage
-import com.dart.campushelper.ui.rememberPalette
-import com.dart.campushelper.ui.rememberPushPin
-import com.dart.campushelper.ui.rememberSchedule
-import com.dart.campushelper.ui.rememberScreenshotFrame
-import com.dart.campushelper.ui.rememberToday
-import com.dart.campushelper.ui.theme.DarkMode
-import com.dart.campushelper.ui.theme.toStringResourceId
-import com.dart.campushelper.utils.Constants.Companion.DEV_GITHUB_URL
-import com.dart.campushelper.utils.Constants.Companion.PROJECT_GITHUB_URL
-import com.dart.campushelper.utils.Constants.Companion.QQ_GROUP_NUMBER
+import com.dart.campushelper.ui.login.LoginDialog
 import com.dart.campushelper.utils.replaceWithStars
+import com.dart.campushelper.viewmodel.DarkMode
+import com.dart.campushelper.viewmodel.LoginViewModel
+import com.dart.campushelper.viewmodel.SettingsViewModel
+import com.dart.campushelper.viewmodel.toStringResourceId
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
@@ -65,7 +64,7 @@ fun SettingsScreen(
                         settingsUiState.isScreenshotMode
                     )
                 }" else stringResource(R.string.unlogin_message),
-                imageVector = rememberAccountCircle()
+                imageVector = Icons.Outlined.AccountCircle
             ) {
                 if (settingsUiState.isLogin) {
                     settingsViewModel.onShowLogoutConfirmDialogRequest()
@@ -75,7 +74,7 @@ fun SettingsScreen(
             }
             PreferenceHeader(text = stringResource(R.string.schedule_label))
             SwitchPreference(
-                imageVector = rememberDoNotDisturbOn(),
+                imageVector = Icons.Outlined.DoNotDisturbOn,
                 value = settingsUiState.isOtherCourseDisplay,
                 title = stringResource(R.string.show_non_week_course_title),
                 description = stringResource(R.string.show_non_week_course_desc),
@@ -84,7 +83,7 @@ fun SettingsScreen(
                 }
             )
             SwitchPreference(
-                imageVector = rememberCalendarViewDay(),
+                imageVector = Icons.Outlined.CalendarViewDay,
                 value = settingsUiState.isYearDisplay,
                 title = stringResource(R.string.show_year_title),
                 description = stringResource(R.string.show_year_desc),
@@ -93,7 +92,7 @@ fun SettingsScreen(
                 }
             )
             SwitchPreference(
-                imageVector = rememberToday(),
+                imageVector = Icons.Outlined.Today,
                 value = settingsUiState.isDateDisplay,
                 title = stringResource(R.string.show_date_title),
                 description = stringResource(R.string.show_date_desc),
@@ -102,7 +101,7 @@ fun SettingsScreen(
                 }
             )
             SwitchPreference(
-                imageVector = rememberSchedule(),
+                imageVector = Icons.Outlined.Schedule,
                 value = settingsUiState.isTimeDisplay,
                 title = stringResource(R.string.show_node_time_title),
                 description = stringResource(R.string.show_node_time_desc),
@@ -112,7 +111,7 @@ fun SettingsScreen(
             )
             // Pin course info widget to desktop
             TextPreference(
-                imageVector = rememberPushPin(),
+                imageVector = Icons.Outlined.PushPin,
                 title = stringResource(R.string.show_pin_title),
                 description = stringResource(R.string.show_pin_desc),
                 onClick = {
@@ -121,7 +120,7 @@ fun SettingsScreen(
             )
             PreferenceHeader(text = stringResource(R.string.display))
             SwitchPreference(
-                imageVector = rememberPalette(),
+                imageVector = Icons.Outlined.Palette,
                 title = stringResource(R.string.system_color_title),
                 description = stringResource(R.string.system_color_desc),
                 value = settingsUiState.isSystemColor,
@@ -130,7 +129,7 @@ fun SettingsScreen(
                 }
             )
             DropdownMenuPreference(
-                imageVector = rememberClearNight(),
+                imageVector = Icons.Outlined.Nightlight,
                 title = stringResource(R.string.dark_mode),
                 value = stringResource(DarkMode.values()[settingsUiState.selectedDarkModeIndex].toStringResourceId()),
                 selections = DarkMode.values().map {
@@ -141,7 +140,7 @@ fun SettingsScreen(
                 }
             )
             DropdownMenuPreference(
-                imageVector = rememberLanguage(),
+                imageVector = Icons.Outlined.Language,
                 title = stringResource(R.string.language),
                 value = (listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList)[settingsUiState.selectedLanguageIndex],
                 selections = listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList,
@@ -153,7 +152,7 @@ fun SettingsScreen(
             TextPreference(
                 title = stringResource(R.string.app_name),
                 description = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
-                imageVector = rememberInfo()
+                imageVector = Icons.Outlined.Info
             ) {
                 // settingsViewModel.clearCookies()
                 settingsViewModel.changeDevSectionShow(!settingsUiState.isDevSectionShow)
@@ -168,21 +167,21 @@ fun SettingsScreen(
             TextPreference(
                 title = stringResource(R.string.feedback_title),
                 description = stringResource(R.string.feedback_desc),
-                imageVector = rememberChat()
+                imageVector = Icons.AutoMirrored.Outlined.Chat
             ) {
                 settingsViewModel.onShowFeedbackUrlConfirmDialogRequest()
             }
             TextPreference(
                 title = stringResource(R.string.open_source_code_title),
                 description = stringResource(R.string.open_source_code_desc),
-                imageVector = rememberCode()
+                imageVector = Icons.Outlined.Code
             ) {
                 settingsViewModel.onShowSourceCodeUrlConfirmDialogRequest()
             }
             if (settingsUiState.isDevSectionShow) {
                 PreferenceHeader(text = stringResource(R.string.dev))
                 SwitchPreference(
-                    imageVector = rememberScreenshotFrame(),
+                    imageVector = Icons.Outlined.Screenshot,
                     title = stringResource(R.string.screenshot_mode_title),
                     description = stringResource(R.string.screenshot_mode_desc),
                     value = settingsUiState.isScreenshotMode,
@@ -195,7 +194,7 @@ fun SettingsScreen(
     }
 
     if (loginUiState.isShowLoginDialog) {
-        ShowLoginDialog(loginViewModel)
+        LoginDialog(loginViewModel)
     }
 
     TextAlertDialog(
@@ -215,7 +214,7 @@ fun SettingsScreen(
         actionAfterConfirm = {
             settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
             // Copy QQ group number
-            clipboardManager.setText(AnnotatedString(QQ_GROUP_NUMBER))
+            clipboardManager.setText(AnnotatedString(context.getString(R.string.qq_group_number)))
             settingsViewModel.viewModelScope.launch {
                 MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.copy_group_toast))
             }
@@ -230,7 +229,7 @@ fun SettingsScreen(
             settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(PROJECT_GITHUB_URL)
+            intent.data = Uri.parse(context.getString(R.string.project_github_url))
             context.startActivity(intent)
         },
         onDismissRequest = { settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest() },
@@ -243,7 +242,7 @@ fun SettingsScreen(
             settingsViewModel.onHideDevProfileUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(DEV_GITHUB_URL)
+            intent.data = Uri.parse(context.getString(R.string.dev_github_url))
             context.startActivity(intent)
         },
         onDismissRequest = { settingsViewModel.onHideDevProfileUrlConfirmDialogRequest() },

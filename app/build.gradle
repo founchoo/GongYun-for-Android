@@ -21,7 +21,7 @@ android {
             useSupportLibrary true
         }
 
-        resourceConfigurations += ["en", "ja", "ko", "zh-rCN", "zh-rTW"]
+        resourceConfigurations += ["zh-rCN", "zh-rTW", "en", "ja", "ko", "th", "id"]
     }
 
     buildTypes {
@@ -67,6 +67,8 @@ android {
 }
 
 dependencies {
+
+    implementation "androidx.compose.material:material-icons-extended:$compose_version"
 
     // Vico
     def vico_version = '1.13.0'

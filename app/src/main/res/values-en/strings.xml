@@ -99,7 +99,7 @@
     <string name="major">Major</string>
     <string name="_class">Class</string>
     <string name="course_name">Course name</string>
-    <string name="week_indicator">Week %s</string>
+    <string name="week_indicator">Week %1$s</string>
     <string name="monday">Mon.</string>
     <string name="tuesday">Tue.</string>
     <string name="wednesday">Wed.</string>
@@ -108,11 +108,11 @@
     <string name="saturday">Sat.</string>
     <string name="sunday">Sun.</string>
     <string name="switch_schedule_hint">Tap the two-line tabbed area above to open a dialogue box to toggle between the school year and the number of weeks.</string>
-    <string name="occupied_room_with_content_desc">The following classrooms are available in week %s, %s, %s session</string>
-    <string name="occupied_room_without_content_desc">No classroom was found with classes in week %s, %s, %s session</string>
-    <string name="empty_room_with_content_desc">The following classrooms are available during the %s week, %s, %s session</string>
+    <string name="occupied_room_with_content_desc">The following classrooms are available in week %1$s, %2$s, %3$s session</string>
+    <string name="occupied_room_without_content_desc">No classroom was found with classes in week %1$s, %2$s, %3$s session</string>
+    <string name="empty_room_with_content_desc">The following classrooms are available during week %1$s, %2$s, %3$s session</string>
     <string name="empty_room_without_content_desc">Classroom not found available in %s week, %s, %s section</string>
-    <string name="year_indicator">Yr.\n%s</string>
+    <string name="year_indicator">Yr.\n%1$s</string>
     <string name="switch_year_semester">Switching academic semesters</string>
     <string name="selected_year_semester">Currently selected academic year term</string>
     <string name="dev_title">Developer</string>

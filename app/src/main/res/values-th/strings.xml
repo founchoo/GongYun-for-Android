@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+      
+  <string name="app_name" translatable="false">工韵</string>
+      
+  <string name="grade_label">เกรด</string>
+      
+  <string name="settings_label">การตั้งค่า</string>
+      
+  <string name="schedule_label">กำหนดการ</string>
+      
+  <string name="program_label">แผนการฝึกอบรม</string>
+      
+  <string name="placeholder_main_activity_pin_unavailable">Launcher ไม่รองรับวิดเจ็ตที่ปักหมุดไว้</string>
+      
+  <string name="filter_grade_title">กรองเกรด</string>
+      
+  <string name="semester_title">ภาคเรียนปีการศึกษา</string>
+      
+  <string name="select_all">เลือกทั้งหมด</string>
+      
+  <string name="deselect_all">ยกเลิกการเลือกทั้งหมด</string>
+      
+  <string name="course_type_title">ประเภทหลักสูตร</string>
+      
+  <string name="gpa_label">คะแนนเกรด</string>
+      
+  <string name="credit_label">เครดิต</string>
+      
+  <string name="close">ปิด</string>
+      
+  <string name="no_grades">ยังไม่มีคะแนน</string>
+      
+  <string name="no_query_grades">ไม่พบเกรดที่เกี่ยวข้อง</string>
+      
+  <string name="courses_belong_to_interval">หลักสูตรต่างๆ จะอยู่ในช่วงนี้</string>
+      
+  <string name="rank_at">อยู่ในอันดับที่หนึ่ง</string>
+      
+  <string name="search">ค้นหา</string>
+      
+  <string name="data_summary">สถิติ</string>
+      
+  <string name="course_grade">เกรดของหลักสูตร</string>
+      
+  <string name="course_grades_desc">เกรดของหลักสูตรที่อยู่ในรายการหลักสูตรปัจจุบัน</string>
+      
+  <string name="arithmetic_mean_score">คะแนนเฉลี่ยเลขคณิต</string>
+      
+  <string name="rank_title">ข้อมูลอันดับภาคเรียนปีการศึกษา</string>
+      
+  <string name="rank_desc">ข้อมูลการจัดอันดับภาคการศึกษาปีการศึกษาที่กรองแล้ว</string>
+      
+  <string name="rank_not_available_title">ไม่มีข้อมูลการจัดอันดับ</string>
+      
+  <string name="rank_not_available_desc">ไม่มีข้อมูลการจัดอันดับเมื่อกรองลักษณะของหลักสูตรหรือเรียกชื่อหลักสูตร</string>
+      
+  <string name="course_score_summary">สถิติคะแนนหลักสูตร</string>
+      
+  <string name="course_score_desc">สถิติคะแนนสำหรับหลักสูตรที่ระบุในรายการหลักสูตรปัจจุบัน</string>
+      
+  <string name="performance_curve">เส้นโค้งประสิทธิภาพ</string>
+      
+  <string name="account">บัญชี</string>
+      
+  <string name="logout">ออกจากระบบ</string>
+      
+  <string name="login">เข้าสู่ระบบ</string>
+      
+  <string name="welcome">ยินดีต้อนรับ</string>
+      
+  <string name="unlogin_message">กรุณาเข้าสู่ระบบก่อน</string>
+      
+  <string name="dark_mode">โหมดมืด</string>
+      
+  <string name="follow_system">ทำตามระบบ</string>
+      
+  <string name="turn_on">เปิด</string>
+      
+  <string name="turn_off">ปิด</string>
+      
+  <string name="language">ภาษา</string>
+      
+  <string name="about">เกี่ยวกับ</string>
+      
+  <string name="feedback_title">ข้อเสนอแนะ</string>
+      
+  <string name="feedback_desc">เข้าร่วมการแชทกลุ่มเพื่อให้ความคิดเห็นและข้อเสนอแนะของคุณ</string>
+      
+  <string name="open_source_code_title">โอเพ่นซอร์สโค้ด</string>
+      
+  <string name="open_source_code_desc">การพัฒนาของคุณจะส่งผลต่อแอปพลิเคชันนี้</string>
+      
+  <string name="open_source_code_message">คุณกำลังจะออกจากแอปพลิเคชันนี้ หลังจากการยืนยัน คุณจะถูกเปลี่ยนเส้นทางไปยังเบราว์เซอร์เพื่อเปิดพื้นที่เก็บข้อมูล Github</string>
+      
+  <string name="dev">ตัวเลือกนักพัฒนา</string>
+      
+  <string name="screenshot_mode_title">โหมดภาพหน้าจอ</string>
+      
+  <string name="screenshot_mode_desc">หลังจากเปิดเครื่องแล้วข้อมูลส่วนตัวจะถูกแทนที่ด้วย *</string>
+      
+  <string name="logout_message">คุณแน่ใจว่าคุณต้องการที่จะออกจากระบบ?</string>
+      
+  <string name="dialog_title">ข้อความ</string>
+      
+  <string name="ok">ตกลง</string>
+      
+  <string name="cancel">ยกเลิก</string>
+      
+  <string name="show_non_week_course_title">แสดงหลักสูตรที่ไม่ใช่สัปดาห์นี้</string>
+      
+  <string name="show_non_week_course_desc">แสดงชั้นเรียนที่ไม่ใช่รายสัปดาห์ด้วยความโปร่งใสมากขึ้น</string>
+      
+  <string name="show_year_title">ปีแสดง</string>
+      
+  <string name="show_year_desc">ที่มุมซ้ายบน จะแสดงปีที่มีหมายเลขสัปดาห์ที่แสดงอยู่ในปัจจุบัน</string>
+      
+  <string name="show_date_title">แสดงวันที่</string>
+      
+  <string name="show_date_desc">แสดงวันที่ที่เกี่ยวข้องด้านล่างวันในสัปดาห์</string>
+      
+  <string name="show_node_time_title">แสดงช่วงเวลา</string>
+      
+  <string name="show_node_time_desc">แสดงช่วงเวลาเรียนด้านล่างส่วน</string>
+      
+  <string name="show_pin_title">(ทดลอง) ปักหมุดหลักสูตรไว้บนเดสก์ท็อป</string>
+      
+  <string name="show_pin_desc">โปรดตรวจสอบให้แน่ใจว่าคุณได้ให้สิทธิ์ \"ทางลัดบนเดสก์ท็อป\" การอนุญาต</string>
+      
+  <string name="display">แสดง</string>
+      
+  <string name="system_color_title">สีของธีมของระบบ</string>
+      
+  <string name="system_color_desc">เมื่อเปิดเครื่องจะเป็นไปตามสีธีมของระบบ</string>
+      
+  <string name="copy_group_toast">คัดลอกหมายเลขกลุ่ม QQ แล้ว</string>
+      
+  <string name="copy_group_message">คุณกำลังจะคัดลอกหมายเลขกลุ่ม QQ</string>
+      
+  <string name="login_dialog_title">ระบบการจัดการศึกษาแบบครบวงจร</string>
+      
+  <string name="student_number">รหัสนักศึกษา</string>
+      
+  <string name="password">รหัสผ่าน</string>
+      
+  <string name="login_error">รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง</string>
+      
+  <string name="schedule_switcher_title">รายละเอียดหลักสูตร</string>
+      
+  <string name="current_observed_week_course_title">กำลังเรียกดูหลักสูตรประจำสัปดาห์</string>
+      
+  <string name="non_current_observed_week_course_title">หลักสูตรที่ยังไม่ได้ดูในสัปดาห์นี้</string>
+      
+  <string name="occupied_room">ห้องเรียนการสอนพร้อมกัน</string>
+      
+  <string name="free_room">ห้องเรียนฟรีในช่วงเวลาเดียวกัน</string>
+      
+  <string name="show_next_tip">ดูเคล็ดลับถัดไป</string>
+      
+  <string name="check_room_tip_title">ดูห้องเรียนว่างและห้องเรียนการสอนในช่วงเวลาเดียวกัน</string>
+      
+  <string name="check_room_tip_desc">กดตารางหลักสูตรใดๆ ค้างไว้แล้วดำเนินการต่อในเมนูป๊อปอัปเพื่อดูห้องเรียนว่างและห้องเรียนการสอนในโรงเรียนในช่วงเวลาของหลักสูตร</string>
+      
+  <string name="help">ช่วย</string>
+      
+  <string name="last_week">อาทิตย์ที่แล้ว</string>
+      
+  <string name="next_week">สัปดาห์หน้า</string>
+      
+  <string name="apply">นำมาใช้</string>
+      
+  <string name="reset">รีเซ็ต</string>
+      
+  <string name="switch_schedule">สลับตารางเรียน</string>
+      
+  <string name="message_befor_exit">ทำอีกครั้งเพื่อออก</string>
+      
+  <string name="first_semester_of_freshman_year">ฤดูใบไม้ร่วงของน้องใหม่</string>
+      
+  <string name="second_semester_of_freshman_year">ฤดูใบไม้ผลิของน้องใหม่</string>
+      
+  <string name="first_semester_of_sophomore_year">ฤดูใบไม้ร่วงของนักเรียนปีที่สอง</string>
+      
+  <string name="second_semester_of_sophomore_year">ฤดูใบไม้ผลิของนักเรียนปีที่สอง</string>
+      
+  <string name="first_semester_of_junior_year">ฤดูใบไม้ร่วงของรุ่นน้อง</string>
+      
+  <string name="second_semester_of_junior_year">ฤดูใบไม้ผลิของจูเนียร์</string>
+      
+  <string name="first_semester_of_senior_year">การล่มสลายของผู้อาวุโส</string>
+      
+  <string name="second_semester_of_senior_year">ฤดูใบไม้ผลิของผู้อาวุโส</string>
+      
+  <string name="score">จุด</string>
+      
+  <string name="institute">สถาบัน</string>
+      
+  <string name="major">วิชาเอก</string>
+      
+  <string name="_class">ระดับ</string>
+      
+  <string name="course_name">ชื่อหลักสูตร</string>
+      
+  <string name="week_indicator">สัปดาห์ที่ %1$s</string>
+      
+  <string name="monday">จันทร์</string>
+      
+  <string name="tuesday">อ.</string>
+      
+  <string name="wednesday">พุธ.</string>
+      
+  <string name="thursday">พฤ.</string>
+      
+  <string name="friday">ศุกร์</string>
+      
+  <string name="saturday">นั่ง.</string>
+      
+  <string name="sunday">ดวงอาทิตย์.</string>
+      
+  <string name="switch_schedule_hint">แตะพื้นที่แท็บสองบรรทัดด้านบนเพื่อเปิดกล่องโต้ตอบเพื่อสลับระหว่างปีการศึกษาและจำนวนสัปดาห์</string>
+      
+  <string name="occupied_room_with_content_desc">ห้องเรียนต่อไปนี้ว่างในสัปดาห์ที่ %1$s, %2$s, %3$s เซสชั่น</string>
+      
+  <string name="occupied_room_without_content_desc">ไม่พบห้องเรียนที่มีชั้นเรียนในสัปดาห์ที่ %1$s, %2$s, %3$s เซสชั่น</string>
+      
+  <string name="empty_room_with_content_desc">ห้องเรียนต่อไปนี้ว่างในช่วงสัปดาห์ที่ %1$s, %2$s, %3$s เซสชั่น</string>
+      
+  <string name="empty_room_without_content_desc">ไม่พบห้องเรียนใน %s สัปดาห์ %s ส่วน %s</string>
+      
+  <string name="year_indicator">ปี\n%1$s</string>
+      
+  <string name="switch_year_semester">การเปลี่ยนภาคการศึกษา</string>
+      
+  <string name="selected_year_semester">ปัจจุบันเลือกภาคเรียนปีการศึกษา</string>
+      
+  <string name="dev_title">นักพัฒนา</string>
+      
+  <string name="dev_name" translatable="false">摘叶飞镖/founchoo</string>
+      
+  <string name="open_dev_profile_message">คุณกำลังจะออกจากแอปพลิเคชันนี้ หลังจากการยืนยัน คุณจะถูกนำไปยังเบราว์เซอร์เพื่อเปิดหน้าโปรไฟล์ GitHub ของผู้พัฒนาแอปพลิเคชันนี้</string>
+      
+  <string name="more">มากกว่า</string>
+      
+  <string name="schedule_other_info">ข้อมูลบันทึกกำหนดการ</string>
+      
+  <string name="plan_courses">แผนหลักสูตร</string>
+      
+  <string name="no_course">ยังไม่มีหลักสูตร</string>
+      
+  <string name="schedule_other_info_empty">ยังไม่มีข้อมูลบันทึกตารางเวลา</string>
+      
+  <string name="planned_schedule_info_title">แผนหลักสูตร</string>
+      
+  <string name="planned_schedule_info_empty">ยังไม่มีแผนหลักสูตร</string>
+  
+</resources>

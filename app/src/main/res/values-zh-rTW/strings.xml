@@ -44,7 +44,7 @@
     <string name="feedback_desc">加入群組聊天提供你的意見及建議</string>
     <string name="open_source_code_title">開源程式碼</string>
     <string name="open_source_code_desc">你的開發將為此應用貢獻一份力量</string>
-    <string name="open_source_code_message">您即將離開此應用程式，確認後將跳到瀏覽器開啟 Github 倉庫</string>
+    <string name="open_source_code_message">您即將離開此應用程式，確認後將跳到瀏覽器開啟 GitHub 倉庫</string>
     <string name="dev">開發者選項</string>
     <string name="screenshot_mode_title">螢幕截圖模式</string>
     <string name="screenshot_mode_desc">開啟後隱私資訊將被*替代</string>
@@ -99,7 +99,7 @@
     <string name="major">專業</string>
     <string name="_class">班級</string>
     <string name="course_name">課程名稱</string>
-    <string name="week_indicator">第 %s 週</string>
+    <string name="week_indicator">第 %1$s 週</string>
     <string name="monday">週一</string>
     <string name="tuesday">週二</string>
     <string name="wednesday">週三</string>
@@ -108,11 +108,11 @@
     <string name="saturday">週六</string>
     <string name="sunday">週日</string>
     <string name="switch_schedule_hint">點選上方的雙行標籤區域以開啟對話方塊切換學年及週數</string>
-    <string name="occupied_room_with_content_desc">以下教室在第 %s 週，%s，%s 節有課</string>
-    <string name="occupied_room_without_content_desc">未找到在第 %s 週，%s，%s 節有課的教室</string>
-    <string name="empty_room_with_content_desc">以下教室在第 %s 週，%s，%s 節空閒</string>
-    <string name="empty_room_without_content_desc">未找到在第 %s 週，%s，%s 節空閒的教室</string>
-    <string name="year_indicator">%s\n年</string>
+    <string name="occupied_room_with_content_desc">以下教室在第 %1$s 周，%2$s，%3$s 节有课</string>
+    <string name="occupied_room_without_content_desc">未找到在第 %1$s 周，%2$s，%3$s 节有课的教室</string>
+    <string name="empty_room_with_content_desc">以下教室在第 %1$s 周，%2$s，%3$s 节空闲</string>
+    <string name="empty_room_without_content_desc">未找到在第 %1$s 周，%2$s，%3$s 节空闲的教室</string>
+    <string name="year_indicator">%1$s\n年</string>
     <string name="switch_year_semester">切換學年學期</string>
     <string name="selected_year_semester">目前選擇的學年學期</string>
     <string name="dev_title">開發者</string>
@@ -125,4 +125,7 @@
     <string name="schedule_other_info_empty">暫無課表備註資訊</string>
     <string name="planned_schedule_info_title">課程計劃</string>
     <string name="planned_schedule_info_empty">暫無課程計劃</string>
+    <string name="qq_group_number" translatable="false">422915042</string>
+    <string name="dev_github_url" translatable="false">https://github.com/founchoo</string>
+    <string name="project_github_url" translatable="false">https://github.com/founchoo/GongYun-for-Android</string>
 </resources>

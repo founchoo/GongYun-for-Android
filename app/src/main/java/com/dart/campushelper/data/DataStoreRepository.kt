@@ -8,7 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dart.campushelper.CampusHelperApplication.Companion.context
 import com.dart.campushelper.api.DataStoreService
-import com.dart.campushelper.ui.theme.DarkMode
+import com.dart.campushelper.viewmodel.DarkMode
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
