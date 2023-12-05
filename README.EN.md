@@ -1,4 +1,4 @@
-[点此跳转至中文说明](https://github.com/founchoo/CampusHelper/blob/main/README.md)
+[英文版本更新可能不及时，点此查看中文版本 / English version may not be updated in time, click here for Chinese version.](https://github.com/founchoo/CampusHelper/blob/main/README.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/3d5c2914-0592-4058-9b54-00e958c62b63" alt="Logo" width="100">
@@ -8,54 +8,118 @@
 
 ## Introduction
 
-Hello, there!
 
-Welcome to GongYun, an third party academic affairs management system for students in **HBUT**(Hubei University of Technology) for **Android**.
+Welcome to the GitHub open source page for **GongYun**, a third-party academic management system for students at **Hubei University of Technology**.
+This is a third-party academic management system running on the **Android** platform with a minimum version of **Android 8.0 (API level 26)**.
 
-If you are searching for another platform, please refer to my another edition, [GongYun](https://github.com/founchoo/GongYun), which supports all platforms.
 
-## Functions
+This application is based on the Jetpack Compose framework and is written in Kotlin.
 
-Currently, we provide the following functions:
 
-- Check schedule/timetable
-  - Other weeks are also available
-- Check grades
-  - Ranking info
-  - Automatic calculation of GPA and average score
-  - Grade filter
+This application sends network requests to the official server of the school's academic affairs system by crawling the API.
+This application stores sensitive user data locally during operation, which includes: student number, password, year of enrollment, current academic year and semester.
+This information is only used to send network requests to the official university server and is not used for any other purpose.
+
+
+The reason for storing the student number and password is as follows: the school's academic system makes login requests even if the Remember Me option is checked.
+Even if the Remember Me option is checked in the login request, the cookie expiration date in the network return is only two hours after the login time.
+In order to prevent users from having to repeatedly enter their student number and password to log in and obtain the login status when using the application after the two-hour interval, the application stores them locally.
+The application stores them locally, and when a network request fails due to an expired login status, the application automatically performs the login operation for the user.
+
+
+If you are in the school using the academic system for super star ( Hubei University of Technology , for example , the academic system address : **hbut.jw.chaoxing.com**) , then this open source project may be helpful to you .
+
+
+## Features at a glance
+
+
+Currently , the application provides the following functions:
+
+
+1. View class schedule
+   - View other school years and weeks of the class schedule
+   - Provide desktop widgets to display the day schedule
+   - View schedule notes (e.g., online classes, class setups)
+  
+2. View scheduled classes
+
+
+3. Find available classrooms and classrooms for the same period of time.
+
+
+4. Grade Inquiry
+   - Ranking inquiry (including grade, major, class ranking)
+   - Ranking histogram
+   - Automatic calculation of grade point and arithmetic mean score
+   - GPA change curve view
+   - Grade screening (academic year, course type)
+   - Histogram of grade distribution
+
+
+## TODO
+
+
+1. The TabRow for viewing empty classrooms/classrooms on the schedule page needs to be linked with Horizontal Pager. 2.
+2. Add "sort by \*\*\*\*\*" function to the results module, such as grades, credits, etc.
+3. The reset button in the popup window for switching class schedules on the schedule page is moved to TopAppBar.
+4. Encrypted storage of local information
+5. First time user guide
+
 
 ## Screenshots
 
-Note: considering the private information, we have make student id number covered with black line by photo editor. In our real app, there is no covery on the personal information.
 
-<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/adb2383f-de53-4b37-8c23-3c54175e7fca">
+Note: For privacy reasons, we have asterisked certain information that will not appear when you actually use the app.
+
+
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/4140a910-2893-4889-ad12-5cd8ca0882c0">
+
 
 ## Download
 
-Go to [release page](https://github.com/founchoo/CampusHelper/releases/latest) to download `.apk` file.
 
-## Contributions
+GitHub release: [Click here](https://github.com/founchoo/CampusHelper/releases/latest) link to the download page, the `.apk` file at the bottom of the page is the installer, download and install it.
 
-If you find some bugs or have some ideas on how to improve it, feel free to post a issue or pull requests. Also, you can [click here](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=VLnZWjYQIT2laeBM4b3YXXrsAqyG9Igd&authKey=I%2FuZwBycJTU04QvDVyU1%2FbtjesWFu%2FP5eNOQl0mMxeuo8fD%2Bn8%2BtcY50K8TpNFSg&noverify=0&group_code=422915042) to join our QQ group. Any help would be appreciated!
 
-## Thanks
+Google Play Store: [Click here to go to Google Play Store](https://play.google.com/store/apps/details?id=com.dart.campushelper)
 
-During the development, we have used the following projects/websites which are helpful:
 
-- https://www.composables.com/icons A website generating **Material Symbols for Jetpack Compose**.
+## Participate in development
 
-  You just need to copy it and paste to you `.kt` file. It will generate a function named `rememberIconName`, and to use it, just call the function, so easy and simple.
 
-- https://stackoverflow.com/ StackOverflow of course, a knowledge sharing community which gained a lot of population.
-  In the development, there are so many times when we refer to it and seek suggestions.
+Feel free to submit an issue or pull request.
 
-- https://m3.material.io/ Material Design guidelines.
 
-- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary Official development document.
+## Acknowledgments
 
-- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose.
 
-- https://json2kt.com/ Convert `JSON` to `.kt` file
+- https://stackoverflow.com/ StackOverflow
 
-- https://github.com/harmittaa/KoinExample Grate help in retrofit error handler
+
+- https://m3.material.io/ Material Design Guide
+
+
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary Official Development Documentation
+
+
+- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose
+
+
+- https://json2kt.com/ Converting `JSON` files to `.kt` files
+
+
+- https://github.com/harmittaa/KoinExample Retrofit error handling
+
+
+- https://github.com/patrykandpatrick/vico Chart Library
+
+
+- https://plugins.jetbrains.com/plugin/18619-svg-to-compose svg to compose
+
+
+
+
+## Open Source License
+
+
+This project uses Apache License 2.0.

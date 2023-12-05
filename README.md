@@ -1,4 +1,4 @@
-[Click here to see English edition](https://github.com/founchoo/CampusHelper/blob/main/README.EN.md)
+[Click here to view the English version. Note: The English version may not be updated in time. / 点此查看英文版本，注意：英文版本更新可能不及时](https://github.com/founchoo/CampusHelper/blob/main/README.EN.md)
 <div align="center">
 
 <img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/3d5c2914-0592-4058-9b54-00e958c62b63" alt="Logo" width="100">
@@ -29,11 +29,15 @@
 目前，该应用提供如下功能：
 
 1. 查看课表
-   - 查看其他学年及周数的课程
-   - 提供桌面小组件显示当天课程
-   - 查找同期空闲教室及授课教室
+   - 查看其他学年及周数的课表
+   - 提供桌面小组件显示当天课表
+   - 查看课表备注信息（如网课、课设）
+  
+2. 查看计划课程
 
-2. 成绩查询
+3. 查找同期空闲教室及授课教室
+
+4. 成绩查询
    - 排名查询（包括年级、专业、班级排名）
    - 排名柱状图
    - 绩点及算术平均分的自动计算
@@ -42,11 +46,12 @@
    - 成绩分布柱状图
 
 ## TODO
+
 1. 课表页面查看空教室 / 有课教室的 TabRow 需要与 Horizontal Pager 联动
 2. 成绩模块增加「按 \*\*\* 排序」功能，例如成绩、学分等
 3. 课表页面切换课表弹窗内重置按钮移至 TopAppBar
-4. 课表页面增设「课程规划」，即对应官方教务系统「培养计划」
-5. 本地信息加密存储
+4. 本地信息加密存储
+5. 初次使用引导
 
 ## 屏幕截图
 
@@ -65,8 +70,6 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 欢迎提出 issue 或 pull request。
 
 ## 鸣谢
-
-- https://www.composables.com/icons Material Symbols for Jetpack Compose
 
 - https://stackoverflow.com/ StackOverflow
 
