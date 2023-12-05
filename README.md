@@ -71,8 +71,6 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 ## 鸣谢
 
-- https://www.composables.com/icons Material Symbols for Jetpack Compose
-
 - https://stackoverflow.com/ StackOverflow
 
 - https://m3.material.io/ Material Design 指南
