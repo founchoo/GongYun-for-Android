@@ -6,7 +6,7 @@ import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
 import com.dart.campushelper.model.StudentInfoResponse
-import com.example.example.PlannedScheduleResponse
+import com.dart.campushelper.model.PlannedScheduleResponse
 import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded

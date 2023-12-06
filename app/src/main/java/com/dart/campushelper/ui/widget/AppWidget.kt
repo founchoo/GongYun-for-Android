@@ -13,6 +13,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.appWidgetBackground
@@ -31,7 +32,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.dart.campushelper.R
-import com.dart.campushelper.utils.convertDayOfWeekToChinese
+import com.dart.campushelper.utils.DayOfWeek
 import com.dart.campushelper.viewmodel.AppWidgetViewModel
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.launch
@@ -72,8 +73,11 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
         ) {
             Text(
                 text = "${
-                    stringResource(R.string.week_indicator, uiState.currentWeek)
-                } / ${convertDayOfWeekToChinese(uiState.dayOfWeek)} / ${
+                    LocalContext.current.getString(
+                        R.string.week_indicator,
+                        uiState.currentWeek.toString()
+                    )
+                } / ${DayOfWeek.instance.convertDayOfWeekToText(uiState.dayOfWeek)} / ${
                     LocalDate.now().format(
                         DateTimeFormatter.ofPattern("MM-dd")
                     )
@@ -101,7 +105,7 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
                             .size(48.dp)
                     )
                     Text(
-                        text = "今天暂无课程",
+                        text = LocalContext.current.getString(R.string.no_schedule_today),
                         style = TextStyle(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
@@ -160,7 +164,7 @@ fun AppWidgetContent(viewModel: AppWidgetViewModel) {
             }
 
             Button(
-                text = "刷新",
+                text = LocalContext.current.getString(R.string.refresh),
                 onClick = {
                     scope.launch {
                         viewModel.getTodaySchedule()

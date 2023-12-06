@@ -60,7 +60,7 @@
     <string name="show_date_desc">在星期下方显示对应日期</string>
     <string name="show_node_time_title">显示时间段</string>
     <string name="show_node_time_desc">在节次下方显示上课时间段</string>
-    <string name="show_pin_title">（实验性）固定课程到桌面</string>
+    <string name="show_pin_title">固定课程到桌面</string>
     <string name="show_pin_desc">请确保已授予"桌面快捷方式"权限</string>
     <string name="display">显示</string>
     <string name="system_color_title">系统主题色</string>
@@ -129,4 +129,9 @@
     <string name="dev_github_url" translatable="false">https://github.com/founchoo</string>
     <string name="project_github_url" translatable="false">https://github.com/founchoo/GongYun-for-Android</string>
     <string name="sort_title">排序</string>
+    <string name="no_schedule_today">今日暂无课程</string>
+    <string name="refresh">刷新</string>
+    <string name="retry">重试</string>
+    <string name="network_connection_error">网络连接有误</string>
+    <string name="login_info_error">学号或密码有误</string>
 </resources>

@@ -44,14 +44,30 @@ fun getCurrentNode(): Int {
     return 0
 }
 
-fun convertDayOfWeekToChinese(dayOfWeek: Int) =
-    when (dayOfWeek) {
-        1 -> context.getString(R.string.monday)
-        2 -> context.getString(R.string.tuesday)
-        3 -> context.getString(R.string.wednesday)
-        4 -> context.getString(R.string.thursday)
-        5 -> context.getString(R.string.friday)
-        6 -> context.getString(R.string.saturday)
-        7 -> context.getString(R.string.sunday)
-        else -> ""
+class DayOfWeek {
+    private val map = mapOf(
+        1 to context.getString(R.string.monday),
+        2 to context.getString(R.string.tuesday),
+        3 to context.getString(R.string.wednesday),
+        4 to context.getString(R.string.thursday),
+        5 to context.getString(R.string.friday),
+        6 to context.getString(R.string.saturday),
+        7 to context.getString(R.string.sunday),
+    )
+
+    fun convertDayOfWeekToText(dayOfWeek: Int): String = map[dayOfWeek] ?: ""
+
+    fun convertChineseToDayOfWeek(chinese: String): Int {
+        map.forEach { (key, value) ->
+            if (value == chinese) {
+                return key
+            }
+        }
+        return 0
     }
+
+    companion object {
+        val instance = DayOfWeek()
+    }
+}
+

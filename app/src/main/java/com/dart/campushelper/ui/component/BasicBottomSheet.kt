@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -28,7 +27,6 @@ import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 fun BasicBottomSheet(
     isBottomSheetShow: Boolean,
     @StringRes title: Int,
-    isContentLoading: Boolean = false,
     onDismissRequest: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
     content: @Composable () -> Unit,
@@ -50,16 +48,10 @@ fun BasicBottomSheet(
                     modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
                 )
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacer)))
-                if (isContentLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    Box(
-                        Modifier.padding(horizontal = DEFAULT_PADDING)
-                    ) {
-                        content()
-                    }
+                Box(
+                    Modifier.padding(horizontal = DEFAULT_PADDING)
+                ) {
+                    content()
                 }
             }
         }

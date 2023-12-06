@@ -4,9 +4,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -22,10 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import com.dart.campushelper.R
 import com.dart.campushelper.viewmodel.LoginViewModel
 
@@ -52,9 +58,9 @@ fun LoginDialog(
                     value = uiState.username,
                     onValueChange = { loginViewModel.onUsernameChanged(it) },
                     label = { Text(stringResource(R.string.student_number)) },
-                    isError = uiState.loginInfoError,
+                    isError = uiState.loginResponse == false,
                     supportingText = {
-                        if (uiState.loginInfoError) {
+                        if (uiState.loginResponse == false) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = stringResource(R.string.login_error),
@@ -63,8 +69,8 @@ fun LoginDialog(
                         }
                     },
                     trailingIcon = {
-                        if (uiState.loginInfoError) {
-                            Icon(Icons.Filled.Warning,null, tint = MaterialTheme.colorScheme.error)
+                        if (uiState.loginResponse == false) {
+                            Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error)
                         }
                     },
                 )
@@ -72,9 +78,9 @@ fun LoginDialog(
                     value = uiState.password,
                     onValueChange = { loginViewModel.onPasswordChanged(it) },
                     label = { Text(stringResource(R.string.password)) },
-                    isError = uiState.loginInfoError,
+                    isError = uiState.loginResponse == false,
                     supportingText = {
-                        if (uiState.loginInfoError) {
+                        if (uiState.loginResponse == false) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = stringResource(R.string.login_error),
@@ -83,8 +89,8 @@ fun LoginDialog(
                         }
                     },
                     trailingIcon = {
-                        if (uiState.loginInfoError) {
-                            Icon(Icons.Filled.Warning,null, tint = MaterialTheme.colorScheme.error)
+                        if (uiState.loginResponse == false) {
+                            Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error)
                         } else {
                             IconButton(
                                 onClick = { },
@@ -99,6 +105,20 @@ fun LoginDialog(
                     },
                     visualTransformation = if (displayPassword) VisualTransformation.None else PasswordVisualTransformation()
                 )
+                if (uiState.loginResponse == null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.ErrorOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = stringResource(R.string.network_connection_error),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
         },
         onDismissRequest = {

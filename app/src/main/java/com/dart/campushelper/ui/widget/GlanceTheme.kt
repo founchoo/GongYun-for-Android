@@ -1,5 +1,6 @@
 package com.dart.campushelper.ui.widget
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -74,6 +75,7 @@ data class ColorProviders(
  * devices that support it, the theme is derived from the user specific platform colors, on other
  * devices this falls back to the Material3 baseline theme.
  */
+@SuppressLint("RestrictedApi")
 fun dynamicThemeColorProviders(): ColorProviders {
     return ColorProviders(
         primary = ColorProvider(R.color.colorPrimary),

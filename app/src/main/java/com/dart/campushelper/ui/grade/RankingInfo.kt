@@ -16,38 +16,36 @@ import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
 
 @Composable
-fun RankingInfo(uiState: GradeUiState) {
-    return HostRankingType.values()
-        .forEach { hostRankingType ->
-            ListItem(
-                leadingContent = {
-                    Box(
-                        Modifier
-                            .width(4.dp)
-                            .height(40.dp)
-                            .background(
-                                color = when (hostRankingType) {
-                                    HostRankingType.GPA -> MaterialTheme.colorScheme.primary
-                                    HostRankingType.SCORE -> MaterialTheme.colorScheme.secondary
-                                },
-                            )
-                    )
-                },
-                supportingContent = {
-                    Text(hostRankingType.run {
-                        SubRankingType.values()
-                            .joinToString("，") {
-                                uiState.rankingInfo.getRanking(
-                                    this,
-                                    it
-                                ).run {
-                                    "$it ${this?.ranking ?: "-"}/${this?.total ?: "-"}"
-                                }
+fun RankingInfo(uiState: GradeUiState) = HostRankingType.values()
+    .forEach {
+        ListItem(
+            leadingContent = {
+                Box(
+                    Modifier
+                        .width(4.dp)
+                        .height(40.dp)
+                        .background(
+                            color = when (it) {
+                                HostRankingType.GPA -> MaterialTheme.colorScheme.primary
+                                HostRankingType.SCORE -> MaterialTheme.colorScheme.secondary
+                            },
+                        )
+                )
+            },
+            supportingContent = {
+                Text(it.run {
+                    SubRankingType.values()
+                        .joinToString("，") {
+                            uiState.rankingInfo?.data?.getRanking(
+                                this,
+                                it
+                            ).run {
+                                "$it ${this?.ranking ?: Double.NaN}/${this?.total ?: Double.NaN}"
                             }
-                            .replaceWithStars(uiState.isScreenshotMode)
-                    })
-                },
-                headlineContent = { Text(hostRankingType.toString()) },
-            )
-        }
-}
+                        }
+                        .replaceWithStars(uiState.isScreenshotMode)
+                })
+            },
+            headlineContent = { Text(it.toString()) },
+        )
+    }

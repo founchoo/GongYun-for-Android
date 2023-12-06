@@ -1,4 +1,4 @@
-package com.example.example
+package com.dart.campushelper.model
 
 import com.google.gson.annotations.SerializedName
 

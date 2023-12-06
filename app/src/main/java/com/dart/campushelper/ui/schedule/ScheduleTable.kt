@@ -8,17 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,26 +37,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.ui.component.LoadOnlineDataLayout
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
-    val scope = rememberCoroutineScope()
-    val refreshState = rememberPullRefreshState(uiState.isTimetableLoading, {
-        scope.launch {
-            viewModel.getCourses(uiState.browsedSemester)
-        }
-    })
     val nodeColumnWeight = 0.65F
     val unimportantAlpha = 0.3f
 
     val coursesOnCell =
         mutableMapOf<Pair<Int, Int>, List<Course>>()
-    uiState.courses.forEach { course ->
+    uiState.courses?.data?.forEach { course ->
         if ((!uiState.isOtherCourseDisplay && course.weekNoList.contains(
                 uiState.browsedWeek
             )) || uiState.isOtherCourseDisplay
@@ -76,96 +65,96 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
             }
         }
     }
-    Column(Modifier.padding(5.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            // 年份标识
-            Box(
-                modifier = Modifier
-                    .weight(nodeColumnWeight)
-            ) {
-                if (uiState.isYearDisplay) {
-                    Text(
-                        text = stringResource(
-                            R.string.year_indicator,
-                            uiState.startLocalDate?.plusDays((uiState.browsedWeek - 1) * 7L)
-                                ?.format(
-                                    DateTimeFormatter.ofPattern("yyyy")
-                                )?.takeLast(2) ?: ""
-                        ),
-                        fontFamily = FontFamily.Serif,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
+    LoadOnlineDataLayout(
+        dataSource = uiState.courses,
+        loadData = {
+            viewModel.loadSemesterList()
+            viewModel.viewModelScope.launch {
+                viewModel.loadSchedule(uiState.browsedSemester)
             }
-            // 星期表头
-            Row(
-                modifier = Modifier
-                    .weight(7F)
-                    .align(Alignment.CenterVertically)
-            ) {
-                listOf(
-                    stringResource(R.string.monday),
-                    stringResource(R.string.tuesday),
-                    stringResource(R.string.wednesday),
-                    stringResource(R.string.thursday),
-                    stringResource(R.string.friday),
-                    stringResource(R.string.saturday),
-                    stringResource(R.string.sunday),
-                ).forEachIndexed { index, week ->
+        },
+        contentWhenDataSourceIsEmpty = {
+            Text(
+                text = stringResource(R.string.no_course),
+                textAlign = TextAlign.Center,
+            )
+        },
+        contentWhenDataSourceIsNotEmpty = {
+            Column(Modifier.padding(5.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    // 年份标识
                     Box(
                         modifier = Modifier
-                            .weight(1F)
+                            .weight(nodeColumnWeight)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.align(Alignment.Center)
-                        ) {
-                            val color =
-                                if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
-                                    .copy(
-                                        alpha = unimportantAlpha
-                                    )
+                        if (uiState.isYearDisplay) {
                             Text(
-                                text = week,
-                                color = color,
-                                style = MaterialTheme.typography.bodyMedium
+                                text = stringResource(
+                                    R.string.year_indicator,
+                                    uiState.startLocalDate?.plusDays((uiState.browsedWeek - 1) * 7L)
+                                        ?.format(
+                                            DateTimeFormatter.ofPattern("yyyy")
+                                        )?.takeLast(2) ?: ""
+                                ),
+                                fontFamily = FontFamily.Serif,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center),
                             )
-                            if (uiState.isDateDisplay) {
-                                Text(
-                                    text = uiState.startLocalDate?.plusDays(index + 7L * (uiState.browsedWeek - 1))
-                                        ?.format(DateTimeFormatter.ofPattern("M-d"))
-                                        ?: "",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = color,
-                                )
+                        }
+                    }
+                    // 星期表头
+                    Row(
+                        modifier = Modifier
+                            .weight(7F)
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        listOf(
+                            stringResource(R.string.monday),
+                            stringResource(R.string.tuesday),
+                            stringResource(R.string.wednesday),
+                            stringResource(R.string.thursday),
+                            stringResource(R.string.friday),
+                            stringResource(R.string.saturday),
+                            stringResource(R.string.sunday),
+                        ).forEachIndexed { index, week ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1F)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.align(Alignment.Center)
+                                ) {
+                                    val color =
+                                        if (uiState.dayOfWeek - 1 == index && uiState.browsedWeek == uiState.currentWeek && uiState.browsedSemester == uiState.semesters.last()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
+                                            .copy(
+                                                alpha = unimportantAlpha
+                                            )
+                                    Text(
+                                        text = week,
+                                        color = color,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    if (uiState.isDateDisplay) {
+                                        Text(
+                                            text = uiState.startLocalDate?.plusDays(index + 7L * (uiState.browsedWeek - 1))
+                                                ?.format(DateTimeFormatter.ofPattern("M-d"))
+                                                ?: "",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = color,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        Box(Modifier.pullRefresh(refreshState)) {
-            LazyColumn {
-                item {
-                    Row {
-                        if (uiState.courses.isEmpty()) {
-                            Box(
-                                Modifier
-                                    .weight(1F, true)
-                                    .fillMaxSize()
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.no_course),
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
-                        } else {
+                LazyColumn {
+                    item {
+                        Row {
                             // 节点数
                             Column(
                                 modifier = Modifier
@@ -214,9 +203,14 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                         for (node in 1..5) {
                                             var expanded by remember { mutableStateOf(false) }
                                             // 筛选出当前遍历的星期号和节次的课程
-                                            val courses = coursesOnCell[Pair(dayOfWeek, node)]
+                                            val courses =
+                                                coursesOnCell[Pair(dayOfWeek, node)]
                                             val currentWeekCourse =
-                                                courses?.find { it.weekNoList.contains(uiState.browsedWeek) }
+                                                courses?.find {
+                                                    it.weekNoList.contains(
+                                                        uiState.browsedWeek
+                                                    )
+                                                }
                                             val alpha =
                                                 if (currentWeekCourse != null)
                                                     1f
@@ -225,7 +219,9 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                 else
                                                     unimportantAlpha
                                             val foreground =
-                                                MaterialTheme.colorScheme.secondary.copy(alpha = alpha)
+                                                MaterialTheme.colorScheme.secondary.copy(
+                                                    alpha = alpha
+                                                )
                                             val background =
                                                 MaterialTheme.colorScheme.secondaryContainer.copy(
                                                     alpha = alpha
@@ -258,7 +254,9 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                             viewModel.setDayOfWeekOnHoldingCourse(
                                                                 dayOfWeek
                                                             )
-                                                            viewModel.setNodeNoOnHoldingCourse(node)
+                                                            viewModel.setNodeNoOnHoldingCourse(
+                                                                node
+                                                            )
                                                             expanded = true
                                                         },
                                                     )
@@ -285,7 +283,8 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         horizontalAlignment = Alignment.CenterHorizontally
                                                     ) {
                                                         val displayedCourse =
-                                                            currentWeekCourse ?: courses.first()
+                                                            currentWeekCourse
+                                                                ?: courses.first()
                                                         Text(
                                                             text = displayedCourse.courseName
                                                                 ?: "",
@@ -313,7 +312,7 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         onClick = {
                                                             expanded = false
                                                             viewModel.viewModelScope.launch {
-                                                                viewModel.getNonEmptyClassrooms(
+                                                                viewModel.loadTeachingClassrooms(
                                                                     dayOfWeek,
                                                                     node
                                                                 )
@@ -348,11 +347,6 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                     }
                 }
             }
-            PullRefreshIndicator(
-                uiState.isTimetableLoading,
-                refreshState,
-                Modifier.align(Alignment.TopCenter)
-            )
-        }
-    }
+        },
+    )
 }

@@ -55,12 +55,7 @@ class SettingsViewModel @Inject constructor(
 
     private val _languageMap = mapOf(
         "中文（简体）" to "zh-CN",
-        "中文（繁体）" to "zh-TW",
         "English" to "en-US",
-        "日本語" to "ja",
-        "한국어(특히 한국 관련)" to "ko",
-        "แบบไทย" to "th",
-        "Bahasa Indonesia" to "id",
     )
 
     // UI state exposed to the UI

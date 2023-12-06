@@ -2,7 +2,6 @@ package com.dart.campushelper.ui.grade
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Category
@@ -20,9 +18,6 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.North
 import androidx.compose.material.icons.outlined.South
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -36,87 +31,67 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.ColumnCard
+import com.dart.campushelper.ui.component.LoadOnlineDataLayout
 import com.dart.campushelper.ui.component.isScrollingUp
 import com.dart.campushelper.viewmodel.GradeViewModel
 import com.dart.campushelper.viewmodel.SortBasis
-import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
-import io.github.fornewid.placeholder.material3.placeholder
-import io.github.fornewid.placeholder.material3.shimmer
 import kotlinx.coroutines.launch
 
 @SuppressLint("RestrictedApi", "CoroutineCreationDuringComposition", "UnrememberedMutableState")
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class, ExperimentalMaterialApi::class,
+    ExperimentalLayoutApi::class,
 )
 @Composable
 fun GradeScreen(
     viewModel: GradeViewModel
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
 
     val listState = rememberLazyListState()
     val isScrollingUp by mutableStateOf(listState.isScrollingUp())
-    val scope = rememberCoroutineScope()
-    fun refresh() = scope.launch {
-        viewModel.getGrades()
-    }
-
-    val pullRefreshState = rememberPullRefreshState(uiState.isGradesLoading, ::refresh)
 
     viewModel.setFabVisibility(isScrollingUp)
 
-    Box(
-        modifier = Modifier
-            .pullRefresh(pullRefreshState)
-            .semantics { isTraversalGroup = true },
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .placeholder(
-                    visible = uiState.isGradesLoading,
-                    highlight = PlaceholderHighlight.shimmer()
+    LoadOnlineDataLayout(
+        dataSource = uiState.grades,
+        loadData = {
+            viewModel.viewModelScope.launch {
+                viewModel.getGrades()
+            }
+        },
+        contentWhenDataSourceIsEmpty = {
+            Text(
+                text = if (uiState.searchKeyword.isEmpty()) stringResource(R.string.no_grades) else stringResource(
+                    R.string.no_query_grades
                 ),
-            verticalArrangement = Arrangement.SpaceAround,
-            state = listState,
-        ) {
-            if (uiState.grades.isEmpty()) {
-                item {
-                    Text(
-                        text = if (uiState.searchKeyword.isEmpty()) stringResource(R.string.no_grades) else stringResource(
-                            R.string.no_query_grades
-                        ),
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            } else {
-                items(uiState.grades) { grade ->
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        },
+        contentWhenDataSourceIsNotEmpty = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.SpaceAround,
+                state = listState,
+            ) {
+                items(it) { grade ->
                     GradeItem(grade, uiState, viewModel)
                 }
             }
-        }
-        PullRefreshIndicator(
-            uiState.isGradesLoading,
-            pullRefreshState,
-            Modifier.align(Alignment.TopCenter)
-        )
-    }
+        },
+    )
 
     GradeDetailDialog(
         uiState = uiState,
@@ -190,51 +165,54 @@ fun GradeScreen(
                 actions = {
                     AssistChip(
                         onClick = {
-                            val value = uiState.semestersSelected.containsValue(false)
-                            uiState.semesters.forEach { semester ->
-                                viewModel.changeSemesterSelected(
-                                    semester, value
-                                )
+                            uiState.semestersSelected?.containsValue(false)?.let {
+                                uiState.semesters?.forEach { semester ->
+                                    viewModel.changeSemesterSelected(
+                                        semester, it
+                                    )
+                                }
+                                viewModel.filterGrades()
                             }
-                            viewModel.filterGrades()
                         },
                         label = {
                             Text(
-                                if (uiState.semestersSelected.containsValue(false))
+                                if (uiState.semestersSelected?.containsValue(false) == true)
                                     stringResource(R.string.select_all) else stringResource(R.string.deselect_all)
                             )
                         }
                     )
                 }
             ) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(-5.dp)
-                ) {
-                    for (semester in uiState.semesters) {
-                        FilterChip(
-                            selected = uiState.semestersSelected[semester] ?: false,
-                            onClick = {
-                                viewModel.changeSemesterSelected(
-                                    semester,
-                                    !(uiState.semestersSelected[semester] ?: false)
-                                )
-                                viewModel.filterGrades()
-                            },
-                            label = { Text(semester) },
-                            leadingIcon = {
-                                SegmentedButtonDefaults.Icon(
-                                    active = uiState.semestersSelected[semester] == true,
-                                    activeContent = {
-                                        Icon(
-                                            Icons.Outlined.Check,
-                                            null,
-                                            Modifier.size(SegmentedButtonDefaults.IconSize)
-                                        )
-                                    },
-                                )
-                            }
-                        )
+                if (uiState.semesters != null) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(-5.dp)
+                    ) {
+                        for (semester in uiState.semesters!!) {
+                            FilterChip(
+                                selected = uiState.semestersSelected?.get(semester) ?: false,
+                                onClick = {
+                                    viewModel.changeSemesterSelected(
+                                        semester,
+                                        !(uiState.semestersSelected?.get(semester) ?: false)
+                                    )
+                                    viewModel.filterGrades()
+                                },
+                                label = { Text(semester) },
+                                leadingIcon = {
+                                    SegmentedButtonDefaults.Icon(
+                                        active = uiState.semestersSelected?.get(semester) == true,
+                                        activeContent = {
+                                            Icon(
+                                                Icons.Outlined.Check,
+                                                null,
+                                                Modifier.size(SegmentedButtonDefaults.IconSize)
+                                            )
+                                        },
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -246,17 +224,18 @@ fun GradeScreen(
                 actions = {
                     AssistChip(
                         onClick = {
-                            val value = uiState.courseTypesSelected.containsValue(false)
-                            uiState.courseTypes.forEach { semester ->
-                                viewModel.changeCourseSortSelected(
-                                    semester, value
-                                )
+                            uiState.courseTypesSelected?.containsValue(false)?.let {
+                                uiState.courseTypes?.forEach { semester ->
+                                    viewModel.changeCourseSortSelected(
+                                        semester, it
+                                    )
+                                }
+                                viewModel.filterGrades()
                             }
-                            viewModel.filterGrades()
                         },
                         label = {
                             Text(
-                                if (uiState.courseTypesSelected.containsValue(false)) stringResource(
+                                if (uiState.courseTypesSelected?.containsValue(false) == true) stringResource(
                                     R.string.select_all
                                 ) else stringResource(R.string.deselect_all)
                             )
@@ -264,34 +243,36 @@ fun GradeScreen(
                     )
                 }
             ) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(-5.dp)
-                ) {
-                    for (courseType in uiState.courseTypes) {
-                        FilterChip(
-                            selected = uiState.courseTypesSelected[courseType] ?: false,
-                            onClick = {
-                                viewModel.changeCourseSortSelected(
-                                    courseType,
-                                    !(uiState.courseTypesSelected[courseType] ?: false)
-                                )
-                                viewModel.filterGrades()
-                            },
-                            label = { Text(courseType) },
-                            leadingIcon = {
-                                SegmentedButtonDefaults.Icon(
-                                    active = uiState.courseTypesSelected[courseType] == true,
-                                    activeContent = {
-                                        Icon(
-                                            Icons.Outlined.Check,
-                                            null,
-                                            Modifier.size(SegmentedButtonDefaults.IconSize)
-                                        )
-                                    }
-                                )
-                            }
-                        )
+                if (uiState.courseTypes != null) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(-5.dp)
+                    ) {
+                        for (courseType in uiState.courseTypes!!) {
+                            FilterChip(
+                                selected = uiState.courseTypesSelected?.get(courseType) ?: false,
+                                onClick = {
+                                    viewModel.changeCourseSortSelected(
+                                        courseType,
+                                        !(uiState.courseTypesSelected?.get(courseType) ?: false)
+                                    )
+                                    viewModel.filterGrades()
+                                },
+                                label = { Text(courseType) },
+                                leadingIcon = {
+                                    SegmentedButtonDefaults.Icon(
+                                        active = uiState.courseTypesSelected?.get(courseType) == true,
+                                        activeContent = {
+                                            Icon(
+                                                Icons.Outlined.Check,
+                                                null,
+                                                Modifier.size(SegmentedButtonDefaults.IconSize)
+                                            )
+                                        }
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

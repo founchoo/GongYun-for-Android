@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.NetworkRepository
+import com.dart.campushelper.data.Result
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.utils.DateUtils
 import com.dart.campushelper.utils.getCurrentNode
 import com.dart.campushelper.utils.getWeekCount
-import com.example.example.PlannedCourse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,8 +30,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class ScheduleUiState constructor(
-    val courses: List<Course> = emptyList(),
-    val isTimetableLoading: Boolean = true,
+    val courses: Result<List<Course>>? = null,
     val currentWeek: Int,
     val browsedWeek: Int,
     // Indicate the day of week, 1 for Monday, 7 for Sunday
@@ -38,8 +38,6 @@ data class ScheduleUiState constructor(
     // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
     val currentNode: Int = 1,
     val isCourseDetailDialogOpen: Boolean = false,
-    val isNonEmptyClrLoading: Boolean = true,
-    val isEmptyClrLoading: Boolean = true,
     val isShowWeekSliderDialog: Boolean = false,
     val nodeHeaders: IntRange = (1..10),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
@@ -57,18 +55,16 @@ data class ScheduleUiState constructor(
     val semesters: List<String> = emptyList(),
     val browsedSemester: String = "",
     val startLocalDate: LocalDate? = null,
-    val nonEmptyClassrooms: List<Course>? = null,
-    val buildingNames: List<String> = emptyList(),
-    val emptyClassrooms: List<Classroom>? = null,
+    val teachingClassrooms: Result<List<Course>>? = null,
+    val buildingNames: List<String>? = null,
+    val emptyClassrooms: Result<List<Classroom>>? = null,
     val holdingCourseTooltipState: TooltipState = TooltipState(isPersistent = true),
     val holdingSemesterTooltipState: TooltipState = TooltipState(isPersistent = true),
-    val scheduleNotes: List<ScheduleNoteItem>? = null,
+    val scheduleNotes: Result<List<ScheduleNoteItem>>? = null,
     val isShowScheduleNotesSheet: Boolean = false,
-    val isScheduleNotesLoading: Boolean = true,
-    val plannedSchedule: List<PlannedCourse>? = null,
+    val plannedSchedule: Result<List<PlannedCourse>>? = null,
     val isShowPlannedScheduleSheet: Boolean = false,
-    val isPlannedScheduleLoading: Boolean = true,
-    val isShowNonEmptyClassroomSheet: Boolean = false,
+    val isShowTeachingClassroomSheet: Boolean = false,
     val isShowEmptyClassroomSheet: Boolean = false,
     val dayOfWeekOnHoldingCourse: Int = 0,
     val nodeNoOnHoldingCourse: Int = 0,
@@ -90,11 +86,6 @@ class ScheduleViewModel @Inject constructor(
         )
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
-
-    /**
-     * 开学日期，如：2021-09-06
-     */
-    private var startLocalDate: LocalDate? = null
 
     private val yearAndSemesterStateFlow =
         dataStoreRepository.observeYearAndSemester().stateIn(
@@ -184,51 +175,53 @@ class ScheduleViewModel @Inject constructor(
                 listOf(yearAndSemester, enterUniversityYear)
             }.collect {
                 if (it[0].isNotEmpty() && it[1].isNotEmpty()) {
-                    val semesterYearStart = it[1].toInt()
-                    val semesterYearEnd = it[0].take(4).toInt()
-                    val semesterNoEnd = it[0].last().toString().toInt()
-                    val semesters = mutableListOf<String>()
-                    (semesterYearStart..semesterYearEnd).forEach { year ->
-                        (1..2).forEach { no ->
-                            if (year == semesterYearEnd && no > semesterNoEnd) {
-                                return@forEach
-                            }
-                            semesters.add("$year-${year + 1}-$no")
-                        }
-                    }
-                    _uiState.update { uiState ->
-                        uiState.copy(browsedSemester = it[0], semesters = semesters)
-                    }
-                    getCourses()
+                    loadSemesterList()
+                    loadSchedule()
                 }
             }
+        }
+    }
+
+    fun loadSemesterList() {
+        val semesterYearStart = enterUniversityYearStateFlow.value.toInt()
+        val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
+        val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
+        val semesters = mutableListOf<String>()
+        (semesterYearStart..semesterYearEnd).forEach { year ->
+            (1..2).forEach { no ->
+                if (year == semesterYearEnd && no > semesterNoEnd) {
+                    return@forEach
+                }
+                semesters.add("$year-${year + 1}-$no")
+            }
+        }
+        _uiState.update { uiState ->
+            uiState.copy(browsedSemester = yearAndSemesterStateFlow.value, semesters = semesters)
         }
     }
 
     /**
      * 当切换学年学期时，此方法应该被调用
      */
-    private suspend fun getStartLocalDate(yearAndSemester: String? = null) {
-        val list = networkRepository.getCalendar(yearAndSemester)
-        if (list != null) {
-            val first = list[0]
-            val day = first.monday ?: (first.tuesday ?: (first.wednesday
-                ?: (first.thursday ?: (first.friday ?: (first.saturday ?: first.sunday ?: "")))))
-            val date =
-                first.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day)
-            startLocalDate =
-                LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            _uiState.update {
-                it.copy(
-                    startLocalDate = startLocalDate
-                )
-            }
-            if (yearAndSemester == null) {
-                val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
-                _uiState.update { uiState ->
-                    uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
-                }
-            }
+    private suspend fun getStartLocalDate(yearAndSemester: String?) {
+        _uiState.update {
+            it.copy(
+                startLocalDate = networkRepository.getCalendar(yearAndSemester).data?.firstOrNull()
+                    ?.let { found ->
+                        (found.monday ?: (found.tuesday ?: (found.wednesday
+                            ?: (found.thursday ?: (found.friday ?: (found.saturday
+                                ?: found.sunday))))))?.let { day ->
+                            LocalDate.parse(
+                                found.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day),
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                            )
+                        }
+                    }
+            )
+        }
+        val currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now())
+        _uiState.update { uiState ->
+            uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
         }
     }
 
@@ -266,32 +259,20 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    suspend fun getCourses(yearAndSemester: String? = null) {
-        _uiState.update { uiState ->
-            uiState.copy(isTimetableLoading = true)
-        }
+    suspend fun loadSchedule(yearAndSemester: String? = null) {
+        _uiState.update { it.copy(courses = null) }
         getStartLocalDate(yearAndSemester)
         // Log.d("ScheduleViewModel", "getCourses")
-        val resource = networkRepository.getSchedule(yearAndSemester)
         // Log.d("ScheduleViewModel", "getCourses: resource: $resource")
-        if (resource != null) {
-            val courses = resource.filter {
-                (it.nodeNo!! + 1) % 2 == 0
-            }.map {
-                it.copy(nodeNo = (it.nodeNo!! + 1) / 2)
-            }
-            _uiState.update { uiState ->
-                uiState.copy(isTimetableLoading = false, courses = courses)
-            }
+        _uiState.update {
+            it.copy(courses = networkRepository.getSchedule(yearAndSemester))
         }
     }
 
-    suspend fun getNonEmptyClassrooms(dayOfWeek: Int, node: Int) {
-        _uiState.update {
-            it.copy(isNonEmptyClrLoading = true)
-        }
+    suspend fun loadTeachingClassrooms(dayOfWeek: Int, node: Int) {
+        _uiState.update { it.copy(buildingNames = null, teachingClassrooms = null) }
         val startNode = node * 2 - 1
-        val response = networkRepository.getGlobalSchedule(
+        val result = networkRepository.getGlobalSchedule(
             yearAndSemester = _uiState.value.browsedSemester,
             startWeekNo = _uiState.value.browsedWeek.toString(),
             endWeekNo = _uiState.value.browsedWeek.toString(),
@@ -300,74 +281,69 @@ class ScheduleViewModel @Inject constructor(
             startNode = startNode.toString(),
             endNode = (node * 2).toString(),
         )
-        if (response != null) {
-            val nonEmptyClassrooms = mutableListOf<Course>()
-            response.results.forEach { course ->
-                val classroomList = course.classroom.split(", ")
-                if (classroomList.size > 1) {
-                    course.sksjdd!!.split("\n").forEach { info ->
-                        val items = info.split(" ")
-                        if (toMachineReadableWeekNoList(items[0]).contains(_uiState.value.browsedWeek)) {
-                            if (when (items[1]) {
-                                    "周一" -> 1
-                                    "周二" -> 2
-                                    "周三" -> 3
-                                    "周四" -> 4
-                                    "周五" -> 5
-                                    "周六" -> 6
-                                    "周日" -> 7
-                                    else -> 0
-                                } == dayOfWeek
-                            ) {
-                                if (items[2].replace("小节", "")
-                                        .split("-")[0].toInt() == startNode
-                                ) {
-                                    nonEmptyClassrooms.add(
-                                        Course().copy(
-                                            courseNameHtml = course.courseNameHtml,
-                                            classroomNameHtml = items[3],
-                                            teacherNameHtml = course.teacherNameHtml,
-                                            classNameHtml = course.classNameHtml,
-                                        )
-                                    )
+        var teachingClassrooms: List<Course>? = null
+        result.data?.forEach { course ->
+            if (course.classroom.split(", ").size > 1) {
+                course.sksjdd!!.split("\n").forEach {
+                    val items = it.split(" ")
+                    if (toMachineReadableWeekNoList(items[0]).contains(_uiState.value.browsedWeek)) {
+                        if (when (items[1]) {
+                                "周一" -> 1
+                                "周二" -> 2
+                                "周三" -> 3
+                                "周四" -> 4
+                                "周五" -> 5
+                                "周六" -> 6
+                                "周日" -> 7
+                                else -> 0
+                            } == dayOfWeek
+                        ) {
+                            if (items[2].replace("小节", "").split("-")[0].toInt() == startNode) {
+                                val tmp = Course().copy(
+                                    courseNameHtml = course.courseNameHtml,
+                                    classroomNameHtml = items[3],
+                                    teacherNameHtml = course.teacherNameHtml,
+                                    classNameHtml = course.classNameHtml,
+                                )
+                                teachingClassrooms = if (teachingClassrooms == null) {
+                                    listOf(tmp)
+                                } else {
+                                    teachingClassrooms!!.plus(tmp)
                                 }
                             }
                         }
                     }
                 }
             }
-            _uiState.update {
-                it.copy(
-                    buildingNames = nonEmptyClassrooms.map { course ->
-                        course.classroomName?.split("-")?.get(0) ?: ""
-                    }.distinct().sorted(),
-                    nonEmptyClassrooms = nonEmptyClassrooms.distinct()
-                        .sortedBy { item -> item.classroomName },
-                    isNonEmptyClrLoading = false,
-                )
-            }
+        }
+        if (result.data != null && teachingClassrooms == null) {
+            teachingClassrooms = emptyList()
+        }
+        _uiState.update {
+            it.copy(
+                buildingNames = teachingClassrooms?.map { course ->
+                    course.classroomName?.split("-")?.get(0) ?: ""
+                }?.distinct()?.sorted(),
+                teachingClassrooms = Result(teachingClassrooms?.distinct()
+                    ?.sortedBy { item -> item.classroomName }),
+            )
         }
     }
 
     suspend fun loadEmptyClassroom(dayOfWeek: Int, node: Int) {
-        _uiState.update {
-            it.copy(isEmptyClrLoading = true)
-        }
-        val response = networkRepository.getEmptyClassroom(
+        _uiState.update { it.copy(buildingNames = null, emptyClassrooms = null) }
+        val result = networkRepository.getEmptyClassroom(
             weekNo = listOf(_uiState.value.browsedWeek),
             dayOfWeekNo = listOf(dayOfWeek),
             nodeNo = listOf(node),
         )
-        if (response != null) {
-            _uiState.update {
-                it.copy(
-                    buildingNames = response.results.map { course ->
-                        course.buildingName ?: ""
-                    }.distinct().sorted(),
-                    emptyClassrooms = response.results,
-                    isEmptyClrLoading = false,
-                )
-            }
+        _uiState.update {
+            it.copy(
+                buildingNames = result.data?.map { course ->
+                    course.buildingName ?: ""
+                }?.distinct()?.sorted(),
+                emptyClassrooms = result,
+            )
         }
     }
 
@@ -385,35 +361,11 @@ class ScheduleViewModel @Inject constructor(
         return list
     }
 
-    fun clearNonEmptyClassrooms() {
+    suspend fun loadScheduleNotes() {
         _uiState.update {
             it.copy(
-                nonEmptyClassrooms = emptyList()
+                scheduleNotes = networkRepository.getScheduleNotes(_uiState.value.browsedSemester),
             )
-        }
-    }
-
-    fun clearEmptyClassrooms() {
-        _uiState.update {
-            it.copy(
-                emptyClassrooms = emptyList()
-            )
-        }
-    }
-
-    fun loadScheduleNotes() {
-        _uiState.update {
-            it.copy(
-                isScheduleNotesLoading = true,
-            )
-        }
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    scheduleNotes = networkRepository.getScheduleNotes(_uiState.value.browsedSemester),
-                    isScheduleNotesLoading = false
-                )
-            }
         }
     }
 
@@ -426,16 +378,13 @@ class ScheduleViewModel @Inject constructor(
     fun loadPlannedSchedule() {
         _uiState.update {
             it.copy(
-                isPlannedScheduleLoading = true,
                 isShowPlannedScheduleSheet = true,
             )
         }
         viewModelScope.launch {
-            val list = networkRepository.getPlannedSchedule()?.results
             _uiState.update {
                 it.copy(
-                    plannedSchedule = list,
-                    isPlannedScheduleLoading = false
+                    plannedSchedule = networkRepository.getPlannedSchedule(),
                 )
             }
         }
@@ -449,7 +398,7 @@ class ScheduleViewModel @Inject constructor(
 
     fun setIsShowNonEmptyClassroomSheet(value: Boolean) {
         _uiState.update {
-            it.copy(isShowNonEmptyClassroomSheet = value)
+            it.copy(isShowTeachingClassroomSheet = value)
         }
     }
 

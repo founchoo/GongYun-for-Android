@@ -1,24 +1,22 @@
 package com.dart.campushelper.data
 
 import androidx.compose.material3.SnackbarResult
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.model.CalendarItem
+import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.model.EmptyClassroomResponse
-import com.dart.campushelper.model.GlobalCourseResponse
-import com.dart.campushelper.model.GradeResponse
+import com.dart.campushelper.model.GlobalCourse
+import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
-import com.dart.campushelper.model.LoginResponse
+import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.Ranking
 import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.SubRankingType
 import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.utils.Constants.Companion.LOGIN_INFO_ERROR
-import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
-import com.dart.campushelper.utils.Constants.Companion.RETRY
-import com.example.example.PlannedScheduleResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -30,6 +28,11 @@ import org.jsoup.Jsoup
 import retrofit2.Call
 import retrofit2.awaitResponse
 import javax.inject.Inject
+
+class Result<T>(
+    val data: T?,
+    val isSuccess: Boolean = data != null,
+)
 
 class NetworkRepository @Inject constructor(
     private val networkService: NetworkService,
@@ -74,69 +77,87 @@ class NetworkRepository @Inject constructor(
             }
         )
 
-    private suspend fun reLogin(): Boolean = login(
+    private suspend fun reLogin(): Boolean? = login(
         username = usernameStateFlow.value,
         password = passwordStateFlow.value,
-    ).isSuccess
+    )
 
-    private suspend fun <T> retry(call: Call<T>): T? {
+    private suspend fun <T> showSnackBarWithRetryButton(call: Call<T>): Result<T> {
+        val result = MainActivity.snackBarHostState.showSnackbar(
+            context.getString(R.string.network_connection_error),
+            context.getString(R.string.retry),
+            true
+        )
+        return if (result == SnackbarResult.ActionPerformed) {
+            tryRequest(call)
+        } else {
+            return Result(null, false)
+        }
+    }
+
+    /**
+     * This method is only for requests which are not handling the login process
+     */
+    private suspend fun <T> tryRequest(call: Call<T>): Result<T> {
         // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
             val code = res.code()
             // Log.d("ChaoxingRepository", "Response code: $code")
+            // Success to response
             if (code == 200) {
-                return res.body()
+                return Result(res.body())
+                // Fail to response due to invalid cookies info, need re-login
             } else if (code == 303) {
-                if (reLogin()) {
-                    return retry(call.clone())
+                // Success to login
+                if (reLogin() == true) {
+                    // Do the original request again
+                    return tryRequest(call.clone())
+                    // Encounter problems during login
                 } else {
-                    return null
+                    // return showSnackBarWithRetryButton(call.clone())
+                    return Result(null)
                 }
+                // Fail to response due to other issues.
             } else {
-                throw Exception(NETWORK_CONNECT_ERROR)
+                // return showSnackBarWithRetryButton(call.clone())
+                return Result(null)
             }
         } catch (e: Exception) {
             // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
-            val result = MainActivity.snackBarHostState.showSnackbar(
-                NETWORK_CONNECT_ERROR,
-                RETRY
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                return retry(call.clone())
-            } else {
-                return null
-            }
+            // return showSnackBarWithRetryButton(call.clone())
+            return Result(null)
         }
     }
 
     suspend fun getCalendar(
         yearAndSemester: String?
-    ): List<CalendarItem>? = retry(
-        networkService.getCalendar(yearAndSemester ?: yearAndSemesterStateFlow.value)
-    )?.filter { it.weekNo?.toInt() != 0 }
+    ): Result<List<CalendarItem>> =
+        Result(
+            tryRequest(
+                networkService.getCalendar(
+                    yearAndSemester ?: yearAndSemesterStateFlow.value
+                )
+            ).data?.filter { it.weekNo?.toInt() != 0 })
 
-    suspend fun getGrades(): GradeResponse? = retry(networkService.getGrades())
+    suspend fun getGrades(): Result<List<Grade>> =
+        tryRequest(networkService.getGrades()).data.run { Result(this?.results) }
 
-    private suspend fun getStudentRankingInfoRaw(yearAndSemester: String): String? = retry(
-        networkService.getStudentRankingInfoRaw(
-            enterUniversityYear = enterUniversityYearStateFlow.value,
-            yearAndSemester = yearAndSemester,
-        )
-    )
-
-    suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): RankingInfo? {
-        val stuRankInfoResult = getStudentRankingInfoRaw(
-            yearAndSemesters.joinToString(","),
-        )
-        if (stuRankInfoResult != null) {
-            val rankingInfo = RankingInfo()
-            Jsoup.parse(stuRankInfoResult).run {
+    suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): Result<RankingInfo> {
+        var rankingInfo: RankingInfo? = null
+        tryRequest(
+            networkService.getStudentRankingInfoRaw(
+                enterUniversityYear = enterUniversityYearStateFlow.value,
+                yearAndSemester = yearAndSemesters.joinToString(","),
+            )
+        ).data?.let {
+            rankingInfo = RankingInfo()
+            Jsoup.parse(it).run {
                 select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
                     hostElement.select("td")
                         .forEachIndexed { subRankingType, subElement ->
                             if (subRankingType > 0) {
-                                rankingInfo.setRanking(
+                                rankingInfo!!.setRanking(
                                     HostRankingType.values()[hostRankingType - 1],
                                     SubRankingType.values()[subRankingType - 1],
                                     subElement.text().split("/").let {
@@ -151,45 +172,49 @@ class NetworkRepository @Inject constructor(
                         }
                 }
             }
-            return rankingInfo
         }
-        return null
+        return Result(rankingInfo)
     }
 
     suspend fun getSchedule(
         yearAndSemester: String?
-    ): List<Course>? = retry(
+    ): Result<List<Course>> = tryRequest(
         networkService.getSchedule(
             yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
             studentId = usernameStateFlow.value,
             semesterNo = ((yearAndSemester ?: yearAndSemesterStateFlow.value).lastOrNull()
                 ?: "").toString(),
         )
-    )
-
-    private suspend fun getScheduleNotesRaw(
-        yearAndSemester: String?
-    ): String? = retry(
-        networkService.getScheduleNotesRaw(
-            yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
-        )
-    )
+    ).data?.filter {
+        (it.nodeNo!! + 1) % 2 == 0
+    }?.map {
+        it.copy(nodeNo = (it.nodeNo!! + 1) / 2)
+    }.run {
+        Result(this)
+    }
 
     suspend fun getScheduleNotes(
         yearAndSemester: String?
-    ): List<ScheduleNoteItem>? = getScheduleNotesRaw(yearAndSemester)?.let { html ->
-        Jsoup.parse(html).select("td[colspan=8]").first()?.html()?.trim()?.split("<br>")?.dropLast(1)?.map {
-            val openBracketIndex = it.indexOf("【")
-            val closeBracketIndex = it.indexOf("】")
-            if (openBracketIndex == -1 || closeBracketIndex == -1) {
-                ScheduleNoteItem(it.trim(), "")
-            } else {
-                ScheduleNoteItem(
-                    it.substring(0, openBracketIndex).trim(),
-                    it.substring(openBracketIndex + 1, closeBracketIndex).trim()
-                )
-            }
-        }
+    ): Result<List<ScheduleNoteItem>> {
+        return tryRequest(
+            networkService.getScheduleNotesRaw(yearAndSemester ?: yearAndSemesterStateFlow.value)
+        ).data?.let {
+            Jsoup.parse(it).select("td[colspan=8]").first()?.html()?.trim()?.split("<br>")
+                ?.dropLast(1)?.map {
+                    val openBracketIndex = it.indexOf("【")
+                    val closeBracketIndex = it.indexOf("】")
+                    if (openBracketIndex == -1 || closeBracketIndex == -1) {
+                        ScheduleNoteItem(it.trim(), "")
+                    } else {
+                        ScheduleNoteItem(
+                            it.substring(0, openBracketIndex).trim(),
+                            it.substring(openBracketIndex + 1, closeBracketIndex).trim()
+                        )
+                    }
+                }.run {
+                    Result(this)
+                }
+        } ?: Result(null)
     }
 
     suspend fun getGlobalSchedule(
@@ -200,8 +225,8 @@ class NetworkRepository @Inject constructor(
         endDayOfWeek: String,
         startNode: String,
         endNode: String,
-    ): GlobalCourseResponse? =
-        retry(
+    ): Result<List<GlobalCourse>> =
+        tryRequest(
             networkService.getGlobalSchedule(
                 yearAndSemester = yearAndSemester,
                 startWeekNo = startWeekNo,
@@ -211,29 +236,30 @@ class NetworkRepository @Inject constructor(
                 startNode = startNode,
                 endNode = endNode,
             )
-        )
+        ).data.run { Result(this?.results) }
 
-    suspend fun getPlannedSchedule(): PlannedScheduleResponse? = retry(networkService.getPlannedSchedule())
+    suspend fun getPlannedSchedule(): Result<List<PlannedCourse>> =
+        tryRequest(networkService.getPlannedSchedule()).data.run { Result(this?.results) }
 
     suspend fun getEmptyClassroom(
         dayOfWeekNo: List<Int>,
         nodeNo: List<Int>,
         weekNo: List<Int>,
-    ): EmptyClassroomResponse? = retry(
+    ): Result<List<Classroom>> = tryRequest(
         networkService.getEmptyClassroom(
             dayOfWeekNo = dayOfWeekNo.joinToString(","),
             nodeNo = nodeNo.joinToString(","),
             weekNo = weekNo.joinToString(","),
         )
-    )
+    ).data.run { Result(this?.results) }
 
-    suspend fun getStudentInfo(): StudentInfoResponse? = retry(networkService.getStudentInfo())
+    suspend fun getStudentInfo(): Result<StudentInfoResponse> =
+        tryRequest(networkService.getStudentInfo())
 
     suspend fun login(
         username: String,
         password: String,
-        showErrorToast: Boolean = false,
-    ): LoginResponse {
+    ): Boolean? {
         val call = networkService.login(
             username = username,
             password = password,
@@ -242,30 +268,15 @@ class NetworkRepository @Inject constructor(
         // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
-            val code = res.code()
             // Log.d("ChaoxingRepository", "Response code: $code")
-            if (code == 200) {
-                return LoginResponse(false, LOGIN_INFO_ERROR)
-            } else if (code == 302) {
-                return LoginResponse(true, null)
-            } else {
-                throw Exception(NETWORK_CONNECT_ERROR)
+            return when (res.code()) {
+                200 -> false
+                302 -> true
+                else -> null
             }
         } catch (e: Exception) {
             // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
-            return if (showErrorToast) {
-                val result = MainActivity.snackBarHostState.showSnackbar(
-                    NETWORK_CONNECT_ERROR,
-                    RETRY
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    login(username, password)
-                } else {
-                    LoginResponse.error()
-                }
-            } else {
-                LoginResponse.error()
-            }
+            return null
         }
     }
 }

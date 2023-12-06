@@ -1,8 +1,9 @@
 package com.dart.campushelper.di
 
+import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.utils.Constants.Companion.NETWORK_CONNECT_ERROR
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,8 +48,8 @@ object NetworkModule {
                         .protocol(Protocol.HTTP_1_1)
                         .code(502)
                         .request(chain.request())
-                        .message(NETWORK_CONNECT_ERROR)
-                        .body(NETWORK_CONNECT_ERROR.toResponseBody())
+                        .message(context.getString(R.string.network_connection_error))
+                        .body(context.getString(R.string.network_connection_error).toResponseBody())
                         .build()
                 }
             }

@@ -60,7 +60,7 @@
     <string name="show_date_desc">Display the corresponding date below the day of the week</string>
     <string name="show_node_time_title">Show time period</string>
     <string name="show_node_time_desc">Show the class time period below the section</string>
-    <string name="show_pin_title">(Experimental) Pin courses to desktop</string>
+    <string name="show_pin_title">Pin courses to desktop</string>
     <string name="show_pin_desc">Please make sure you have granted the \"Desktop Shortcut\" permission</string>
     <string name="display">Display</string>
     <string name="system_color_title">System theme color</string>
@@ -125,4 +125,10 @@
     <string name="schedule_other_info_empty">No timetable notes information yet</string>
     <string name="planned_schedule_info_title">Course plan</string>
     <string name="planned_schedule_info_empty">No course plan yet</string>
+    <string name="sort_title">Sort</string>
+    <string name="no_schedule_today">No schedule today</string>
+    <string name="refresh">Refresh</string>
+    <string name="retry">Retry</string>
+    <string name="network_connection_error">Network connection error</string>
+    <string name="login_info_error">Invalid student # or password</string>
 </resources>

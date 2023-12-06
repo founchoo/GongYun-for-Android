@@ -13,15 +13,15 @@ android {
         applicationId 'com.dart.campushelper'
         minSdk 26
         targetSdk 34
-        versionCode 15
-        versionName "1.1.3"
+        versionCode 16
+        versionName "1.1.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
 
-        resourceConfigurations += ["zh-rCN", "zh-rTW", "en", "ja", "ko", "th", "id"]
+        resourceConfigurations += ["zh-rCN", "en"]
     }
 
     buildTypes {

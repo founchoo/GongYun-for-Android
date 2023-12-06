@@ -30,7 +30,6 @@ import com.dart.campushelper.ui.component.TooltipIconButton
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.dart.campushelper.viewmodel.GradeViewModel
-import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,9 +58,7 @@ fun ActionsForGrade(
         label = R.string.data_summary,
         imageVector = Icons.Outlined.ShowChart,
         onClick = {
-            scope.launch {
-                viewModel.loadLineChart()
-            }
+            viewModel.loadLineChart()
             viewModel.setOpenSummarySheet(true)
         },
     )
@@ -76,7 +73,6 @@ fun ActionsForGrade(
         ) {
             item {
                 ColumnCard(
-                    isLoadingPlaceholderShow = uiState.isGradesLoading,
                     icon = Icons.Outlined.Score,
                     title = stringResource(R.string.course_grade),
                     description = stringResource(R.string.course_grades_desc)
@@ -107,7 +103,6 @@ fun ActionsForGrade(
             item {
                 if (uiState.rankingAvailable) {
                     ColumnCard(
-                        isLoadingPlaceholderShow = uiState.isRankingInfoLoading,
                         icon = Icons.Outlined.Groups,
                         title = stringResource(R.string.rank_title),
                         description = stringResource(R.string.rank_desc)
@@ -118,7 +113,6 @@ fun ActionsForGrade(
                 } else {
                     ColumnCard(
                         useErrorColor = true,
-                        isLoadingPlaceholderShow = uiState.isGradesLoading,
                         icon = Icons.Outlined.Groups,
                         title = stringResource(R.string.rank_not_available_title),
                     ) {
@@ -143,7 +137,6 @@ fun ActionsForGrade(
             }
             item {
                 ColumnCard(
-                    isLoadingPlaceholderShow = uiState.isLineChartLoading,
                     icon = Icons.Outlined.Timeline,
                     title = stringResource(R.string.performance_curve),
                 ) {

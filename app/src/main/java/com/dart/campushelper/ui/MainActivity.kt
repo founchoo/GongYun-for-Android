@@ -241,10 +241,9 @@ class MainActivity : AppCompatActivity() {
                                                         style = MaterialTheme.typography.labelSmall,
                                                     )
                                                     Text(
-                                                        text = String.format(
-                                                            stringResource(
-                                                                R.string.week_indicator
-                                                            ), scheduleUiState.browsedWeek
+                                                        text = stringResource(
+                                                            R.string.week_indicator,
+                                                            scheduleUiState.browsedWeek.toString()
                                                         ),
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis,
@@ -414,7 +413,11 @@ class MainActivity : AppCompatActivity() {
                     floatingActionButton = {
                         if (mainUiState.isLogin) {
                             when (currentDestination?.route) {
-                                grade.route -> FloatingActionButtonForGrade(gradeUiState, gradeViewModel)
+                                grade.route -> FloatingActionButtonForGrade(
+                                    gradeUiState,
+                                    gradeViewModel
+                                )
+
                                 else -> null
                             }
                         }

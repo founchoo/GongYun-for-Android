@@ -2,11 +2,9 @@ package com.dart.campushelper.ui.widget
 
 import android.content.res.Resources
 import android.os.Build
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceModifier
-import androidx.glance.LocalContext
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
@@ -73,11 +71,6 @@ fun GlanceModifier.appWidgetInnerCornerRadius(): GlanceModifier {
         cornerRadius(8.dp)
     }
     return this
-}
-
-@Composable
-fun stringResource(@StringRes id: Int, vararg args: Any): String {
-    return LocalContext.current.getString(id, args)
 }
 
 val Float.toPx get() = this * Resources.getSystem().displayMetrics.density
