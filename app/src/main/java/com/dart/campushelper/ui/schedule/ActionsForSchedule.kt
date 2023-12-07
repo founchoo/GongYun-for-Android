@@ -10,7 +10,6 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,18 +33,18 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
     TooltipIconButton(
         label = R.string.last_week,
         imageVector = Icons.Outlined.ChevronLeft,
-        enabled = uiState.browsedWeek > 1,
+        enabled = uiState.browsedWeek != null && uiState.browsedWeek > 1,
         onClick = {
-            viewModel.setBrowsedWeek(uiState.browsedWeek - 1)
+            uiState.browsedWeek?.minus(1)?.let { viewModel.setBrowsedWeek(it) }
         },
     )
 
     TooltipIconButton(
         label = R.string.next_week,
         imageVector = Icons.Outlined.ChevronRight,
-        enabled = uiState.browsedWeek < 20,
+        enabled = uiState.browsedWeek != null && uiState.browsedWeek < 20,
         onClick = {
-            viewModel.setBrowsedWeek(uiState.browsedWeek + 1)
+            uiState.browsedWeek?.plus(1)?.let { viewModel.setBrowsedWeek(it) }
         },
     )
 
@@ -81,9 +80,6 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
             onClick = {
                 isMenuExpanded = false
                 viewModel.setIsShowScheduleNotesSheet(true)
-                viewModel.viewModelScope.launch {
-                    viewModel.loadScheduleNotes()
-                }
             },
         )
         DropdownMenuItem(
@@ -94,7 +90,6 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
             onClick = {
                 isMenuExpanded = false
                 viewModel.setIsShowPlannedScheduleSheet(true)
-                viewModel.loadPlannedSchedule()
             },
         )
     }

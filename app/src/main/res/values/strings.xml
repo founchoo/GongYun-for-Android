@@ -134,4 +134,5 @@
     <string name="retry">重试</string>
     <string name="network_connection_error">网络连接有误</string>
     <string name="login_info_error">学号或密码有误</string>
+    <string name="switch_week">切换周数</string>
 </resources>

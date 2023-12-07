@@ -201,54 +201,56 @@ class MainActivity : AppCompatActivity() {
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
                                             )
-                                            TooltipBox(
-                                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                                                tooltip = {
-                                                    RichTooltip(
-                                                        title = {
-                                                            Text(
-                                                                stringResource(R.string.switch_schedule),
-                                                                fontWeight = FontWeight.Bold
-                                                            )
-                                                        },
-                                                        action = {
-                                                            TextButton(
-                                                                onClick = {
-                                                                    scope.launch {
-                                                                        scheduleUiState.holdingSemesterTooltipState.dismiss()
+                                            if (scheduleUiState.browsedSemester != null && scheduleUiState.browsedWeek != null) {
+                                                TooltipBox(
+                                                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                                    tooltip = {
+                                                        RichTooltip(
+                                                            title = {
+                                                                Text(
+                                                                    stringResource(R.string.switch_schedule),
+                                                                    fontWeight = FontWeight.Bold
+                                                                )
+                                                            },
+                                                            action = {
+                                                                TextButton(
+                                                                    onClick = {
+                                                                        scope.launch {
+                                                                            scheduleUiState.holdingSemesterTooltipState.dismiss()
+                                                                        }
                                                                     }
+                                                                ) {
+                                                                    Text(stringResource(R.string.close))
                                                                 }
-                                                            ) {
-                                                                Text(stringResource(R.string.close))
-                                                            }
-                                                        }) {
-                                                        Text(stringResource(R.string.switch_schedule_hint))
-                                                    }
-                                                },
-                                                state = scheduleUiState.holdingSemesterTooltipState
-                                            ) {
-                                                Column(
-                                                    Modifier
-                                                        .clip(RoundedCornerShape(5.dp))
-                                                        .clickable {
-                                                            scheduleViewModel.setIsShowWeekSliderDialog(
-                                                                true
-                                                            )
-                                                        },
+                                                            }) {
+                                                            Text(stringResource(R.string.switch_schedule_hint))
+                                                        }
+                                                    },
+                                                    state = scheduleUiState.holdingSemesterTooltipState
                                                 ) {
-                                                    Text(
-                                                        text = scheduleUiState.browsedSemester,
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                    )
-                                                    Text(
-                                                        text = stringResource(
-                                                            R.string.week_indicator,
-                                                            scheduleUiState.browsedWeek.toString()
-                                                        ),
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis,
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                    )
+                                                    Column(
+                                                        Modifier
+                                                            .clip(RoundedCornerShape(5.dp))
+                                                            .clickable {
+                                                                scheduleViewModel.setIsShowWeekSliderDialog(
+                                                                    true
+                                                                )
+                                                            },
+                                                    ) {
+                                                        Text(
+                                                            text = scheduleUiState.browsedSemester!!,
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                        )
+                                                        Text(
+                                                            text = stringResource(
+                                                                R.string.week_indicator,
+                                                                scheduleUiState.browsedWeek!!
+                                                            ),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -428,20 +430,13 @@ class MainActivity : AppCompatActivity() {
                         if (mainUiState.isLogin) schedule.route else settings.route,
                         Modifier.padding(it),
                     ) {
-                        composable(
-                            schedule.route,
-                        ) {
-                            ScheduleScreen(scheduleViewModel)
-                        }
-                        composable(
-                            grade.route,
-                        ) {
-                            GradeScreen(gradeViewModel)
-                        }
-                        composable(
-                            settings.route,
-                        ) {
-                            SettingsScreen(settingsViewModel, loginViewModel)
+                        composable(schedule.route) { ScheduleScreen(scheduleViewModel) }
+                        composable(grade.route) { GradeScreen(gradeViewModel) }
+                        composable(settings.route) {
+                            SettingsScreen(
+                                settingsViewModel,
+                                loginViewModel
+                            )
                         }
                     }
                 }

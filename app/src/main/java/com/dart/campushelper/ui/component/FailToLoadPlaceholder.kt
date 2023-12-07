@@ -13,10 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.R
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun FailToLoadPlaceholder(
-    retry: (() -> Unit)? = null,
+    retry: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -26,7 +27,7 @@ fun FailToLoadPlaceholder(
         Text(text = stringResource(R.string.network_connection_error))
         Spacer(Modifier.width(5.dp))
         TextButton(onClick = {
-            retry?.let { it() }
+            runBlocking { retry() }
         }) {
             Text(
                 text = stringResource(R.string.retry),

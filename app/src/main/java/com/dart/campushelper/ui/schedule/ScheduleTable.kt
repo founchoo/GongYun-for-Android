@@ -34,13 +34,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.ui.component.LoadOnlineDataLayout
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
-import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,7 +49,7 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
 
     val coursesOnCell =
         mutableMapOf<Pair<Int, Int>, List<Course>>()
-    uiState.courses?.data?.forEach { course ->
+    uiState.courses.data?.forEach { course ->
         if ((!uiState.isOtherCourseDisplay && course.weekNoList.contains(
                 uiState.browsedWeek
             )) || uiState.isOtherCourseDisplay
@@ -68,15 +66,14 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
     LoadOnlineDataLayout(
         dataSource = uiState.courses,
         loadData = {
-            viewModel.loadSemesterList()
-            viewModel.viewModelScope.launch {
-                viewModel.loadSchedule(uiState.browsedSemester)
-            }
+            viewModel.loadSchedule(uiState.browsedSemester)
         },
+        autoLoadingArgs = arrayOf(uiState.browsedSemester),
         contentWhenDataSourceIsEmpty = {
             Text(
                 text = stringResource(R.string.no_course),
                 textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         },
         contentWhenDataSourceIsNotEmpty = {
@@ -94,7 +91,11 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                             Text(
                                 text = stringResource(
                                     R.string.year_indicator,
-                                    uiState.startLocalDate?.plusDays((uiState.browsedWeek - 1) * 7L)
+                                    uiState.startLocalDate?.plusDays(
+                                        (uiState.browsedWeek?.minus(1))?.times(
+                                            7L
+                                        ) ?: 0
+                                    )
                                         ?.format(
                                             DateTimeFormatter.ofPattern("yyyy")
                                         )?.takeLast(2) ?: ""
@@ -140,7 +141,11 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                     )
                                     if (uiState.isDateDisplay) {
                                         Text(
-                                            text = uiState.startLocalDate?.plusDays(index + 7L * (uiState.browsedWeek - 1))
+                                            text = uiState.startLocalDate?.plusDays(
+                                                index + 7L * (uiState.browsedWeek?.minus(
+                                                    1
+                                                ) ?: 0)
+                                            )
                                                 ?.format(DateTimeFormatter.ofPattern("M-d"))
                                                 ?: "",
                                             style = MaterialTheme.typography.labelSmall,
@@ -311,12 +316,6 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         text = { Text(stringResource(R.string.occupied_room)) },
                                                         onClick = {
                                                             expanded = false
-                                                            viewModel.viewModelScope.launch {
-                                                                viewModel.loadTeachingClassrooms(
-                                                                    dayOfWeek,
-                                                                    node
-                                                                )
-                                                            }
                                                             viewModel.setIsShowNonEmptyClassroomSheet(
                                                                 true
                                                             )
@@ -326,12 +325,6 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel) {
                                                         text = { Text(stringResource(R.string.free_room)) },
                                                         onClick = {
                                                             expanded = false
-                                                            viewModel.viewModelScope.launch {
-                                                                viewModel.loadEmptyClassroom(
-                                                                    dayOfWeek,
-                                                                    node
-                                                                )
-                                                            }
                                                             viewModel.setIsShowEmptyClassroomSheet(
                                                                 true
                                                             )

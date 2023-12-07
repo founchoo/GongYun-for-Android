@@ -30,9 +30,9 @@ fun ScheduleScreen(
 
     // Dialogs
     CourseDetailDialog(uiState, viewModel)
-    WeekSliderDialog(uiState, viewModel)
 
     // Bottom sheets
+    WeekSliderBottomSheet(uiState, viewModel)
     TeachingClassroomBottomSheet(uiState, viewModel, *args)
     EmptyClassroomBottomSheet(uiState, viewModel, *args)
     ScheduleNotesBottomSheet(uiState, viewModel)

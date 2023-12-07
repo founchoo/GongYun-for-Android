@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.North
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.South
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material3.AssistChip
@@ -35,15 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.ColumnCard
 import com.dart.campushelper.ui.component.LoadOnlineDataLayout
+import com.dart.campushelper.ui.component.TooltipIconButton
 import com.dart.campushelper.ui.component.isScrollingUp
 import com.dart.campushelper.viewmodel.GradeViewModel
 import com.dart.campushelper.viewmodel.SortBasis
-import kotlinx.coroutines.launch
 
 @SuppressLint("RestrictedApi", "CoroutineCreationDuringComposition", "UnrememberedMutableState")
 @OptIn(
@@ -63,11 +63,7 @@ fun GradeScreen(
 
     LoadOnlineDataLayout(
         dataSource = uiState.grades,
-        loadData = {
-            viewModel.viewModelScope.launch {
-                viewModel.getGrades()
-            }
-        },
+        loadData = { viewModel.getGrades() },
         contentWhenDataSourceIsEmpty = {
             Text(
                 text = if (uiState.searchKeyword.isEmpty()) stringResource(R.string.no_grades) else stringResource(
@@ -108,6 +104,12 @@ fun GradeScreen(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true
         ),
+        actions = {
+            TooltipIconButton(label = R.string.reset, imageVector = Icons.Outlined.RestartAlt) {
+                viewModel.resetFilter()
+                viewModel.filterGrades()
+            }
+        },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             ColumnCard(

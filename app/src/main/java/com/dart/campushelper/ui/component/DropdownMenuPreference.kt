@@ -28,7 +28,7 @@ import com.dart.campushelper.utils.Constants
 @Composable
 fun <T> DropdownMenuPreference(
     value: T,
-    imageVector: ImageVector,
+    imageVector: ImageVector? = null,
     title: String,
     selections: List<T>,
     onValueChanged: (index: Int, value: T) -> Unit
@@ -43,12 +43,14 @@ fun <T> DropdownMenuPreference(
             .padding(vertical = Constants.DEFAULT_PADDING)
             .fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .padding(start = 25.dp)
-                .align(Alignment.CenterVertically)
-        ) {
-            Icon(imageVector = imageVector, contentDescription = null)
+        if (imageVector != null) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 25.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
+                Icon(imageVector = imageVector, contentDescription = null)
+            }
         }
         Column(
             modifier = Modifier

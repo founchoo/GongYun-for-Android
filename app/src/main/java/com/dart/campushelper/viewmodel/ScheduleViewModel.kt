@@ -29,10 +29,10 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-data class ScheduleUiState constructor(
-    val courses: Result<List<Course>>? = null,
-    val currentWeek: Int,
-    val browsedWeek: Int,
+data class ScheduleUiState(
+    val courses: Result<List<Course>> = Result(),
+    val currentWeek: Int? = null,
+    val browsedWeek: Int? = null,
     // Indicate the day of week, 1 for Monday, 7 for Sunday
     val dayOfWeek: Int,
     // Indicate the node of the current day, 1 for 8:20 - 9:05, 2 for 9:10 - 9:55, etc.
@@ -53,16 +53,17 @@ data class ScheduleUiState constructor(
     val isDateDisplay: Boolean = false,
     val isTimeDisplay: Boolean = false,
     val semesters: List<String> = emptyList(),
-    val browsedSemester: String = "",
+    val browsedSemester: String? = null,
+    val currentSemester: String? = null,
     val startLocalDate: LocalDate? = null,
-    val teachingClassrooms: Result<List<Course>>? = null,
+    val teachingClassrooms: Result<List<Course>> = Result(),
     val buildingNames: List<String>? = null,
-    val emptyClassrooms: Result<List<Classroom>>? = null,
+    val emptyClassrooms: Result<List<Classroom>> = Result(),
     val holdingCourseTooltipState: TooltipState = TooltipState(isPersistent = true),
     val holdingSemesterTooltipState: TooltipState = TooltipState(isPersistent = true),
-    val scheduleNotes: Result<List<ScheduleNoteItem>>? = null,
+    val scheduleNotes: Result<List<ScheduleNoteItem>> = Result(),
     val isShowScheduleNotesSheet: Boolean = false,
-    val plannedSchedule: Result<List<PlannedCourse>>? = null,
+    val plannedSchedule: Result<List<PlannedCourse>> = Result(),
     val isShowPlannedScheduleSheet: Boolean = false,
     val isShowTeachingClassroomSheet: Boolean = false,
     val isShowEmptyClassroomSheet: Boolean = false,
@@ -79,8 +80,6 @@ class ScheduleViewModel @Inject constructor(
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(
         ScheduleUiState(
-            currentWeek = 1,
-            browsedWeek = 1,
             dayOfWeek = LocalDate.now().dayOfWeek.value,
             currentNode = getCurrentNode(),
         )
@@ -173,59 +172,15 @@ class ScheduleViewModel @Inject constructor(
                 enterUniversityYearStateFlow
             ) { yearAndSemester, enterUniversityYear ->
                 listOf(yearAndSemester, enterUniversityYear)
-            }.collect {
-                if (it[0].isNotEmpty() && it[1].isNotEmpty()) {
-                    loadSemesterList()
-                    loadSchedule()
+            }.collect { data ->
+                if (data[0].isNotEmpty() && data[1].isNotEmpty()) {
+                    _uiState.update { it.copy(currentSemester = data[0]) }
                 }
             }
         }
     }
 
-    fun loadSemesterList() {
-        val semesterYearStart = enterUniversityYearStateFlow.value.toInt()
-        val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
-        val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
-        val semesters = mutableListOf<String>()
-        (semesterYearStart..semesterYearEnd).forEach { year ->
-            (1..2).forEach { no ->
-                if (year == semesterYearEnd && no > semesterNoEnd) {
-                    return@forEach
-                }
-                semesters.add("$year-${year + 1}-$no")
-            }
-        }
-        _uiState.update { uiState ->
-            uiState.copy(browsedSemester = yearAndSemesterStateFlow.value, semesters = semesters)
-        }
-    }
-
-    /**
-     * 当切换学年学期时，此方法应该被调用
-     */
-    private suspend fun getStartLocalDate(yearAndSemester: String?) {
-        _uiState.update {
-            it.copy(
-                startLocalDate = networkRepository.getCalendar(yearAndSemester).data?.firstOrNull()
-                    ?.let { found ->
-                        (found.monday ?: (found.tuesday ?: (found.wednesday
-                            ?: (found.thursday ?: (found.friday ?: (found.saturday
-                                ?: found.sunday))))))?.let { day ->
-                            LocalDate.parse(
-                                found.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day),
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            )
-                        }
-                    }
-            )
-        }
-        val currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now())
-        _uiState.update { uiState ->
-            uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
-        }
-    }
-
-    fun setBrowsedSemester(value: String) {
+    fun setBrowsedSemester(value: String?) {
         _uiState.update {
             it.copy(
                 browsedSemester = value
@@ -260,29 +215,60 @@ class ScheduleViewModel @Inject constructor(
     }
 
     suspend fun loadSchedule(yearAndSemester: String? = null) {
-        _uiState.update { it.copy(courses = null) }
-        getStartLocalDate(yearAndSemester)
-        // Log.d("ScheduleViewModel", "getCourses")
-        // Log.d("ScheduleViewModel", "getCourses: resource: $resource")
-        _uiState.update {
-            it.copy(courses = networkRepository.getSchedule(yearAndSemester))
+        val semesterYearStart = enterUniversityYearStateFlow.value.toInt()
+        val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
+        val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
+        val semesters = mutableListOf<String>()
+        (semesterYearStart..semesterYearEnd).forEach { year ->
+            (1..2).forEach { no ->
+                if (year == semesterYearEnd && no > semesterNoEnd) {
+                    return@forEach
+                }
+                semesters.add("$year-${year + 1}-$no")
+            }
         }
+        _uiState.update {
+            it.copy(
+                browsedSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
+                semesters = semesters,
+                startLocalDate = networkRepository.getCalendar(yearAndSemester)?.firstOrNull()
+                    ?.let { found ->
+                        (found.monday ?: (found.tuesday ?: (found.wednesday
+                            ?: (found.thursday ?: (found.friday ?: (found.saturday
+                                ?: found.sunday))))))?.let { day ->
+                            LocalDate.parse(
+                                found.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day),
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                            )
+                        }
+                    },
+            )
+        }
+        if (_uiState.value.browsedSemester == semesters.last()) {
+            val currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now())
+            _uiState.update { uiState ->
+                uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
+            }
+        }
+        _uiState.update { it.copy(courses = Result(networkRepository.getSchedule(yearAndSemester))) }
     }
 
     suspend fun loadTeachingClassrooms(dayOfWeek: Int, node: Int) {
-        _uiState.update { it.copy(buildingNames = null, teachingClassrooms = null) }
+        _uiState.update { it.copy(buildingNames = null) }
         val startNode = node * 2 - 1
-        val result = networkRepository.getGlobalSchedule(
-            yearAndSemester = _uiState.value.browsedSemester,
-            startWeekNo = _uiState.value.browsedWeek.toString(),
-            endWeekNo = _uiState.value.browsedWeek.toString(),
-            startDayOfWeek = dayOfWeek.toString(),
-            endDayOfWeek = dayOfWeek.toString(),
-            startNode = startNode.toString(),
-            endNode = (node * 2).toString(),
-        )
+        val result = _uiState.value.browsedSemester?.let {
+            networkRepository.getGlobalSchedule(
+                yearAndSemester = it,
+                startWeekNo = _uiState.value.browsedWeek.toString(),
+                endWeekNo = _uiState.value.browsedWeek.toString(),
+                startDayOfWeek = dayOfWeek.toString(),
+                endDayOfWeek = dayOfWeek.toString(),
+                startNode = startNode.toString(),
+                endNode = (node * 2).toString(),
+            )
+        }
         var teachingClassrooms: List<Course>? = null
-        result.data?.forEach { course ->
+        result?.forEach { course ->
             if (course.classroom.split(", ").size > 1) {
                 course.sksjdd!!.split("\n").forEach {
                     val items = it.split(" ")
@@ -316,7 +302,7 @@ class ScheduleViewModel @Inject constructor(
                 }
             }
         }
-        if (result.data != null && teachingClassrooms == null) {
+        if (result != null && teachingClassrooms == null) {
             teachingClassrooms = emptyList()
         }
         _uiState.update {
@@ -331,18 +317,20 @@ class ScheduleViewModel @Inject constructor(
     }
 
     suspend fun loadEmptyClassroom(dayOfWeek: Int, node: Int) {
-        _uiState.update { it.copy(buildingNames = null, emptyClassrooms = null) }
-        val result = networkRepository.getEmptyClassroom(
-            weekNo = listOf(_uiState.value.browsedWeek),
-            dayOfWeekNo = listOf(dayOfWeek),
-            nodeNo = listOf(node),
-        )
+        _uiState.update { it.copy(buildingNames = null) }
+        val result = _uiState.value.browsedWeek?.let {
+            networkRepository.getEmptyClassroom(
+                weekNo = listOf(it),
+                dayOfWeekNo = listOf(dayOfWeek),
+                nodeNo = listOf(node),
+            )
+        }
         _uiState.update {
             it.copy(
-                buildingNames = result.data?.map { course ->
+                buildingNames = result?.map { course ->
                     course.buildingName ?: ""
                 }?.distinct()?.sorted(),
-                emptyClassrooms = result,
+                emptyClassrooms = Result(result),
             )
         }
     }
@@ -364,7 +352,11 @@ class ScheduleViewModel @Inject constructor(
     suspend fun loadScheduleNotes() {
         _uiState.update {
             it.copy(
-                scheduleNotes = networkRepository.getScheduleNotes(_uiState.value.browsedSemester),
+                scheduleNotes = Result(
+                    networkRepository.getScheduleNotes(
+                        _uiState.value.browsedSemester
+                    )
+                ),
             )
         }
     }
@@ -375,18 +367,16 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun loadPlannedSchedule() {
+    suspend fun loadPlannedSchedule() {
         _uiState.update {
             it.copy(
                 isShowPlannedScheduleSheet = true,
             )
         }
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    plannedSchedule = networkRepository.getPlannedSchedule(),
-                )
-            }
+        _uiState.update {
+            it.copy(
+                plannedSchedule = Result(networkRepository.getPlannedSchedule()),
+            )
         }
     }
 

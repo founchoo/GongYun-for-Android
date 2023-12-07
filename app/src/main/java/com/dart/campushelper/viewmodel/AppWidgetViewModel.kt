@@ -38,8 +38,8 @@ class AppWidgetViewModel @Inject constructor(
         getCurrentWeek(null)
         // Log.d("AppWidgetViewModel", "getTodaySchedule: ")
         val result = networkRepository.getSchedule(null)
-        if (result.data != null) {
-            val courses = result.data.filter { course ->
+        if (result != null) {
+            val courses = result.filter { course ->
                 course.nodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
                     _uiState.value.currentWeek
                 )
@@ -54,8 +54,8 @@ class AppWidgetViewModel @Inject constructor(
     @WorkerThread
     private suspend fun getCurrentWeek(yearAndSemester: String?) {
         val list = networkRepository.getCalendar(yearAndSemester)
-        if (list.data != null) {
-            val first = list.data[0]
+        if (list != null) {
+            val first = list[0]
             val day = first.monday ?: (first.tuesday ?: (first.wednesday
                 ?: (first.thursday ?: (first.friday ?: (first.saturday ?: first.sunday ?: "")))))
             val date =

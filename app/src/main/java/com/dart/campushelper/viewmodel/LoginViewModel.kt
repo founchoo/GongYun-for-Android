@@ -43,11 +43,11 @@ class LoginViewModel @Inject constructor(
                     if (studentInfoResult != null) {
                         // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].dataXnxq!!)
                         runBlocking {
-                            dataStoreRepository.changeSemesterYearAndNo(studentInfoResult.data?.data!!.records[0].dataXnxq!!)
+                            dataStoreRepository.changeSemesterYearAndNo(studentInfoResult.data!!.records[0].dataXnxq!!)
                         }
                         // Log.d("LoginViewModel", studentInfoResult.data!!.records[0].rxnj!!)
                         runBlocking {
-                            dataStoreRepository.changeEnterUniversityYear(studentInfoResult.data?.data!!.records[0].rxnj!!)
+                            dataStoreRepository.changeEnterUniversityYear(studentInfoResult.data!!.records[0].rxnj!!)
                         }
                     }
                     runBlocking {

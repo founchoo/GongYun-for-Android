@@ -8,13 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.LoadOnlineDataLayout
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,9 +27,7 @@ fun ScheduleNotesBottomSheet(uiState: ScheduleUiState, viewModel: ScheduleViewMo
         LoadOnlineDataLayout(
             dataSource = uiState.scheduleNotes,
             loadData = {
-                viewModel.viewModelScope.launch {
-                    viewModel.loadScheduleNotes()
-                }
+                viewModel.loadScheduleNotes()
             },
             contentWhenDataSourceIsEmpty = {
                 Text(

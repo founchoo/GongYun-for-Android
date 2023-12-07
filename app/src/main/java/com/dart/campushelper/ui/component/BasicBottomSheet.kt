@@ -3,6 +3,7 @@ package com.dart.campushelper.ui.component
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -29,6 +31,7 @@ fun BasicBottomSheet(
     @StringRes title: Int,
     onDismissRequest: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+    actions: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     if (isBottomSheetShow) {
@@ -42,11 +45,17 @@ fun BasicBottomSheet(
                     .padding(bottom = DEFAULT_PADDING)
                     .fillMaxWidth()
             ) {
-                Text(
-                    stringResource(title),
-                    style = MaterialTheme.typography.headlineSmall,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = DEFAULT_PADDING)
-                )
+                ) {
+                    Text(
+                        stringResource(title),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    actions?.let { it() }
+                }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacer)))
                 Box(
                     Modifier.padding(horizontal = DEFAULT_PADDING)

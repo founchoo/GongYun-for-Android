@@ -63,8 +63,8 @@ class SortBasisItem(val sortBasis: SortBasis) {
 
 data class GradeUiState(
     val rankingAvailable: Boolean = true,
-    val rankingInfo: Result<RankingInfo>? = null,
-    val grades: Result<List<Grade>>? = null,
+    val rankingInfo: Result<RankingInfo> = Result(),
+    val grades: Result<List<Grade>> = Result(),
     val courseTypes: List<String>? = null,
     val semesters: List<String>? = null,
     val courseTypesSelected: Map<String, Boolean>? = null,
@@ -118,7 +118,7 @@ class GradeViewModel @Inject constructor(
             }
         )
 
-    private var _backedGrades: Result<List<Grade>>? = null
+    private var _backedGrades: List<Grade>? = null
 
     init {
         viewModelScope.launch {
@@ -160,13 +160,13 @@ class GradeViewModel @Inject constructor(
     fun loadLineChart() {
         if (_backedGrades != null) {
             val sorted =
-                _backedGrades!!.data?.sortedBy { grade -> grade.yearAndSemester }?.plus(Grade())
-            var flag = sorted?.first()?.yearAndSemester
+                _backedGrades!!.sortedBy { grade -> grade.yearAndSemester }.plus(Grade())
+            var flag = sorted.first().yearAndSemester
             val grades = mutableListOf<Grade>()
             val model = mutableListOf<FloatEntry>()
             var no = 1
 
-            sorted?.forEach {
+            sorted.forEach {
                 if (it.yearAndSemester != flag) {
                     model.add(FloatEntry(no.toFloat(), calculateGPA(grades)!!.toFloat()))
                     grades.clear()
@@ -204,30 +204,35 @@ class GradeViewModel @Inject constructor(
     }
 
     suspend fun getGrades() {
+        val firstLoad = _backedGrades == null
         _backedGrades = null
-        _uiState.update { it.copy(grades = null) }
         viewModelScope.launch {
             val gradesResult = networkRepository.getGrades()
             _backedGrades = gradesResult
-            val courseTypes = gradesResult.data?.map {
-                it.courseType
-            }?.toSet()?.toList()
-            val semesters = gradesResult.data?.map { grade ->
-                grade.yearAndSemester ?: ""
-            }?.toSet()?.toList()?.sorted()
-            _uiState.update {
-                it.copy(
-                    courseTypes = courseTypes,
-                    courseTypesSelected = courseTypes?.map { sortName ->
-                        sortName to true
-                    }?.toMutableStateMap(),
-                    semesters = semesters,
-                    semestersSelected = semesters?.mapIndexed { index, semesterName ->
-                        semesterName to (index == semesters.size - 1)
-                    }?.toMutableStateMap(),
-                )
-            }
+            if (firstLoad) resetFilter()
             filterGrades()
+        }
+    }
+
+    fun resetFilter() {
+        val courseTypes = _backedGrades?.map {
+            it.courseType
+        }?.toSet()?.toList()
+        val semesters = _backedGrades?.map { grade ->
+            grade.yearAndSemester ?: ""
+        }?.toSet()?.toList()?.sorted()
+        _uiState.update {
+            it.copy(
+                courseTypes = courseTypes,
+                courseTypesSelected = courseTypes?.map { sortName ->
+                    sortName to true
+                }?.toMutableStateMap(),
+                semesters = semesters,
+                semestersSelected = semesters?.mapIndexed { index, semesterName ->
+                    semesterName to (index == semesters.size - 1)
+                }?.toMutableStateMap(),
+                sortBasisList = SortBasis.values().map { SortBasisItem(it) }
+            )
         }
     }
 
@@ -248,7 +253,7 @@ class GradeViewModel @Inject constructor(
     private fun updateGPA() {
         _uiState.update {
             it.copy(
-                gradePointAverage = calculateGPA(it.grades?.data) ?: Double.NaN,
+                gradePointAverage = calculateGPA(it.grades.data) ?: Double.NaN,
             )
         }
     }
@@ -256,14 +261,14 @@ class GradeViewModel @Inject constructor(
     private fun updateAverageScore() {
         _uiState.update {
             it.copy(
-                averageScore = calculateAverageScore(it.grades?.data) ?: Double.NaN,
+                averageScore = calculateAverageScore(it.grades.data) ?: Double.NaN,
             )
         }
     }
 
     private fun updateGradeDistribution() {
         val tmp = mutableListOf(0, 0, 0, 0, 0)
-        _uiState.value.grades?.data?.forEach {
+        _uiState.value.grades.data?.forEach {
             tmp[getScoreRangeIndex(it.score)]++
         }
         _uiState.update {
@@ -271,7 +276,6 @@ class GradeViewModel @Inject constructor(
                 gradeDistribution = tmp
             )
         }
-        // Log.d("GradeViewModel", "updateGradeDistribution: ${_uiState.value.gradeDistribution}")
     }
 
     private suspend fun getStudentRankingInfo() {
@@ -279,10 +283,10 @@ class GradeViewModel @Inject constructor(
             isSelected
         }?.keys?.let {
             val rankingInfo = networkRepository.getStudentRankingInfo(it)
-            if (rankingInfo.data != null) {
+            if (rankingInfo != null) {
                 _uiState.update {
                     it.copy(
-                        rankingInfo = rankingInfo,
+                        rankingInfo = Result(rankingInfo),
                     )
                 }
                 _uiState.update {
@@ -299,7 +303,7 @@ class GradeViewModel @Inject constructor(
     fun filterGrades() {
         _uiState.update {
             it.copy(
-                grades = Result(_backedGrades!!.data?.filter { grade ->
+                grades = Result(_backedGrades?.filter { grade ->
                     grade.name.replace(" ", "").lowercase().contains(
                         it.searchKeyword.replace(" ", "").lowercase()
                     ) && it.courseTypesSelected?.filterValues { isSelected -> isSelected }
@@ -323,7 +327,7 @@ class GradeViewModel @Inject constructor(
     private fun generateChartModelForGrade(hostRankingType: HostRankingType): ChartEntryModel {
         return entryModelOf(
             SubRankingType.values().map { subRankingType ->
-                _uiState.value.rankingInfo?.data?.getRanking(
+                _uiState.value.rankingInfo.data?.getRanking(
                     hostRankingType,
                     subRankingType
                 ).run {
@@ -407,7 +411,7 @@ class GradeViewModel @Inject constructor(
         if (found != null && found.selected) {
             _uiState.update {
                 it.copy(
-                    grades = Result(it.grades?.data?.sortedBy {
+                    grades = Result(it.grades.data?.sortedBy {
                         when (found.sortBasis) {
                             SortBasis.GRADE -> it.score.toDouble().times(if (found.asc) 1 else -1)
                             SortBasis.CREDIT -> it.credit.times(if (found.asc) 1 else -1)
