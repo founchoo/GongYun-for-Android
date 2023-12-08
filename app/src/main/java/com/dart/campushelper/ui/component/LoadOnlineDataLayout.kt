@@ -9,6 +9,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.dart.campushelper.data.Result
+import com.dart.campushelper.data.Status
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +29,7 @@ import kotlinx.coroutines.withContext
  * @param pullRefreshEnabled Whether to enable pull refresh.
  * @param loadData The function to load data from network.
  * @param autoLoadingArgs The arguments to trigger auto loading.
+ * @param autoLoadWhenDataLoaded Whether to auto load data when data source is not empty.
  * @param contentWhenDataSourceIsEmpty The content to display when data source is empty.
  * @param contentWhenDataSourceIsNotEmpty The content to display when data source is not empty.
  */
@@ -37,11 +40,13 @@ fun <T : List<Any>> LoadOnlineDataLayout(
     pullRefreshEnabled: Boolean = true,
     loadData: suspend () -> Unit,
     autoLoadingArgs: Array<Any?> = arrayOf(Unit),
+    autoLoadWhenDataLoaded: Boolean = false,
     contentWhenDataSourceIsEmpty: @Composable (() -> Unit)? = null,
     contentWhenDataSourceIsNotEmpty: @Composable ((items: T) -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
-    var isRefreshing by remember { mutableStateOf(true) }
+    var changeTimes by remember { mutableIntStateOf(0) }
+    var isRefreshing by remember { mutableStateOf(false) }
     fun onRefresh() = scope.launch {
         isRefreshing = true
         withContext(Dispatchers.IO) {
@@ -49,21 +54,25 @@ fun <T : List<Any>> LoadOnlineDataLayout(
         }
         isRefreshing = false
     }
+
+
     LaunchedEffect(*autoLoadingArgs) {
-        onRefresh()
+        if (autoLoadWhenDataLoaded || (changeTimes == 0 && dataSource.data == null) || changeTimes > 0) {
+            onRefresh()
+        }
+        changeTimes++
     }
 
     val refreshState = rememberPullRefreshState(isRefreshing, ::onRefresh)
     Box(modifier = if (pullRefreshEnabled) Modifier.pullRefresh(refreshState) else Modifier) {
-        if (isRefreshing) {
+        if (dataSource.status == Status.LOADING || isRefreshing) {
             // Waiting for data to load from network
             Box(Modifier.fillMaxSize())
         } else if (dataSource.data == null) {
-            // Fail to load data from network
+            // If fail to load data from network, show a placeholder
             FailToLoadPlaceholder(::onRefresh)
         } else {
-            // Data loaded successfully
-            if (dataSource.isDataEmpty) {
+            if (dataSource.data.isEmpty()) {
                 contentWhenDataSourceIsEmpty?.let { it() }
             } else {
                 contentWhenDataSourceIsNotEmpty?.let { it(dataSource.data) }

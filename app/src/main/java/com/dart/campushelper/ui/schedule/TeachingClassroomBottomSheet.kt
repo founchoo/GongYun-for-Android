@@ -32,11 +32,10 @@ fun TeachingClassroomBottomSheet(
         LoadOnlineDataLayout(
             dataSource = uiState.teachingClassrooms,
             loadData = {
-                viewModel.loadTeachingClassrooms(
-                    uiState.dayOfWeekOnHoldingCourse,
-                    uiState.nodeNoOnHoldingCourse
-                )
+                viewModel.loadTeachingClassrooms()
             },
+            autoLoadingArgs = arrayOf(uiState.dayOfWeekOnHoldingCourse, uiState.nodeNoOnHoldingCourse),
+            autoLoadWhenDataLoaded = true,
             contentWhenDataSourceIsEmpty = {
                 Text(
                     text = stringResource(

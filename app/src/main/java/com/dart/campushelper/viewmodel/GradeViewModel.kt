@@ -122,14 +122,6 @@ class GradeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            isLoginStateFlow.collect {
-                if (it) {
-                    getGrades()
-                    getStudentRankingInfo()
-                }
-            }
-        }
-        viewModelScope.launch {
             isScreenshotModeStateFlow.collect { value ->
                 _uiState.update {
                     it.copy(isScreenshotMode = value)

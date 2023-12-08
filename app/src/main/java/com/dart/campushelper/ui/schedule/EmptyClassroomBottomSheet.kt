@@ -32,11 +32,10 @@ fun EmptyClassroomBottomSheet(
         LoadOnlineDataLayout(
             dataSource = uiState.emptyClassrooms,
             loadData = {
-                viewModel.loadEmptyClassroom(
-                    uiState.dayOfWeekOnHoldingCourse,
-                    uiState.nodeNoOnHoldingCourse
-                )
+                viewModel.loadEmptyClassroom()
             },
+            autoLoadingArgs = arrayOf(uiState.dayOfWeekOnHoldingCourse, uiState.nodeNoOnHoldingCourse),
+            autoLoadWhenDataLoaded = true,
             contentWhenDataSourceIsEmpty = {
                 Text(
                     text = stringResource(

@@ -1,10 +1,14 @@
 package com.dart.campushelper.ui.component
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,17 +25,30 @@ fun FailToLoadPlaceholder(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp)
+            .background(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(5.dp)),
     ) {
-        Text(text = stringResource(R.string.network_connection_error))
-        Spacer(Modifier.width(5.dp))
-        TextButton(onClick = {
-            runBlocking { retry() }
-        }) {
+        Spacer(Modifier.width(15.dp))
+        Text(
+            text = stringResource(R.string.network_connection_error),
+            color = MaterialTheme.colorScheme.onErrorContainer
+        )
+        Spacer(Modifier.weight(1f))
+        TextButton(
+            onClick = {
+                runBlocking { retry() }
+            },
+            colors =  ButtonDefaults.textButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            )
+        ) {
             Text(
                 text = stringResource(R.string.retry),
             )
         }
+        Spacer(Modifier.width(15.dp))
     }
 }

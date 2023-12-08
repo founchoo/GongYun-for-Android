@@ -253,8 +253,10 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update { it.copy(courses = Result(networkRepository.getSchedule(yearAndSemester))) }
     }
 
-    suspend fun loadTeachingClassrooms(dayOfWeek: Int, node: Int) {
+    suspend fun loadTeachingClassrooms() {
         _uiState.update { it.copy(buildingNames = null) }
+        val node = _uiState.value.nodeNoOnHoldingCourse
+        val dayOfWeek = _uiState.value.dayOfWeekOnHoldingCourse
         val startNode = node * 2 - 1
         val result = _uiState.value.browsedSemester?.let {
             networkRepository.getGlobalSchedule(
@@ -316,13 +318,13 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    suspend fun loadEmptyClassroom(dayOfWeek: Int, node: Int) {
+    suspend fun loadEmptyClassroom() {
         _uiState.update { it.copy(buildingNames = null) }
         val result = _uiState.value.browsedWeek?.let {
             networkRepository.getEmptyClassroom(
                 weekNo = listOf(it),
-                dayOfWeekNo = listOf(dayOfWeek),
-                nodeNo = listOf(node),
+                dayOfWeekNo = listOf(_uiState.value.dayOfWeekOnHoldingCourse),
+                nodeNo = listOf(_uiState.value.nodeNoOnHoldingCourse),
             )
         }
         _uiState.update {
