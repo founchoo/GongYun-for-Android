@@ -8,7 +8,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.dart.campushelper.R
-import com.dart.campushelper.ui.component.PreferenceHeader
+import com.dart.campushelper.ui.component.preference.PreferenceHeader
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
 

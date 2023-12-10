@@ -16,7 +16,8 @@ import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.SubRankingType
-import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.ui.main.MainActivity
+import com.dart.campushelper.viewmodel.CourseType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -150,6 +151,17 @@ class NetworkRepository @Inject constructor(
 
     suspend fun getGrades(): List<Grade>? =
         tryRequest(networkService.getGrades())?.results
+
+    suspend fun getCourseTypeList(): List<CourseType>? =
+        tryRequest(networkService.getCourseTypeList())?.let {
+            Jsoup.parse(it).select("select[id=kcxz]").firstOrNull()?.children()?.drop(1)?.map {
+                CourseType(
+                    id = it.attr("value").toInt(),
+                    name = it.text(),
+                    selected = true,
+                )
+            }
+        }
 
     suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): RankingInfo? {
         var rankingInfo: RankingInfo? = null

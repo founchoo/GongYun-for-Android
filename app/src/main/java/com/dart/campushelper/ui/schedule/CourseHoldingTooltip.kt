@@ -12,11 +12,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,12 +39,9 @@ fun CourseHoldingTooltip(uiState: ScheduleUiState, viewModel: ScheduleViewModel)
                     TextButton(
                         onClick = {
                             uiState.holdingCourseTooltipState.dismiss()
-                            viewModel.viewModelScope.launch {
-                                uiState.holdingSemesterTooltipState.show()
-                            }
                         }
                     ) {
-                        Text(stringResource(R.string.show_next_tip))
+                        Text(stringResource(R.string.close))
                     }
                 }) {
                 Text(stringResource(R.string.check_room_tip_desc))

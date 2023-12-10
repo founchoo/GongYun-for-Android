@@ -5,8 +5,8 @@ import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.EmptyClassroomResponse
 import com.dart.campushelper.model.GlobalCourseResponse
 import com.dart.campushelper.model.GradeResponse
-import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.PlannedScheduleResponse
+import com.dart.campushelper.model.StudentInfoResponse
 import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -41,6 +41,9 @@ interface NetworkService {
         @Query("query.endXnxq||") queryEndYearAndSemester: String? = "001",
         @Query("query.sfjg||") querySfjq: String? = "",
     ): Call<GradeResponse>
+
+    @GET("xsd/xsdzgcjcx/zgcjcx")
+    fun getCourseTypeList(): Call<String>
 
     @GET("cjgl/xscjbbdy/getXscjpm")
     fun getStudentRankingInfoRaw(
@@ -110,7 +113,7 @@ interface NetworkService {
         @Query("query.xqStr||") queryDayOfWeekNo: String = dayOfWeekNo,
         @Query("query.jcStr||") queryNodeNo: String = nodeNo,
         @Query("query.zcStr||") queryWeekNo: String = weekNo,
-        ): Call<EmptyClassroomResponse>
+    ): Call<EmptyClassroomResponse>
 
     @POST("cjgl/xscjbbdy/printdgxscj")
     fun getStudentInfo(): Call<StudentInfoResponse>

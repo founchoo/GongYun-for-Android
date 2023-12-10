@@ -28,12 +28,13 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.CampusHelperApplication.Companion.context
 import com.dart.campushelper.R
-import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.ui.component.DropdownMenuPreference
-import com.dart.campushelper.ui.component.PreferenceHeader
-import com.dart.campushelper.ui.component.SwitchPreference
+import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.ui.component.TextAlertDialog
-import com.dart.campushelper.ui.component.TextPreference
+import com.dart.campushelper.ui.component.preference.DropdownMenuPreference
+import com.dart.campushelper.ui.component.preference.PreferenceHeader
+import com.dart.campushelper.ui.component.preference.SelectionItem
+import com.dart.campushelper.ui.component.preference.SwitchPreference
+import com.dart.campushelper.ui.component.preference.TextPreference
 import com.dart.campushelper.ui.login.LoginDialog
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.DarkMode
@@ -63,7 +64,9 @@ fun SettingsScreen(
                     settingsUiState.username.replaceWithStars(
                         settingsUiState.isScreenshotMode
                     )
-                }" else stringResource(R.string.unlogin_message),
+                }" else stringResource(
+                    R.string.unlogin_message
+                ),
                 imageVector = Icons.Outlined.AccountCircle
             ) {
                 if (settingsUiState.isLogin) {
@@ -72,7 +75,6 @@ fun SettingsScreen(
                     loginViewModel.onShowLoginDialogRequest()
                 }
             }
-            PreferenceHeader(text = stringResource(R.string.schedule_label))
             SwitchPreference(
                 imageVector = Icons.Outlined.DoNotDisturbOn,
                 value = settingsUiState.isOtherCourseDisplay,
@@ -131,9 +133,9 @@ fun SettingsScreen(
             DropdownMenuPreference(
                 imageVector = Icons.Outlined.Nightlight,
                 title = stringResource(R.string.dark_mode),
-                value = stringResource(DarkMode.values()[settingsUiState.selectedDarkModeIndex].toStringResourceId()),
+                value = DarkMode.values()[settingsUiState.selectedDarkModeIndex],
                 selections = DarkMode.values().map {
-                    stringResource(it.toStringResourceId())
+                    SelectionItem(stringResource(it.toStringResourceId()), it)
                 },
                 onValueChanged = { index, _ ->
                     settingsViewModel.changeSelectedDarkModeIndex(index)
@@ -142,10 +144,10 @@ fun SettingsScreen(
             DropdownMenuPreference(
                 imageVector = Icons.Outlined.Language,
                 title = stringResource(R.string.language),
-                value = (listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList)[settingsUiState.selectedLanguageIndex],
-                selections = listOf(stringResource(R.string.follow_system)) + settingsUiState.languageList,
-                onValueChanged = { index, item ->
-                    settingsViewModel.changeLanguage(index, item)
+                value = settingsUiState.languageList[settingsUiState.selectedLanguageIndex].value,
+                selections = settingsUiState.languageList,
+                onValueChanged = { index, _ ->
+                    settingsViewModel.changeLanguage(index)
                 }
             )
             PreferenceHeader(text = stringResource(R.string.about))

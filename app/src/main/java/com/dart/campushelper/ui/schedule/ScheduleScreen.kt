@@ -1,18 +1,28 @@
 package com.dart.campushelper.ui.schedule
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.dart.campushelper.ui.schedule.bottomsheet.EmptyClassroomBottomSheet
+import com.dart.campushelper.ui.schedule.bottomsheet.PlannedScheduleBottomSheet
+import com.dart.campushelper.ui.schedule.bottomsheet.ScheduleNotesBottomSheet
+import com.dart.campushelper.ui.schedule.bottomsheet.TeachingClassroomBottomSheet
+import com.dart.campushelper.ui.schedule.bottomsheet.WeekSliderBottomSheet
 import com.dart.campushelper.utils.DayOfWeek
 import com.dart.campushelper.viewmodel.ScheduleViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ScheduleScreen(
     viewModel: ScheduleViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 20 })
 
     val args = arrayOf(
         uiState.browsedWeek.toString(),
@@ -23,7 +33,7 @@ fun ScheduleScreen(
     )
 
     // Home
-    ScheduleTable(uiState, viewModel)
+    ScheduleTable(uiState, viewModel, pagerState)
 
     // Tooltips
     CourseHoldingTooltip(uiState, viewModel)
@@ -32,7 +42,7 @@ fun ScheduleScreen(
     CourseDetailDialog(uiState, viewModel)
 
     // Bottom sheets
-    WeekSliderBottomSheet(uiState, viewModel)
+    WeekSliderBottomSheet(uiState, viewModel, pagerState)
     TeachingClassroomBottomSheet(uiState, viewModel, *args)
     EmptyClassroomBottomSheet(uiState, viewModel, *args)
     ScheduleNotesBottomSheet(uiState, viewModel)

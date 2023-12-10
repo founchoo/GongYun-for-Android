@@ -7,15 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.CampusHelperApplication.Companion.context
-import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
-import com.dart.campushelper.ui.MainActivity
-import com.dart.campushelper.ui.pin
+import com.dart.campushelper.ui.main.MainActivity
+import com.dart.campushelper.ui.component.preference.SelectionItem
+import com.dart.campushelper.ui.main.pin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,8 +44,9 @@ data class SettingsUiState(
     val openDevProfileUrlConfirmDialog: Boolean = false,
     val appVersion: String = BuildConfig.VERSION_NAME,
     val isDevSectionShow: Boolean = false,
-    val languageList: List<String>,
+    val languageList: List<SelectionItem<String>>,
     val selectedLanguageIndex: Int,
+    val currentYearAndSemester: String? = null,
 )
 
 @HiltViewModel
@@ -53,18 +54,20 @@ class SettingsViewModel @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
-    private val _languageMap = mapOf(
-        "中文（简体）" to "zh-CN",
-        "English" to "en-US",
+    private var _languageMap = mapOf(
+        "中文（简体）" to "zh",
+        "English" to "en",
     )
 
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(
         SettingsUiState(
-            languageList = _languageMap.keys.toList(),
-            selectedLanguageIndex = _languageMap.keys.indexOf(getLanguageName(
+            languageList = _languageMap.map {
+                SelectionItem(it.key, it.value)
+            },
+            selectedLanguageIndex = _languageMap.values.indexOf(
                 AppCompatDelegate.getApplicationLocales()[0]?.language
-            )) + 1,
+            ).let { if (it == -1) 0 else it },
         )
     )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -145,72 +148,67 @@ class SettingsViewModel @Inject constructor(
             }
         )
 
+    private val yearAndSemesterStateFlow: StateFlow<String> =
+        dataStoreRepository.observeYearAndSemester().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                dataStoreRepository.observeYearAndSemester().first()
+            }
+        )
+
     init {
         viewModelScope.launch {
             usernameStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(username = value)
-                }
+                _uiState.update { it.copy(username = value) }
             }
         }
         viewModelScope.launch {
             isLoginStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isLogin = value)
-                }
+                _uiState.update { it.copy(isLogin = value) }
             }
         }
         viewModelScope.launch {
             enableSystemColorStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isSystemColor = value)
-                }
+                _uiState.update { it.copy(isSystemColor = value) }
             }
         }
         viewModelScope.launch {
             selectedDarkModeStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(
-                        selectedDarkModeIndex = value
-                    )
-                }
+                _uiState.update { it.copy(selectedDarkModeIndex = value) }
             }
         }
         viewModelScope.launch {
             isOtherCourseDisplayStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isOtherCourseDisplay = value)
-                }
+                _uiState.update { it.copy(isOtherCourseDisplay = value) }
             }
         }
         viewModelScope.launch {
             isYearDisplayStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isYearDisplay = value)
-                }
+                _uiState.update { it.copy(isYearDisplay = value) }
             }
         }
         viewModelScope.launch {
             isDateDisplayStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isDateDisplay = value)
-                }
+                _uiState.update { it.copy(isDateDisplay = value) }
             }
         }
         viewModelScope.launch {
             isTimeDisplayStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isTimeDisplay = value)
-                }
+                _uiState.update { it.copy(isTimeDisplay = value) }
             }
         }
         viewModelScope.launch {
             isScreenshotModeStateFlow.collect { value ->
-                _uiState.update {
-                    it.copy(isScreenshotMode = value)
-                }
+                _uiState.update { it.copy(isScreenshotMode = value) }
             }
         }
+        viewModelScope.launch {
+            yearAndSemesterStateFlow.collect { value ->
+                _uiState.update { it.copy(currentYearAndSemester = value) }
+            }
+        }
+        changeLanguage(_uiState.value.selectedLanguageIndex)
     }
 
     fun clearCookies() {
@@ -332,24 +330,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun getLanguageName(code: String?): String {
-        _languageMap.forEach {
-            if (it.value == code) {
-                return it.key
-            }
-        }
-        return context.getString(R.string.follow_system)
-    }
-
-    private fun getLanguageCode(name: String): String {
+    fun getLanguageCode(name: String): String {
         return _languageMap[name] ?: _languageMap.toList()[0].second
     }
 
-    fun changeLanguage(index: Int, name: String) {
+    fun changeLanguage(index: Int) {
         AppCompatDelegate.setApplicationLocales(
-            if (index == 0) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(
-                getLanguageCode(name)
-            )
+            LocaleListCompat.forLanguageTags(_languageMap.toList()[index].second)
         )
         _uiState.update {
             it.copy(

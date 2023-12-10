@@ -1,5 +1,6 @@
 package com.dart.campushelper.viewmodel
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,7 +30,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-data class ScheduleUiState(
+data class ScheduleUiState @OptIn(ExperimentalFoundationApi::class) constructor(
     val courses: Result<List<Course>> = Result(),
     val currentWeek: Int? = null,
     val browsedWeek: Int? = null,
@@ -39,7 +40,7 @@ data class ScheduleUiState(
     val currentNode: Int = 1,
     val isCourseDetailDialogOpen: Boolean = false,
     val isShowWeekSliderDialog: Boolean = false,
-    val nodeHeaders: IntRange = (1..10),
+    val nodeHeaders: IntRange = (1..5),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
     val nodeStartHeaders: List<String> = DateUtils.nodeEnds.map {
         LocalTime.of(
@@ -60,7 +61,6 @@ data class ScheduleUiState(
     val buildingNames: List<String>? = null,
     val emptyClassrooms: Result<List<Classroom>> = Result(),
     val holdingCourseTooltipState: TooltipState = TooltipState(isPersistent = true),
-    val holdingSemesterTooltipState: TooltipState = TooltipState(isPersistent = true),
     val scheduleNotes: Result<List<ScheduleNoteItem>> = Result(),
     val isShowScheduleNotesSheet: Boolean = false,
     val plannedSchedule: Result<List<PlannedCourse>> = Result(),
@@ -78,6 +78,7 @@ class ScheduleViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state exposed to the UI
+    @OptIn(ExperimentalFoundationApi::class)
     private val _uiState = MutableStateFlow(
         ScheduleUiState(
             dayOfWeek = LocalDate.now().dayOfWeek.value,

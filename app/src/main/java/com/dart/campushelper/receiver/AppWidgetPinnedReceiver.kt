@@ -19,7 +19,7 @@ package com.dart.campushelper.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.dart.campushelper.ui.MainActivity
+import com.dart.campushelper.ui.main.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -23,7 +23,7 @@
     <string name="course_grades_desc">当前课程列表所列课程的成绩</string>
     <string name="arithmetic_mean_score">算数平均分</string>
     <string name="rank_title">学年学期排名信息</string>
-    <string name="rank_desc">已筛选学年学期的排名信息</string>
+    <string name="rank_desc">已筛选学年学期：%1$s 的排名信息</string>
     <string name="rank_not_available_title">排名信息不可用</string>
     <string name="rank_not_available_desc">当筛选课程性质或检索课程名称时排名信息不可用</string>
     <string name="course_score_summary">课程分数统计</string>
@@ -86,14 +86,12 @@
     <string name="reset">重置</string>
     <string name="switch_schedule">切换课表</string>
     <string name="message_befor_exit">再次操作以退出</string>
-    <string name="first_semester_of_freshman_year">大一上</string>
-    <string name="second_semester_of_freshman_year">大一下</string>
-    <string name="first_semester_of_sophomore_year">大二上</string>
-    <string name="second_semester_of_sophomore_year">大二下</string>
-    <string name="first_semester_of_junior_year">大三上</string>
-    <string name="second_semester_of_junior_year">大三下</string>
-    <string name="first_semester_of_senior_year">大四上</string>
-    <string name="second_semester_of_senior_year">大四下</string>
+    <string name="freshman_year">大一</string>
+    <string name="sophomore_year">大二</string>
+    <string name="junior_year">大三</string>
+    <string name="senior_year">大四</string>
+    <string name="spring_semester">春季学期</string>
+    <string name="fall_semester">秋季学期</string>
     <string name="score">分</string>
     <string name="institute">学院</string>
     <string name="major">专业</string>
@@ -135,4 +133,5 @@
     <string name="network_connection_error">网络连接有误</string>
     <string name="login_info_error">学号或密码有误</string>
     <string name="switch_week">切换周数</string>
+    <string name="current_semester">当前学年学期</string>
 </resources>

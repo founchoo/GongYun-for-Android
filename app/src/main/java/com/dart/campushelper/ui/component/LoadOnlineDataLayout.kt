@@ -1,7 +1,9 @@
 package com.dart.campushelper.ui.component
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -16,11 +18,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.dart.campushelper.data.Result
 import com.dart.campushelper.data.Status
+import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
+import io.github.fornewid.placeholder.material3.placeholder
+import io.github.fornewid.placeholder.material3.shimmer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+enum class LoadingIndicatorStyle {
+    CIRCULAR,
+    SHIMMER,
+}
 
 /**
  * A layout that can load data from network and display different content according to the
@@ -35,9 +46,9 @@ import kotlinx.coroutines.withContext
  */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun <T : List<Any>> LoadOnlineDataLayout(
+fun <T> LoadOnlineDataLayout(
     dataSource: Result<T>,
-    pullRefreshEnabled: Boolean = true,
+    loadingIndicatorStyle: LoadingIndicatorStyle = LoadingIndicatorStyle.CIRCULAR,
     loadData: suspend () -> Unit,
     autoLoadingArgs: Array<Any?> = arrayOf(Unit),
     autoLoadWhenDataLoaded: Boolean = false,
@@ -55,7 +66,6 @@ fun <T : List<Any>> LoadOnlineDataLayout(
         isRefreshing = false
     }
 
-
     LaunchedEffect(*autoLoadingArgs) {
         if (autoLoadWhenDataLoaded || (changeTimes == 0 && dataSource.data == null) || changeTimes > 0) {
             onRefresh()
@@ -64,21 +74,32 @@ fun <T : List<Any>> LoadOnlineDataLayout(
     }
 
     val refreshState = rememberPullRefreshState(isRefreshing, ::onRefresh)
-    Box(modifier = if (pullRefreshEnabled) Modifier.pullRefresh(refreshState) else Modifier) {
+    Box(
+        modifier = if (loadingIndicatorStyle == LoadingIndicatorStyle.CIRCULAR)
+            Modifier.pullRefresh(refreshState)
+        else Modifier
+            .wrapContentSize()
+            .placeholder(
+                visible = dataSource.status == Status.LOADING || isRefreshing,
+                highlight = PlaceholderHighlight.shimmer()
+            )
+    ) {
         if (dataSource.status == Status.LOADING || isRefreshing) {
             // Waiting for data to load from network
-            Box(Modifier.fillMaxSize())
+            Box(
+                Modifier
+                    .height(400.dp)
+                    .fillMaxWidth()
+            )
         } else if (dataSource.data == null) {
             // If fail to load data from network, show a placeholder
             FailToLoadPlaceholder(::onRefresh)
+        } else if (dataSource.data is List<*> && dataSource.data.isEmpty()) {
+            contentWhenDataSourceIsEmpty?.let { it() }
         } else {
-            if (dataSource.data.isEmpty()) {
-                contentWhenDataSourceIsEmpty?.let { it() }
-            } else {
-                contentWhenDataSourceIsNotEmpty?.let { it(dataSource.data) }
-            }
+            contentWhenDataSourceIsNotEmpty?.let { it(dataSource.data) }
         }
-        if (pullRefreshEnabled) {
+        if (loadingIndicatorStyle == LoadingIndicatorStyle.CIRCULAR) {
             PullRefreshIndicator(
                 isRefreshing,
                 refreshState,

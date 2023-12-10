@@ -48,7 +48,7 @@ fun GradeDetailDialog(
                         trailingContent = {
                             Text(
                                 "${grade.yearAndSemester}\n" +
-                                        "${grade.courseType}\n" +
+                                        "${uiState.courseTypes?.find { it.id.toString() == grade.courseTypeRaw }?.name}\n" +
                                         "${stringResource(R.string.credit_label)} ${grade.credit}"
                             )
                         },

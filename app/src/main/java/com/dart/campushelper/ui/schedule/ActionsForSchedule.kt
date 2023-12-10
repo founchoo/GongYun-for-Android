@@ -2,11 +2,10 @@ package com.dart.campushelper.ui.schedule
 
 import android.annotation.SuppressLint
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,20 +30,20 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
     TooltipIconButton(
-        label = R.string.last_week,
-        imageVector = Icons.Outlined.ChevronLeft,
-        enabled = uiState.browsedWeek != null && uiState.browsedWeek > 1,
+        label = R.string.help,
+        imageVector = Icons.Outlined.Lightbulb,
         onClick = {
-            uiState.browsedWeek?.minus(1)?.let { viewModel.setBrowsedWeek(it) }
+            viewModel.viewModelScope.launch {
+                uiState.holdingCourseTooltipState.show()
+            }
         },
     )
 
     TooltipIconButton(
-        label = R.string.next_week,
-        imageVector = Icons.Outlined.ChevronRight,
-        enabled = uiState.browsedWeek != null && uiState.browsedWeek < 20,
+        label = R.string.switch_schedule,
+        imageVector = Icons.Outlined.Tune,
         onClick = {
-            uiState.browsedWeek?.plus(1)?.let { viewModel.setBrowsedWeek(it) }
+            viewModel.setIsShowWeekSliderDialog(true)
         },
     )
 
@@ -60,18 +59,6 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
         expanded = isMenuExpanded,
         onDismissRequest = { isMenuExpanded = false },
     ) {
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.Outlined.Lightbulb, null)
-            },
-            text = { Text(stringResource(R.string.help)) },
-            onClick = {
-                viewModel.viewModelScope.launch {
-                    uiState.holdingCourseTooltipState.show()
-                }
-                isMenuExpanded = false
-            },
-        )
         DropdownMenuItem(
             leadingIcon = {
                 Icon(Icons.Outlined.EditNote, null)

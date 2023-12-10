@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.R
 import com.dart.campushelper.model.Grade
+import com.dart.campushelper.utils.AcademicYearAndSemester
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.dart.campushelper.viewmodel.GradeViewModel
@@ -40,7 +41,16 @@ fun GradeItem(grade: Grade, uiState: GradeUiState, viewModel: GradeViewModel) {
         },
         trailingContent = {
             Text(
-                text = "${grade.yearAndSemester}"
+                text = "${
+                    grade.yearAndSemester?.let {
+                        uiState.startYearAndSemester?.let { start ->
+                            AcademicYearAndSemester.getReadableString(
+                                start,
+                                it
+                            )
+                        }
+                    }
+                }"
             )
         },
         colors = ListItemDefaults.colors(
