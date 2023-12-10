@@ -91,6 +91,7 @@ import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
 import com.dart.campushelper.ui.grade.ActionsForGrade
+import com.dart.campushelper.ui.grade.FloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
 import com.dart.campushelper.ui.schedule.ActionsForSchedule
 import com.dart.campushelper.ui.schedule.ScheduleScreen
@@ -286,6 +287,12 @@ class MainActivity : AppCompatActivity() {
                             focusSearchBarRequester.requestFocus()
                         }
                     }
+                },
+                fab = {
+                    FloatingActionButtonForGrade(
+                        gradeUiState,
+                        gradeViewModel
+                    )
                 },
                 content = { GradeScreen(gradeViewModel) }
             ),
