@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -133,6 +134,7 @@ data class Screen(
         )
     },
     val fab: @Composable (() -> Unit)? = null,
+    val actions: @Composable (() -> Unit)? = null,
     val content: @Composable () -> Unit,
 )
 
@@ -217,6 +219,7 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                 },
+                actions = { ActionsForSchedule(scheduleViewModel, scheduleUiState) },
                 content = { ScheduleScreen(scheduleViewModel) }
             ),
             Route.GRADE to Screen(
@@ -288,12 +291,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 },
-                fab = {
-                    FloatingActionButtonForGrade(
-                        gradeUiState,
-                        gradeViewModel
-                    )
-                },
+                actions = { ActionsForGrade(gradeViewModel, gradeUiState) },
+                fab = { FloatingActionButtonForGrade(gradeUiState, gradeViewModel) },
                 content = { GradeScreen(gradeViewModel) }
             ),
             Route.SETTINGS to Screen(
@@ -447,21 +446,22 @@ class MainActivity : AppCompatActivity() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    currentDestination?.route?.let { screens[Route.valueOf(it)] }
-                        ?.let { if (it.enabled) it else null }?.title?.let { it() }
+                    Crossfade(targetState = currentDestination?.route?.let {
+                        screens[Route.valueOf(
+                            it
+                        )]
+                    }?.let { if (it.enabled) it else null }?.title) {
+                        it?.let { it() }
+                    }
                 }
             },
             actions = {
-                if (currentDestination?.route == screens[Route.SCHEDULE]!!.route) {
-                    ActionsForSchedule(
-                        scheduleViewModel,
-                        scheduleUiState
-                    )
-                } else if (currentDestination?.route == screens[Route.GRADE]!!.route) {
-                    ActionsForGrade(
-                        viewModel = gradeViewModel,
-                        uiState = gradeUiState
-                    )
+                Crossfade(targetState = currentDestination?.route?.let {
+                    screens[Route.valueOf(
+                        it
+                    )]
+                }?.let { if (it.enabled) it else null }?.actions) {
+                    it?.let { Row { it() } }
                 }
             },
             scrollBehavior = scrollBehavior,

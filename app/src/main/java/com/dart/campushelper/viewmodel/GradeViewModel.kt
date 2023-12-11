@@ -36,10 +36,10 @@ data class YearAndSemester(
     @StringRes val yearResId: Int,
     @StringRes val semesterResId: Int,
     val value: String,
-    val selected: Boolean
+    var selected: Boolean
 )
 
-data class CourseType(val id: Int, val name: String, val selected: Boolean)
+data class CourseType(val value: String, val label: String, val selected: Boolean)
 
 enum class SortBasis {
     GRADE,
@@ -216,7 +216,9 @@ class GradeViewModel @Inject constructor(
         val firstLoad = _backedGrades == null
         _backedGrades = null
         viewModelScope.launch {
-            _uiState.update { it.copy(courseTypes = networkRepository.getCourseTypeList()) }
+            _uiState.update {
+                it.copy(courseTypes = networkRepository.getCourseTypeList())
+            }
             val gradesResult = networkRepository.getGrades()
             _backedGrades = gradesResult
             if (firstLoad) resetFilter()
@@ -240,6 +242,9 @@ class GradeViewModel @Inject constructor(
                         it,
                         it == semesters.last()
                     )
+                },
+                courseTypes = it.courseTypes?.map { courseType ->
+                    courseType.copy(selected = true)
                 },
                 sortBasisList = SortBasis.values().map { SortBasisItem(it) }
             )
@@ -307,16 +312,17 @@ class GradeViewModel @Inject constructor(
     }
 
     fun filterGrades() {
+        val formattedSearchKeyword = _uiState.value.searchKeyword.replace(" ", "").lowercase()
+        val selectedCourseTypes = _uiState.value.courseTypes?.filter { it.selected }
+            ?.map { it.value.toString() }
+        val selectedYearAndSemesters =
+            _uiState.value.semesters?.filter { it.selected }?.map { it.value }
         _uiState.update {
             it.copy(
                 grades = Result(_backedGrades?.filter { grade ->
-                    grade.name.replace(" ", "").lowercase().contains(
-                        it.searchKeyword.replace(" ", "").lowercase()
-                    ) && it.courseTypes?.filter { it.selected }
-                        ?.map { it.id.toString() }?.contains(
-                            grade.courseTypeRaw
-                        ) == true && it.semesters?.filter { it.selected }?.map { it.value }
-                        ?.contains(grade.yearAndSemester) == true
+                    grade.name.replace(" ", "").lowercase().contains(formattedSearchKeyword) &&
+                            selectedCourseTypes?.contains(grade.courseTypeRaw) == true &&
+                            selectedYearAndSemesters?.contains(grade.yearAndSemester) == true
                 }),
                 rankingAvailable = it.courseTypes?.find { !it.selected } == null && it.searchKeyword.isEmpty()
             )
@@ -346,8 +352,8 @@ class GradeViewModel @Inject constructor(
     fun changeCourseSortSelected(index: Int, selected: Boolean) {
         _uiState.update {
             it.copy(
-                courseTypes = it.courseTypes?.apply {
-                    this[index].setFieldValue("selected", selected)
+                courseTypes = it.courseTypes.apply {
+                    this?.get(index)?.setFieldValue("selected", selected)
                 }
             )
         }
@@ -357,7 +363,7 @@ class GradeViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 semesters = it.semesters?.apply {
-                    this[index].setFieldValue("selected", selected)
+                    this[index].selected = selected
                 }
             )
         }

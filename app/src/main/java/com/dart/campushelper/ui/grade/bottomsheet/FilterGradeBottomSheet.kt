@@ -1,10 +1,13 @@
 package com.dart.campushelper.ui.grade.bottomsheet
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Category
@@ -16,13 +19,18 @@ import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -41,9 +49,6 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
         isBottomSheetShow = uiState.openFilterSheet,
         title = R.string.filter_grade_title,
         onDismissRequest = { viewModel.setOpenFilterSheet(false) },
-        sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true
-        ),
         actions = {
             TooltipIconButton(label = R.string.reset, imageVector = Icons.Outlined.RestartAlt) {
                 viewModel.resetFilter()
@@ -51,7 +56,11 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
             }
         },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp), modifier = Modifier.verticalScroll(
+                rememberScrollState()
+            )
+        ) {
             ColumnCard(
                 title = stringResource(R.string.sort_title),
                 icon = Icons.AutoMirrored.Outlined.Sort,
@@ -125,44 +134,45 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                     )
                 }
             ) {
-                if (uiState.semesters != null) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(-5.dp)
-                    ) {
-                        uiState.semesters.forEachIndexed { index, yearAndSemester ->
-                            FilterChip(
-                                selected = yearAndSemester.selected,
-                                onClick = {
-                                    viewModel.changeSemesterSelected(
-                                        index,
-                                        !yearAndSemester.selected
-                                    )
-                                    viewModel.filterGrades()
-                                },
-                                label = {
-                                    Text(yearAndSemester.let {
-                                        "${stringResource(it.yearResId)} ${
-                                            stringResource(
-                                                it.semesterResId
-                                            )
-                                        }"
-                                    })
-                                },
-                                leadingIcon = {
-                                    SegmentedButtonDefaults.Icon(
-                                        active = yearAndSemester.selected,
-                                        activeContent = {
-                                            Icon(
-                                                Icons.Outlined.Check,
-                                                null,
-                                                Modifier.size(SegmentedButtonDefaults.IconSize)
-                                            )
-                                        },
-                                    )
-                                }
-                            )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    uiState.semesters?.forEachIndexed { index, yearAndSemester ->
+                        var selected by remember { mutableStateOf(yearAndSemester.selected) }
+                        LaunchedEffect(uiState.semesters[index].selected) {
+                            selected = uiState.semesters[index].selected
                         }
+                        FilterChip(
+                            selected = selected,
+                            onClick = {
+                                selected = !selected
+                                viewModel.changeSemesterSelected(
+                                    index,
+                                    selected
+                                )
+                                viewModel.filterGrades()
+                            },
+                            label = {
+                                Text(yearAndSemester.let {
+                                    "${stringResource(it.yearResId)} ${
+                                        stringResource(
+                                            it.semesterResId
+                                        )
+                                    }"
+                                })
+                            },
+                            leadingIcon = {
+                                Crossfade(targetState = selected) {
+                                    if (it) {
+                                        Icon(
+                                            Icons.Outlined.Check,
+                                            null,
+                                            Modifier.size(FilterChipDefaults.IconSize)
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -175,7 +185,7 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                     AssistChip(
                         onClick = {
                             (uiState.courseTypes?.find { !it.selected } != null).let {
-                                uiState.courseTypes?.forEachIndexed { index, _ ->
+                                uiState.courseTypes?.forEachIndexed { index, courseType ->
                                     viewModel.changeCourseSortSelected(
                                         index, it
                                     )
@@ -193,33 +203,34 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                     )
                 }
             ) {
-                if (uiState.courseTypes != null) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(-5.dp)
-                    ) {
-                        uiState.courseTypes.forEachIndexed { index, courseType ->
-                            FilterChip(
-                                selected = courseType.selected,
-                                onClick = {
-                                    viewModel.changeCourseSortSelected(index, !courseType.selected)
-                                    viewModel.filterGrades()
-                                },
-                                label = { Text(courseType.name) },
-                                leadingIcon = {
-                                    SegmentedButtonDefaults.Icon(
-                                        active = courseType.selected,
-                                        activeContent = {
-                                            Icon(
-                                                Icons.Outlined.Check,
-                                                null,
-                                                Modifier.size(SegmentedButtonDefaults.IconSize)
-                                            )
-                                        }
-                                    )
-                                }
-                            )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    uiState.courseTypes?.forEachIndexed { index, courseType ->
+                        var selected by remember { mutableStateOf(courseType.selected) }
+                        LaunchedEffect(uiState.courseTypes[index].selected) {
+                            selected = uiState.courseTypes[index].selected
                         }
+                        FilterChip(
+                            selected = selected,
+                            onClick = {
+                                selected = !selected
+                                viewModel.changeCourseSortSelected(index, selected)
+                                viewModel.filterGrades()
+                            },
+                            label = { Text(courseType.label) },
+                            leadingIcon = {
+                                Crossfade(targetState = selected) {
+                                    if (it) {
+                                        Icon(
+                                            Icons.Outlined.Check,
+                                            null,
+                                            Modifier.size(FilterChipDefaults.IconSize)
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }

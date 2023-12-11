@@ -2,13 +2,11 @@ package com.dart.campushelper.ui.grade
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,10 +24,6 @@ import com.dart.campushelper.ui.grade.bottomsheet.StatisticBottomSheet
 import com.dart.campushelper.viewmodel.GradeViewModel
 
 @SuppressLint("RestrictedApi", "CoroutineCreationDuringComposition", "UnrememberedMutableState")
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class,
-)
 @Composable
 fun GradeScreen(
     viewModel: GradeViewModel

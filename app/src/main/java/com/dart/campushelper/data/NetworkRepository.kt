@@ -156,8 +156,8 @@ class NetworkRepository @Inject constructor(
         tryRequest(networkService.getCourseTypeList())?.let {
             Jsoup.parse(it).select("select[id=kcxz]").firstOrNull()?.children()?.drop(1)?.map {
                 CourseType(
-                    id = it.attr("value").toInt(),
-                    name = it.text(),
+                    value = it.attr("value"),
+                    label = it.text(),
                     selected = true,
                 )
             }
