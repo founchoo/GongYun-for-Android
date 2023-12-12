@@ -1,0 +1,121 @@
+#参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
+name: Android CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.idea/**'
+      - '.gitattributes'
+      - '.github/**.json'
+      - '.gitignore'
+      - '.gitmodules'
+      - '**.md'
+      - 'LICENSE'
+      - 'NOTICE'
+  pull_request:
+    paths-ignore:
+      - '.idea/**'
+      - '.gitattributes'
+      - '.github/**.json'
+      - '.gitignore'
+      - '.gitmodules'
+      - '**.md'
+      - 'LICENSE'
+      - 'NOTICE'
+  workflow_dispatch:
+
+#env:
+ # APP_CENTER_SECRET: ${{secrets.APP_CENTER_SECRET}}
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip duplicate actions
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+      - run: chmod +x ./gradlew   
+      - run: ./gradlew lintKotlin
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+      - name: Retrieve version
+        run: |
+          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+      - name: Write sign info
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
+        run: |
+          if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
+            echo releaseStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
+            echo releaseKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
+            echo releaseKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
+            echo releaseStoreFile='${{ github.workspace }}/key.jks' >> gradle.properties
+            echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
+          fi
+      - name: Build with Gradle
+      - run: chmod +x ./gradlew
+      - run: ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
+      - name: Upload built Foss apk
+        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Foss
+          path: ${{ github.workspace }}/app/build/outputs/apk/foss/release
+      - name: Upload built Market apk
+        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Market
+          path: ${{ github.workspace }}/app/build/outputs/apk/market/release
+      - name: Upload mappings
+        if: success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: mappings
+          path: "app/build/outputs/mapping/marketRelease"
+      - name: Set apk path
+        id: apk-path
+        run: |
+          foss_path=$(find **/build/outputs/apk/foss -name '*.apk' -type f | head -1)
+          echo "foss_path=$foss_path" >> $GITHUB_OUTPUT
+          market_path=$(find **/build/outputs/apk/market -name '*.apk' -type f | head -1)
+          echo "market_path=$market_path" >> $GITHUB_OUTPUT
+      - name: Get apk info
+        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
+        id: apk-info
+        uses: zhaobozhen/apk-info-action@1.1.2
+        with:
+          apk-path: ${{ steps.apk-path.outputs.foss_path }}
+#      - name: Upload mappings with App Center CLI
+#        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
+#        uses: zhaobozhen/AppCenter-Github-Action@1.0.1
+#        with:
+#          command: appcenter crashes upload-mappings --mapping app/build/outputs/mapping/marketRelease/mapping.txt --version-name ${{ steps.apk-info.outputs.version-name }} --version-code ${{ steps.apk-info.outputs.version-code }} --app zhaobozhen2025-gmail.com/LibChecker
+#          token: ${{secrets.APP_CENTER_TOKEN}}
