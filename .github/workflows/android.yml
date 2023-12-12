@@ -26,9 +26,6 @@ on:
       - 'NOTICE'
   workflow_dispatch:
 
-# env:
-#  APP_CENTER_SECRET: ${{secrets.APP_CENTER_SECRET}}
-
 jobs:
   check:
     name: Check
@@ -71,6 +68,7 @@ jobs:
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
       - name: Write sign info
+        id: sign_app
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
         run: |
           if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
@@ -84,40 +82,9 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
-      - name: Upload built Foss apk
-        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
-        uses: actions/upload-artifact@v3
+      - run: mv ${{steps.sign_app.outputs.signedReleaseFile}} GongYun_$GITHUB_REF_NAME.apk
+      - uses: ncipollo/release-action@v1
         with:
-          name: Foss
-          path: ${{ github.workspace }}/app/build/outputs/apk/foss/release
-      - name: Upload built Market apk
-        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
-        uses: actions/upload-artifact@v3
-        with:
-          name: Market
-          path: ${{ github.workspace }}/app/build/outputs/apk/market/release
-      - name: Upload mappings
-        if: success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v3
-        with:
-          name: mappings
-          path: "app/build/outputs/mapping/marketRelease"
-      - name: Set apk path
-        id: apk-path
-        run: |
-          foss_path=$(find **/build/outputs/apk/foss -name '*.apk' -type f | head -1)
-          echo "foss_path=$foss_path" >> $GITHUB_OUTPUT
-          market_path=$(find **/build/outputs/apk/market -name '*.apk' -type f | head -1)
-          echo "market_path=$market_path" >> $GITHUB_OUTPUT
-      - name: Get apk info
-        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
-        id: apk-info
-        uses: zhaobozhen/apk-info-action@1.1.2
-        with:
-          apk-path: ${{ steps.apk-path.outputs.foss_path }}
-     # - name: Upload mappings with App Center CLI
-     #   if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
-     #   uses: zhaobozhen/AppCenter-Github-Action@1.0.1
-     #   with:
-     #     command: appcenter crashes upload-mappings --mapping app/build/outputs/mapping/marketRelease/mapping.txt --version-name ${{ steps.apk-info.outputs.version-name }} --version-code ${{ steps.apk-info.outputs.version-code }} --app zhaobozhen2025-gmail.com/LibChecker
-     #     token: ${{secrets.APP_CENTER_TOKEN}}
+          artifacts: "*.apk"
+          token: ${{ github.token }}
+          generateReleaseNotes: true
