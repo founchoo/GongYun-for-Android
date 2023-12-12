@@ -1,4 +1,4 @@
-# 参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
+# Reference: https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
 name: Android CI
 
 on:
@@ -47,39 +47,39 @@ jobs:
           gradle-home-cache-cleanup: true
 
   build:
-    name: Build
+    name: Build and Release
     runs-on: ubuntu-latest
-
     steps:
-      # Check out
-      - uses: actions/checkout@v4
+      - name: Check out
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Set Java version
-      - uses: actions/setup-java@v4
+      - name: Set Java version
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
-      # Build Gradle
-      - uses: gradle/gradle-build-action@v2
+      - name: Build Gradle
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
-      # Get current date and time
-      - name: Test1
+      - name: Get current date and time
         id: dt
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
           format: "YYYY_MM_DD HH_mm_ss_SSS"
-      - run: echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
-      # Set version name
-      - name: Retrieve version
-        run: echo VERSION=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
-      # Add version code
-      - name: Bump version
+      - name: set COM_ID
+        run: echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 7) >> $GITHUB_ENV
+      - name: Set VERSION_NAME
+        run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
+      - name: Set VERSION_CODE
+        run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.year }}${{ steps.dt.outputs.month }}${{ steps.dt.outputs.day }}${{ steps.dt.outputs.hours }}${{ steps.dt.outputs.minutes }}${{ steps.dt.outputs.seconds }}) >> $GITHUB_ENV
+      - name: Override version name and code in build.gradle
         uses: Devofure/advance-android-version-actions@v1.4
         with:
           gradlePath: app/build.gradle
-          versionName: ${{ env.VERSION }}
+          versionName: ${{ env.VERSION_NAME }}
+          versionCode: ${{ env.VERSION_CODE }}
       - name: Write sign info
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
         run: |
@@ -93,7 +93,7 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
+          ./gradlew -PappVerName=${{ env.VERSION_NAME }} app:assembleRelease
           APK_PATH=$(ls app/build/outputs/apk/release/*.apk)
           echo "APK path: $APK_PATH"
           echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
@@ -103,8 +103,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: ${{ env.VERSION_NAME }}
+          release_name: ${{ env.VERSION_NAME }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
@@ -115,5 +115,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
           asset_path: ./${{ env.APK_PATH }}
-          asset_name: GongYun-${{ env.VERSION }}.apk
+          asset_name: GongYun-${{ env.VERSION_NAME }}.apk
           asset_content_type: application/vnd.android.package-archive
