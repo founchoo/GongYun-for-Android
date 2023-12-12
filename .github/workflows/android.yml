@@ -47,7 +47,7 @@ jobs:
           gradle-home-cache-cleanup: true
 
   build:
-    name: Build and Release
+    name: Build, upload and release
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -106,7 +106,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           
-      - name: Create release
+      - name: Create release for APK
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -147,5 +147,5 @@ jobs:
       - name: Upload built AAB
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.VERSION_NAME }}
+          name: GongYun-${{ env.VERSION_NAME }}.aab
           path: ${{ github.workspace }}/app/build/outputs/bundle/release
