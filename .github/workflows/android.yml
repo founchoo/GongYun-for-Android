@@ -144,5 +144,5 @@ jobs:
       - name: Upload built AAB
         uses: actions/upload-artifact@v3
         with:
-          name: GongYun-${{ env.VERSION_NAME }}.aab
+          name: GongYun-${{ env.VERSION_NAME }}
           path: ./${{ env.SIGNED_RELEASE_FILE }}
