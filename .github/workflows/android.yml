@@ -68,6 +68,7 @@ jobs:
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
       - name: Write sign info
+        id: sign_app
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
         run: |
           if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
