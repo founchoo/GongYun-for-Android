@@ -45,9 +45,6 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
-      # - run: |
-      #     chmod +x ./gradlew   
-      #     ./gradlew lintKotlin
 
   build:
     name: Build
@@ -67,17 +64,14 @@ jobs:
       - name: Retrieve version
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
-      - name: Write sign info
+      - uses: r0adkll/sign-android-release@v1
         id: sign_app
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
-        run: |
-          if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
-            echo releaseStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
-            echo releaseKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
-            echo releaseKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
-            echo releaseStoreFile='${{ github.workspace }}/key.jks' >> gradle.properties
-            echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
-          fi
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
       - name: Build with Gradle
         run: |
           chmod +x ./gradlew
