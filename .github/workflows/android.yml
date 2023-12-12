@@ -92,9 +92,6 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew app:assembleRelease
-          APK_PATH=$(ls app/build/outputs/apk/release/*.apk)
-          echo "APK path: $APK_PATH"
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
           
       - name: Sign APK
         id: sign_apk
@@ -124,7 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./${{ env.APK_PATH }}
+          asset_path: ./${{ env.SIGNED_RELEASE_FILE }}
           asset_name: GongYun-${{ env.VERSION_NAME }}.apk
           asset_content_type: application/vnd.android.package-archive
 
