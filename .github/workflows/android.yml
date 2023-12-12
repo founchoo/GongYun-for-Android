@@ -48,8 +48,9 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
-#      - run: chmod +x ./gradlew   
-      - run: ./gradlew lintKotlin
+      - run: |
+          chmod +x ./gradlew   
+          ./gradlew lintKotlin
 
   build:
     name: Build
@@ -80,8 +81,9 @@ jobs:
             echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
           fi
       - name: Build with Gradle
-#        run: chmod +x ./gradlew
-        run: ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
+        run: |
+          chmod +x ./gradlew
+          ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
       - name: Upload built Foss apk
         if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
         uses: actions/upload-artifact@v3
