@@ -26,10 +26,12 @@ android {
 
     productFlavors {
         foss {
+            dimension "version"
             applicationIdSuffix ".foss"
             versionNameSuffix "-foss"
         }
         market {
+            dimension "version"
             applicationIdSuffix ".market"
             versionNameSuffix "-market"
         }
