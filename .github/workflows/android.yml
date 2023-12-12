@@ -1,10 +1,7 @@
 # Ref. https://juejin.cn/post/7234418257759846455
 
 name: Android CI
-on:
-  push:
-    tags:
-      - "v*"
+on: push
 
 jobs:
   build:
