@@ -145,4 +145,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: GongYun-${{ env.VERSION_NAME }}.aab
-          path: ${{ github.workspace }}/app/build/outputs/bundle/release
+          path: ./${{ env.SIGNED_RELEASE_FILE }}
