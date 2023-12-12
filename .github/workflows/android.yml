@@ -1,69 +1,26 @@
-# 参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
-name: Android CI
+# Ref. https://juejin.cn/post/7234418257759846455
 
+name: Android CI
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '.idea/**'
-      - '.gitattributes'
-      - '.github/**.json'
-      - '.gitignore'
-      - '.gitmodules'
-      - '**.md'
-      - 'LICENSE'
-      - 'NOTICE'
-  pull_request:
-    paths-ignore:
-      - '.idea/**'
-      - '.gitattributes'
-      - '.github/**.json'
-      - '.gitignore'
-      - '.gitmodules'
-      - '**.md'
-      - 'LICENSE'
-      - 'NOTICE'
-  workflow_dispatch:
+    tags:
+      - "v*"
 
 jobs:
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Skip duplicate actions
-        uses: fkirc/skip-duplicate-actions@v5
-        with:
-          cancel_others: true
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 17
-      - uses: gradle/wrapper-validation-action@v1
-      - uses: gradle/gradle-build-action@v2
-        with:
-          gradle-home-cache-cleanup: true
-
   build:
-    name: Build
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
         with:
-          fetch-depth: 0
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
+          distribution: temurin
           java-version: 17
       - uses: gradle/gradle-build-action@v2
         with:
-          gradle-home-cache-cleanup: true
-      - name: Retrieve version
-        run: |
-          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+          gradle-version: current
+          arguments: assembleRelease
       - uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
@@ -72,10 +29,6 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-      - name: Build with Gradle
-        run: |
-          chmod +x ./gradlew
-          ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
       - run: mv ${{steps.sign_app.outputs.signedReleaseFile}} GongYun_$GITHUB_REF_NAME.apk
       - uses: ncipollo/release-action@v1
         with:
