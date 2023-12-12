@@ -45,20 +45,6 @@ android {
         }
     }
 
-    flavorDimensions += "version"
-    productFlavors {
-        foss {
-            dimension "version"
-            applicationIdSuffix ".foss"
-            versionNameSuffix "-foss"
-        }
-        market {
-            dimension "version"
-            applicationIdSuffix ".market"
-            versionNameSuffix "-market"
-        }
-    }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
