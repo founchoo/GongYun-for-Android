@@ -1,42 +1,81 @@
-# Ref. https://juejin.cn/post/7234418257759846455
-
+# 参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
 name: Android CI
-on: push
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.idea/**'
+      - '.gitattributes'
+      - '.github/**.json'
+      - '.gitignore'
+      - '.gitmodules'
+      - '**.md'
+      - 'LICENSE'
+      - 'NOTICE'
+  pull_request:
+    paths-ignore:
+      - '.idea/**'
+      - '.gitattributes'
+      - '.github/**.json'
+      - '.gitignore'
+      - '.gitmodules'
+      - '**.md'
+      - 'LICENSE'
+      - 'NOTICE'
+  workflow_dispatch:
 
 jobs:
-  build:
+  check:
+    name: Check
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - name: Skip duplicate actions
+        uses: fkirc/skip-duplicate-actions@v5
         with:
-          distribution: temurin
+          cancel_others: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
           java-version: 17
-      - name: Increment version code and update version name
-        run: |
-          versionCode=$(grep versionCode app/build.gradle | awk '{ print $2 }')
-          versionCode=$((versionCode+1))
-          sed -i "s/versionCode .*/versionCode $versionCode/" app/build.gradle
-          versionName="$(date +%Y%m%d)-${GITHUB_SHA::7}"
-          sed -i "s/versionName .*/versionName \"$versionName\"/" app/build.gradle
+      - uses: gradle/wrapper-validation-action@v1
       - uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
-          arguments: assembleRelease
-      - uses: r0adkll/sign-android-release@v1
-        id: sign_app
+          gradle-home-cache-cleanup: true
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
         with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-      - uses: GoogleCloudPlatform/release-please-action@v3
-        id: release
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
         with:
-          token: ${{ secrets.RELEASE_TOKEN }}
-          release-type: node
-          package-name: standard-version
-          changelog-types: '[{"type": "types", "section":"Types", "hidden": false},{"type": "revert", "section":"Reverts", "hidden": false},{"type": "feat", "section": "Features", "hidden": false},{"type": "fix", "section": "Bug Fixes", "hidden": false},{"type": "improvement", "section": "Feature Improvements", "hidden": false},{"type": "docs", "section":"Docs", "hidden": false},{"type": "style", "section":"Styling", "hidden": false},{"type": "refactor", "section":"Code Refactoring", "hidden": false},{"type": "perf", "section":"Performance Improvements", "hidden": false},{"type": "test", "section":"Tests", "hidden": false},{"type": "build", "section":"Build System", "hidden": false},{"type": "ci", "section":"CI", "hidden":false}]'
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+      - name: Retrieve version
+        run: |
+          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+      - name: Write sign info
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
+        run: |
+          if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
+            echo releaseStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
+            echo releaseKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
+            echo releaseKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
+            echo releaseStoreFile='${{ github.workspace }}/key.jks' >> gradle.properties
+            echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
+          fi
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
+          echo "APK path: $(ls app/build/outputs/apk/release/*.apk)"
