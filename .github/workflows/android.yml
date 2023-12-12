@@ -88,23 +88,10 @@ jobs:
           versionName: ${{ env.VERSION_NAME }}
           versionCode: ${{ env.VERSION_CODE }}
           
-      - name: Grant rights
-        run: chmod +x build.gradle
-        
-      - name: Write sign info
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
-        run: |
-          if [ ! -z "${{ secrets.SIGNING_KEY }}" ]; then
-            echo releaseStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
-            echo releaseKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
-            echo releaseKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
-            echo releaseStoreFile='${{ github.workspace }}/key.jks' >> gradle.properties
-            echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
-          fi
-          
       - name: Build release APK
         run: |
-          ./gradlew -PappVerName=${{ env.VERSION_NAME }} app:assembleRelease
+          chmod +x ./gradlew
+          ./gradlew app:assembleRelease
           APK_PATH=$(ls app/build/outputs/apk/release/*.apk)
           echo "APK path: $APK_PATH"
           echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
@@ -119,7 +106,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           
-      - name: Create Release
+      - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -143,7 +130,9 @@ jobs:
 
       - name: Build release AAB
         id: buildRelease
-        run: ./gradlew bundleRelease
+        run: |
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
         
       - name: Sign AAB
         id: sign_aab
