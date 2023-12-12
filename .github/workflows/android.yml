@@ -54,32 +54,43 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
       - name: Set Java version
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
+          
       - name: Build Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
+          
       - name: Get current date and time
         id: dt
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
           format: "YYYY_MM_DD HH_mm_ss_SSS"
+          
       - name: Set COM_ID
         run: echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 7) >> $GITHUB_ENV
+        
       - name: Set VERSION_NAME
         run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
+        
       - name: Set VERSION_CODE
         run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.year }}${{ github.run_number }}) >> $GITHUB_ENV
+        
       - name: Override version name and code in build.gradle
         uses: Devofure/advance-android-version-actions@v1.4
         with:
           gradlePath: app/build.gradle
           versionName: ${{ env.VERSION_NAME }}
           versionCode: ${{ env.VERSION_CODE }}
+          
+      - name: Grant rights
+        run: chmod +x build.gradle
+        
       - name: Write sign info
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
         run: |
@@ -90,13 +101,24 @@ jobs:
             echo releaseStoreFile='${{ github.workspace }}/key.jks' >> gradle.properties
             echo ${{ secrets.SIGNING_KEY }} | base64 --decode > ${{ github.workspace }}/key.jks
           fi
-      - name: Build with Gradle
+          
+      - name: Build release APK
         run: |
-          chmod +x ./gradlew
           ./gradlew -PappVerName=${{ env.VERSION_NAME }} app:assembleRelease
           APK_PATH=$(ls app/build/outputs/apk/release/*.apk)
           echo "APK path: $APK_PATH"
           echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+          
+      - name: Sign APK
+        id: sign_apk
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -107,7 +129,8 @@ jobs:
           release_name: ${{ env.VERSION_NAME }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
+          
+      - name: Upload release APK
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
@@ -117,3 +140,23 @@ jobs:
           asset_path: ./${{ env.APK_PATH }}
           asset_name: GongYun-${{ env.VERSION_NAME }}.apk
           asset_content_type: application/vnd.android.package-archive
+
+      - name: Build release AAB
+        id: buildRelease
+        run: ./gradlew bundleRelease
+        
+      - name: Sign AAB
+        id: sign_aab
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload built AAB
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.VERSION_NAME }}
+          path: ${{ github.workspace }}/app/build/outputs/bundle/release
