@@ -68,12 +68,12 @@ jobs:
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
           format: "YYYY_MM_DD HH_mm_ss_SSS"
-      - name: set COM_ID
+      - name: Set COM_ID
         run: echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 7) >> $GITHUB_ENV
       - name: Set VERSION_NAME
         run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
       - name: Set VERSION_CODE
-        run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.year }}${{ steps.dt.outputs.month }}${{ steps.dt.outputs.day }}${{ steps.dt.outputs.hours }}${{ steps.dt.outputs.minutes }}${{ steps.dt.outputs.seconds }}) >> $GITHUB_ENV
+        run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.year }}${{ steps.dt.outputs.month }}${{ steps.dt.outputs.day }}${{ github.run_number }}) >> $GITHUB_ENV
       - name: Override version name and code in build.gradle
         uses: Devofure/advance-android-version-actions@v1.4
         with:
