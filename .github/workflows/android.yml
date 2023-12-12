@@ -73,7 +73,7 @@ jobs:
       # Set version name
       - name: Retrieve version
         run: |
-          echo VERSION=$(echo ${{ steps.dt.outputs.year }}-${{ steps.dt.outputs.month }}-${{ steps.dt.outputs.day }}-${{ github.event.head_commit.id }}) >> $GITHUB_ENV
+          echo VERSION=$(echo ${{ steps.dt.outputs.year }}-${{ steps.dt.outputs.month }}-${{ steps.dt.outputs.day }}-${{ github.event.head_commit.id: -10 }}) >> $GITHUB_ENV
       # Add version code
       - name: Bump version
         uses: Devofure/advance-android-version-actions@v1.4
@@ -94,9 +94,26 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
-          echo "APK path: $(ls app/build/outputs/apk/release/*.apk)"
-      - name: Releasing using Hub
-        uses: r0user/release-apk@main
+          APK_PATH=$(ls app/build/outputs/apk/release/*.apk)
+          echo "APK path: $APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          APP_FOLDER: app
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./${{ env.APK_PATH }}
+          asset_name: GongYun-${{ env.VERSION }}.apk
+          asset_content_type: application/vnd.android.package-archive
