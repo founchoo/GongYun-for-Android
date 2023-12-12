@@ -73,9 +73,8 @@ jobs:
       # Set version name
       - name: Retrieve version
         run: |
-          COM_ID=${{ github.event.head_commit.id }} | head -c 10
-          echo "COM_ID=$COM_ID" >> $GITHUB_ENV
-          echo VERSION=$(echo ${{ steps.dt.outputs.year }}-${{ steps.dt.outputs.month }}-${{ steps.dt.outputs.day }}-${{ env.COM_ID }}) >> $GITHUB_ENV
+          echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+          echo VERSION=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
       # Add version code
       - name: Bump version
         uses: Devofure/advance-android-version-actions@v1.4
