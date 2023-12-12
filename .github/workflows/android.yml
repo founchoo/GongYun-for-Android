@@ -51,19 +51,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Check out
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Set Java version
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
+      # Build Gradle
       - uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
+      # Get current date and time
+      - name: Test1
+        id: dt
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "YYYY_MM_DD HH_mm_ss_SSS"
+      # Set version name
       - name: Retrieve version
         run: |
-          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+          echo VERSION=$(echo ${{ steps.dt.outputs.year }}-${{ steps.dt.outputs.month }}-${{ steps.dt.outputs.day }}-${{ github.event.head_commit.id }}) >> $GITHUB_ENV
+      # Add version code
+      - name: Bump version
+        uses: Devofure/advance-android-version-actions@v1.4
+        with:
+          gradlePath: app/build.gradle
+          versionName: ${{ env.VERSION }}
       - name: Write sign info
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'founchoo/GongYun-for-Android'
         run: |
@@ -79,3 +95,8 @@ jobs:
           chmod +x ./gradlew
           ./gradlew -PappVerName=${{ env.VERSION }} app:assembleRelease
           echo "APK path: $(ls app/build/outputs/apk/release/*.apk)"
+      - name: Releasing using Hub
+        uses: r0user/release-apk@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          APP_FOLDER: app
