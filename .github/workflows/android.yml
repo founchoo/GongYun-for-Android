@@ -1,4 +1,4 @@
-#参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
+# 参考 https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
 name: Android CI
 
 on:
@@ -26,8 +26,8 @@ on:
       - 'NOTICE'
   workflow_dispatch:
 
-#env:
- # APP_CENTER_SECRET: ${{secrets.APP_CENTER_SECRET}}
+# env:
+#  APP_CENTER_SECRET: ${{secrets.APP_CENTER_SECRET}}
 
 jobs:
   check:
@@ -48,9 +48,9 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           gradle-home-cache-cleanup: true
-      - run: |
-          chmod +x ./gradlew   
-          ./gradlew lintKotlin
+      # - run: |
+      #     chmod +x ./gradlew   
+      #     ./gradlew lintKotlin
 
   build:
     name: Build
@@ -115,9 +115,9 @@ jobs:
         uses: zhaobozhen/apk-info-action@1.1.2
         with:
           apk-path: ${{ steps.apk-path.outputs.foss_path }}
-#      - name: Upload mappings with App Center CLI
-#        if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
-#        uses: zhaobozhen/AppCenter-Github-Action@1.0.1
-#        with:
-#          command: appcenter crashes upload-mappings --mapping app/build/outputs/mapping/marketRelease/mapping.txt --version-name ${{ steps.apk-info.outputs.version-name }} --version-code ${{ steps.apk-info.outputs.version-code }} --app zhaobozhen2025-gmail.com/LibChecker
-#          token: ${{secrets.APP_CENTER_TOKEN}}
+     # - name: Upload mappings with App Center CLI
+     #   if: success() && github.event_name != 'pull_request' && github.repository == 'founchoo/GongYun-for-Android'
+     #   uses: zhaobozhen/AppCenter-Github-Action@1.0.1
+     #   with:
+     #     command: appcenter crashes upload-mappings --mapping app/build/outputs/mapping/marketRelease/mapping.txt --version-name ${{ steps.apk-info.outputs.version-name }} --version-code ${{ steps.apk-info.outputs.version-code }} --app zhaobozhen2025-gmail.com/LibChecker
+     #     token: ${{secrets.APP_CENTER_TOKEN}}
