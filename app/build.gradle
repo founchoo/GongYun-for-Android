@@ -24,6 +24,17 @@ android {
         resourceConfigurations += ["zh-rCN", "en"]
     }
 
+    productFlavors {
+        foss {
+            applicationIdSuffix ".foss"
+            versionNameSuffix "-foss"
+        }
+        market {
+            applicationIdSuffix ".market"
+            versionNameSuffix "-market"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
