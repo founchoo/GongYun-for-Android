@@ -1,13 +1,7 @@
 # Trigger the workflow on milestone events
-on:
+on: 
   milestone:
     types: [closed]
-  workflow_dispatch:
-    inputs:
-      milestoneId:
-        description: 'Milestone ID'     
-        required: true
-        default: '1'
 name: Milestone Closure
 jobs:
   create-release-notes:
@@ -15,8 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Create Release Notes
-      uses: docker://decathlon/release-notes-generator-action:3.1.6
+      uses: Cossey/release-notes-generator-action@v2.1.4
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         OUTPUT_FOLDER: temp_release_notes
-        USE_MILESTONE_TITLE: "true"
