@@ -185,7 +185,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
     }
 
     override fun observeYearAndSemester(): Flow<String> = instance.dataStore.data.map {
-        it[KEY_SEMESTER_YEAR_AND_NO] ?: DEFAULT_VALUE_SEMESTER_YEAR_AND_NO
+        it[KEY_SEMESTER_YEAR_AND_NO] ?: DEFAULT_VALUE_YEAR_AND_SEMESTER
     }
 
     override fun observeEnterUniversityYear(): Flow<String> = instance.dataStore.data.map {
@@ -222,14 +222,16 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         const val DEFAULT_VALUE_COOKIES = "[]"
         const val DEFAULT_VALUE_IS_LOGIN = false
         const val DEFAULT_VALUE_DAY_OF_WEEK = -1
-        const val DEFAULT_VALUE_DISPLAYED_WEEK = -1
         const val DEFAULT_VALUE_ENABLE_SYSTEM_COLOR = true
         val DEFAULT_VALUE_SELECTED_DARK_MODE = DarkMode.SYSTEM.ordinal
-        val DEFAULT_VALUE_START_LOCALDATE = LocalDate.now()
         const val DEFAULT_VALUE_USERNAME = ""
+        const val MOCK_VALUE_USERNAME = "MOCK_USERNAME"
         const val DEFAULT_VALUE_PASSWORD = ""
-        const val DEFAULT_VALUE_SEMESTER_YEAR_AND_NO = ""
+        const val MOCK_VALUE_PASSWORD = "MOCK_PASSWORD"
+        const val DEFAULT_VALUE_YEAR_AND_SEMESTER = ""
+        val MOCK_VALUE_YEAR_AND_SEMESTER = LocalDate.now().year.let { "${it}-${it + 1}-1" }
         const val DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR = ""
+        val MOCK_VALUE_ENTER_UNIVERSITY_YEAR = "${LocalDate.now().year - 3}"
         const val DEFAULT_VALUE_IS_SCREENSHOT_MODE = false
     }
 }

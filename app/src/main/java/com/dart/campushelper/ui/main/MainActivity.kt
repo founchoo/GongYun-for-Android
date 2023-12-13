@@ -358,8 +358,13 @@ class MainActivity : AppCompatActivity() {
                 SnackbarHost(hostState = snackBarHostState)
             },
             floatingActionButton = {
-                currentDestination?.route?.let { screens[Route.valueOf(it)] }
-                    ?.let { if (it.enabled) it else null }?.fab?.let { it() }
+                Crossfade(targetState = currentDestination?.route?.let {
+                    screens[Route.valueOf(
+                        it
+                    )]
+                }?.let { if (it.enabled) it else null }?.fab) {
+                    it?.let { it() }
+                }
             }
         ) {
             NavHost(

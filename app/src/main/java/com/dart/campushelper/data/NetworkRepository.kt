@@ -4,6 +4,9 @@ import androidx.compose.material3.SnackbarResult
 import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_PASSWORD
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_USERNAME
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
 import com.dart.campushelper.model.CalendarItem
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
@@ -13,8 +16,8 @@ import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.Ranking
 import com.dart.campushelper.model.RankingInfo
+import com.dart.campushelper.model.Records
 import com.dart.campushelper.model.ScheduleNoteItem
-import com.dart.campushelper.model.StudentInfoResponse
 import com.dart.campushelper.model.SubRankingType
 import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.viewmodel.CourseType
@@ -87,6 +90,8 @@ class NetworkRepository @Inject constructor(
             }
         )
 
+    private fun isMockMode() = usernameStateFlow.value == MOCK_VALUE_USERNAME
+
     private suspend fun reLogin(): Boolean? = login(
         username = usernameStateFlow.value,
         password = passwordStateFlow.value,
@@ -109,11 +114,9 @@ class NetworkRepository @Inject constructor(
      * This method is only for requests which are not handling the login process
      */
     private suspend fun <T> tryRequest(call: Call<T>): T? {
-        // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
         try {
             val res = call.awaitResponse()
             val code = res.code()
-            // Log.d("ChaoxingRepository", "Response code: $code")
             // Success to response
             if (code == 200) {
                 return res.body()
@@ -134,7 +137,6 @@ class NetworkRepository @Inject constructor(
                 return null
             }
         } catch (e: Exception) {
-            // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
             // return showSnackBarWithRetryButton(call.clone())
             return null
         }
@@ -142,94 +144,149 @@ class NetworkRepository @Inject constructor(
 
     suspend fun getCalendar(
         yearAndSemester: String?
-    ): List<CalendarItem>? =
-        tryRequest(
-            networkService.getCalendar(
-                yearAndSemester ?: yearAndSemesterStateFlow.value
-            )
-        )?.filter { it.weekNo?.toInt() != 0 }
+    ): List<CalendarItem>? {
+        return if (isMockMode()) {
+            List(1) {
+                CalendarItem.mock()
+            }
+        } else {
+            tryRequest(
+                networkService.getCalendar(
+                    yearAndSemester ?: yearAndSemesterStateFlow.value
+                )
+            )?.filter { it.weekNo?.toInt() != 0 }
+        }
+    }
 
-    suspend fun getGrades(): List<Grade>? =
-        tryRequest(networkService.getGrades())?.results
+    suspend fun getGrades(): List<Grade>? {
+        return if (isMockMode()) {
+            return List(20) {
+                Grade(
+                    yearAndSemester = MOCK_VALUE_YEAR_AND_SEMESTER,
+                    creditRaw = "${1.0 + it * 0.1}",
+                    courseNameRaw = "[${it}]课程名称${it}",
+                    courseTypeRaw = "${it / 2}",
+                    scoreRaw = "${80 + it}",
+                    gradePoint = 3.0 + it * 0.1,
+                    courseId = "$it",
+                    detail = "详细信息"
+                )
+            }
+        } else {
+            tryRequest(networkService.getGrades())?.results
+        }
+    }
 
-    suspend fun getCourseTypeList(): List<CourseType>? =
-        tryRequest(networkService.getCourseTypeList())?.let {
-            Jsoup.parse(it).select("select[id=kcxz]").firstOrNull()?.children()?.drop(1)?.map {
+
+    suspend fun getCourseTypeList(): List<CourseType>? {
+        return if (isMockMode()) {
+            List(10) {
                 CourseType(
-                    value = it.attr("value"),
-                    label = it.text(),
+                    value = "$it",
+                    label = "类型${it}",
                     selected = true,
                 )
             }
-        }
-
-    suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): RankingInfo? {
-        var rankingInfo: RankingInfo? = null
-        tryRequest(
-            networkService.getStudentRankingInfoRaw(
-                enterUniversityYear = enterUniversityYearStateFlow.value,
-                yearAndSemester = yearAndSemesters.joinToString(","),
-            )
-        )?.let {
-            rankingInfo = RankingInfo()
-            Jsoup.parse(it).run {
-                select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
-                    hostElement.select("td")
-                        .forEachIndexed { subRankingType, subElement ->
-                            if (subRankingType > 0) {
-                                rankingInfo!!.setRanking(
-                                    HostRankingType.values()[hostRankingType - 1],
-                                    SubRankingType.values()[subRankingType - 1],
-                                    subElement.text().split("/").let {
-                                        if (it[0] == "" || it[1] == "") {
-                                            Ranking()
-                                        } else {
-                                            Ranking(it[0].toInt(), it[1].toInt())
-                                        }
-                                    }
-                                )
-                            }
-                        }
+        } else {
+            tryRequest(networkService.getCourseTypeList())?.let {
+                Jsoup.parse(it).select("select[id=kcxz]").firstOrNull()?.children()?.drop(1)?.map {
+                    CourseType(
+                        value = it.attr("value"),
+                        label = it.text(),
+                        selected = true,
+                    )
                 }
             }
         }
-        return rankingInfo
+    }
+
+    suspend fun getStudentRankingInfo(yearAndSemesters: Collection<String>): RankingInfo? {
+        if (isMockMode()) {
+            return RankingInfo.mock()
+        } else {
+            var rankingInfo: RankingInfo? = null
+            tryRequest(
+                networkService.getStudentRankingInfoRaw(
+                    enterUniversityYear = enterUniversityYearStateFlow.value,
+                    yearAndSemester = yearAndSemesters.joinToString(","),
+                )
+            )?.let {
+                rankingInfo = RankingInfo()
+                Jsoup.parse(it).run {
+                    select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
+                        hostElement.select("td")
+                            .forEachIndexed { subRankingType, subElement ->
+                                if (subRankingType > 0) {
+                                    rankingInfo!!.setRanking(
+                                        HostRankingType.values()[hostRankingType - 1],
+                                        SubRankingType.values()[subRankingType - 1],
+                                        subElement.text().split("/").let {
+                                            if (it[0] == "" || it[1] == "") {
+                                                Ranking()
+                                            } else {
+                                                Ranking(it[0].toInt(), it[1].toInt())
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                    }
+                }
+            }
+            return rankingInfo
+        }
     }
 
     suspend fun getSchedule(
         yearAndSemester: String?
-    ): List<Course>? = tryRequest(
-        networkService.getSchedule(
-            yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
-            studentId = usernameStateFlow.value,
-            semesterNo = ((yearAndSemester ?: yearAndSemesterStateFlow.value).lastOrNull()
-                ?: "").toString(),
-        )
-    )?.filter {
-        (it.nodeNo!! + 1) % 2 == 0
-    }?.map {
-        it.copy(nodeNo = (it.nodeNo!! + 1) / 2)
+    ): List<Course>? {
+        return if (isMockMode()) {
+            return List(20) {
+                Course.mock()
+            }
+        } else {
+            tryRequest(
+                networkService.getSchedule(
+                    yearAndSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
+                    studentId = usernameStateFlow.value,
+                    semesterNo = ((yearAndSemester ?: yearAndSemesterStateFlow.value).lastOrNull()
+                        ?: "").toString(),
+                )
+            )?.filter {
+                (it.nodeNo!! + 1) % 2 == 0
+            }?.map {
+                it.copy(nodeNo = (it.nodeNo!! + 1) / 2)
+            }
+        }
     }
 
     suspend fun getScheduleNotes(
         yearAndSemester: String?
     ): List<ScheduleNoteItem>? {
-        return tryRequest(
-            networkService.getScheduleNotesRaw(yearAndSemester ?: yearAndSemesterStateFlow.value)
-        )?.let {
-            Jsoup.parse(it).select("td[colspan=8]").first()?.html()?.trim()?.split("<br>")
-                ?.dropLast(1)?.map {
-                    val openBracketIndex = it.indexOf("【")
-                    val closeBracketIndex = it.indexOf("】")
-                    if (openBracketIndex == -1 || closeBracketIndex == -1) {
-                        ScheduleNoteItem(it.trim(), "")
-                    } else {
-                        ScheduleNoteItem(
-                            it.substring(0, openBracketIndex).trim(),
-                            it.substring(openBracketIndex + 1, closeBracketIndex).trim()
-                        )
+        return if (isMockMode()) {
+            List(2) {
+                ScheduleNoteItem.mock()
+            }
+        } else {
+            tryRequest(
+                networkService.getScheduleNotesRaw(
+                    yearAndSemester ?: yearAndSemesterStateFlow.value
+                )
+            )?.let {
+                Jsoup.parse(it).select("td[colspan=8]").first()?.html()?.trim()?.split("<br>")
+                    ?.dropLast(1)?.map {
+                        val openBracketIndex = it.indexOf("【")
+                        val closeBracketIndex = it.indexOf("】")
+                        if (openBracketIndex == -1 || closeBracketIndex == -1) {
+                            ScheduleNoteItem(it.trim(), "")
+                        } else {
+                            ScheduleNoteItem(
+                                it.substring(0, openBracketIndex).trim(),
+                                it.substring(openBracketIndex + 1, closeBracketIndex).trim()
+                            )
+                        }
                     }
-                }
+            }
         }
     }
 
@@ -241,58 +298,91 @@ class NetworkRepository @Inject constructor(
         endDayOfWeek: String,
         startNode: String,
         endNode: String,
-    ): List<GlobalCourse>? =
-        tryRequest(
-            networkService.getGlobalSchedule(
-                yearAndSemester = yearAndSemester,
-                startWeekNo = startWeekNo,
-                endWeekNo = endWeekNo,
-                startDayOfWeek = startDayOfWeek,
-                endDayOfWeek = endDayOfWeek,
-                startNode = startNode,
-                endNode = endNode,
-            )
-        )?.results
+    ): List<GlobalCourse>? {
+        return if (isMockMode()) {
+            List(20) {
+                GlobalCourse.mock()
+            }
+        } else {
+            tryRequest(
+                networkService.getGlobalSchedule(
+                    yearAndSemester = yearAndSemester,
+                    startWeekNo = startWeekNo,
+                    endWeekNo = endWeekNo,
+                    startDayOfWeek = startDayOfWeek,
+                    endDayOfWeek = endDayOfWeek,
+                    startNode = startNode,
+                    endNode = endNode,
+                )
+            )?.results
+        }
+    }
 
-    suspend fun getPlannedSchedule(): List<PlannedCourse>? =
-        tryRequest(networkService.getPlannedSchedule())?.results
+    suspend fun getPlannedSchedule(): List<PlannedCourse>? {
+        return if (isMockMode()) {
+            List(20) {
+                PlannedCourse.mock()
+            }
+        } else {
+            tryRequest(networkService.getPlannedSchedule())?.results
+        }
+    }
+
 
     suspend fun getEmptyClassroom(
         dayOfWeekNo: List<Int>,
         nodeNo: List<Int>,
         weekNo: List<Int>,
-    ): List<Classroom>? = tryRequest(
-        networkService.getEmptyClassroom(
-            dayOfWeekNo = dayOfWeekNo.joinToString(","),
-            nodeNo = nodeNo.joinToString(","),
-            weekNo = weekNo.joinToString(","),
-        )
-    )?.results
+    ): List<Classroom>? {
+        return if (isMockMode()) {
+            List(20) {
+                Classroom.mock()
+            }
+        } else {
+            tryRequest(
+                networkService.getEmptyClassroom(
+                    dayOfWeekNo = dayOfWeekNo.joinToString(","),
+                    nodeNo = nodeNo.joinToString(","),
+                    weekNo = weekNo.joinToString(","),
+                )
+            )?.results
+        }
+    }
 
-    suspend fun getStudentInfo(): StudentInfoResponse? =
-        tryRequest(networkService.getStudentInfo())
+    suspend fun getStudentInfo(): Records? {
+        return if (isMockMode()) {
+            Records.mock()
+        } else {
+            tryRequest(networkService.getStudentInfo())?.data?.records?.get(0)
+        }
+    }
 
     suspend fun login(
         username: String,
         password: String,
     ): Boolean? {
-        val call = networkService.login(
-            username = username,
-            password = password,
-        )
-        val reqUrl = call.request().url.toString()
-        // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
-        try {
-            val res = call.awaitResponse()
-            // Log.d("ChaoxingRepository", "Response code: $code")
-            return when (res.code()) {
-                200 -> false
-                302 -> true
-                else -> null
+        if (username == MOCK_VALUE_USERNAME && password == MOCK_VALUE_PASSWORD) {
+
+            return true
+        } else {
+            val call = networkService.login(
+                username = username,
+                password = password,
+            )
+            val reqUrl = call.request().url.toString()
+            // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
+            try {
+                val res = call.awaitResponse()
+                // Log.d("ChaoxingRepository", "Response code: $code")
+                return when (res.code()) {
+                    200 -> false
+                    302 -> true
+                    else -> null
+                }
+            } catch (e: Exception) {
+                // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
+                return null
             }
-        } catch (e: Exception) {
-            // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
-            return null
         }
     }
 }

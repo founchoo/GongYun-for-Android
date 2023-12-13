@@ -1,9 +1,10 @@
 package com.dart.campushelper.model
 
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
+import com.dart.campushelper.viewmodel.CourseType
 import com.google.gson.annotations.SerializedName
 
 data class GradeResponse(
-
     @SerializedName("msg") var msg: String? = null,
     @SerializedName("ret") var ret: Int? = null,
     @SerializedName("page") var page: Int? = null,
@@ -11,11 +12,9 @@ data class GradeResponse(
     @SerializedName("total") var total: Int? = null,
     @SerializedName("totalPages") var totalPages: Int? = null,
     @SerializedName("results") var results: ArrayList<Grade> = arrayListOf()
-
 )
 
 data class Grade(
-
     @SerializedName("xnxq") var yearAndSemester: String? = null,
     @SerializedName("xf") var creditRaw: String? = null,
     @SerializedName("kcmc") var courseNameRaw: String? = null,
@@ -24,8 +23,7 @@ data class Grade(
     @SerializedName("jd") var gradePoint: Double? = null,
     @SerializedName("kcid") var courseId: String? = null,
     @SerializedName("cjfxms") var detail: String? = null,
-
-    ) {
+) {
     val score: Int
         get() = scoreRaw.orEmpty().toIntOrNull() ?: 0
 
@@ -34,4 +32,19 @@ data class Grade(
 
     val name: String
         get() = courseNameRaw?.replace("[${courseId}]", "") ?: ""
+
+    companion object {
+        fun mock(): Grade {
+            return Grade(
+                yearAndSemester = MOCK_VALUE_YEAR_AND_SEMESTER,
+                creditRaw = "3.0",
+                courseNameRaw = "[CS101]Introduction to Computer Science",
+                courseTypeRaw = CourseType.mock().value,
+                scoreRaw = "85",
+                gradePoint = 3.7,
+                courseId = "CS101",
+                detail = "Final Exam: 85, Midterm: 80, Homework: 90"
+            )
+        }
+    }
 }

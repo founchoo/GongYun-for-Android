@@ -1,8 +1,6 @@
 package com.dart.campushelper.ui.settings
 
 import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
@@ -24,11 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
-import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.ui.component.TextAlertDialog
 import com.dart.campushelper.ui.component.preference.DropdownMenuPreference
 import com.dart.campushelper.ui.component.preference.PreferenceHeader
@@ -37,11 +32,11 @@ import com.dart.campushelper.ui.component.preference.SwitchPreference
 import com.dart.campushelper.ui.component.preference.TextPreference
 import com.dart.campushelper.ui.login.LoginDialog
 import com.dart.campushelper.utils.replaceWithStars
+import com.dart.campushelper.utils.visitWebsite
 import com.dart.campushelper.viewmodel.DarkMode
 import com.dart.campushelper.viewmodel.LoginViewModel
 import com.dart.campushelper.viewmodel.SettingsViewModel
 import com.dart.campushelper.viewmodel.toStringResourceId
-import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -49,9 +44,10 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     loginViewModel: LoginViewModel
 ) {
-
     val loginUiState by loginViewModel.uiState.collectAsState()
     val settingsUiState by settingsViewModel.uiState.collectAsState()
+
+    val cbManager = LocalClipboardManager.current
 
     LazyColumn {
         item {
@@ -164,21 +160,22 @@ fun SettingsScreen(
                 description = stringResource(R.string.dev_name),
                 painter = painterResource(R.drawable.dev_avatar),
             ) {
-                settingsViewModel.onShowDevProfileUrlConfirmDialogRequest()
+                visitWebsite(instance.getString(R.string.dev_github_url))
             }
             TextPreference(
                 title = stringResource(R.string.feedback_title),
                 description = stringResource(R.string.feedback_desc),
                 imageVector = Icons.AutoMirrored.Outlined.Chat
             ) {
-                settingsViewModel.onShowFeedbackUrlConfirmDialogRequest()
+
+                settingsViewModel.copyText(cbManager)
             }
             TextPreference(
                 title = stringResource(R.string.open_source_code_title),
                 description = stringResource(R.string.open_source_code_desc),
                 imageVector = Icons.Outlined.Code
             ) {
-                settingsViewModel.onShowSourceCodeUrlConfirmDialogRequest()
+                visitWebsite(instance.getString(R.string.project_github_url))
             }
             if (settingsUiState.isDevSectionShow) {
                 PreferenceHeader(text = stringResource(R.string.dev))
@@ -207,47 +204,5 @@ fun SettingsScreen(
         },
         onDismissRequest = { settingsViewModel.onHideLogoutConfirmDialogRequest() },
         contentText = stringResource(R.string.logout_message)
-    )
-
-    val clipboardManager = LocalClipboardManager.current
-
-    TextAlertDialog(
-        isShowDialog = settingsUiState.openFeedbackUrlConfirmDialog,
-        actionAfterConfirm = {
-            settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
-            // Copy QQ group number
-            clipboardManager.setText(AnnotatedString(instance.getString(R.string.qq_group_number)))
-            settingsViewModel.viewModelScope.launch {
-                MainActivity.snackBarHostState.showSnackbar(instance.getString(R.string.copy_group_toast))
-            }
-        },
-        onDismissRequest = { settingsViewModel.onHideFeedbackUrlConfirmDialogRequest() },
-        contentText = stringResource(R.string.copy_group_message)
-    )
-
-    TextAlertDialog(
-        isShowDialog = settingsUiState.openSourceCodeUrlConfirmDialog,
-        actionAfterConfirm = {
-            settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest()
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(instance.getString(R.string.project_github_url))
-            instance.startActivity(intent)
-        },
-        onDismissRequest = { settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest() },
-        contentText = stringResource(R.string.open_source_code_message)
-    )
-
-    TextAlertDialog(
-        isShowDialog = settingsUiState.openDevProfileUrlConfirmDialog,
-        actionAfterConfirm = {
-            settingsViewModel.onHideDevProfileUrlConfirmDialogRequest()
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(instance.getString(R.string.dev_github_url))
-            instance.startActivity(intent)
-        },
-        onDismissRequest = { settingsViewModel.onHideDevProfileUrlConfirmDialogRequest() },
-        contentText = stringResource(R.string.open_dev_profile_message)
     )
 }

@@ -134,4 +134,7 @@
     <string name="login_info_error">学号或密码有误</string>
     <string name="switch_week">切换周数</string>
     <string name="current_semester">当前学年学期</string>
+    <string name="fill_mock_info">没有帐户？填充体验账户</string>
+    <string name="clear_mock_info">清除体验账户</string>
+    <string name="login_help_text">不知道到密码？访问 %1$s 了解更多信息</string>
 </resources>

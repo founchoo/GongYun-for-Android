@@ -56,4 +56,53 @@ data class PlannedCourse(
     @SerializedName("delFlag") var delFlag: String? = null,
     @SerializedName("createDate") var createDate: String? = null,
     @SerializedName("new") var new: Boolean? = null
-)
+) {
+    companion object {
+        fun mock(): PlannedCourse {
+            return PlannedCourse(
+                currentUserId = "U001",
+                userRoleId = "R001",
+                dataAuth = true,
+                currentYearAndSemester = "2022-2023-1",
+                currentRoleId = "R002",
+                currentJsId = "JS001",
+                currentUserName = "John Doe",
+                currentDepartmentId = "D001",
+                id = "PC001",
+                pyfaid = "PYFA001",
+                grade = "1",
+                gradename = "Freshman",
+                semester = "1",
+                kcid = "KC001",
+                kcbh = "KCBH001",
+                ksxs = "Written",
+                llxs = "32",
+                syxs = "16",
+                shijianxs = "2",
+                shangjxs = "2",
+                qtxs = "0",
+                zhouxs = "16",
+                sjzs = "48",
+                kkyx = "KKYX001",
+                hostInstituteName = "Computer Science",
+                kcxz = "Compulsory",
+                jxzs = "Lecture",
+                kclb = "Core",
+                courseName = "Introduction to Computer Science",
+                zongxs = "48",
+                xf = "3",
+                sfsjhj = "0",
+                sfsjhjmc = "Not included in GPA",
+                sfbx = "1",
+                jd = 4,
+                jhcounts = 30,
+                sumflag = 1,
+                kczxgzt = "Normal",
+                ywmc = "Introduction to Computer Science",
+                delFlag = "0",
+                createDate = "2022-09-01",
+                new = false
+            )
+        }
+    }
+}

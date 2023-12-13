@@ -13,6 +13,18 @@ class RankingInfo {
     fun setRanking(hostRankingType: HostRankingType, subRankingType: SubRankingType, ranking: Ranking) {
         data[Pair(hostRankingType, subRankingType)] = ranking
     }
+
+    companion object {
+        fun mock(): RankingInfo {
+            return RankingInfo().apply {
+                HostRankingType.values().forEach { host ->
+                    SubRankingType.values().forEach { sub ->
+                        this.setRanking(host, sub, Ranking(23, 800))
+                    }
+                }
+            }
+        }
+    }
 }
 
 data class Ranking (

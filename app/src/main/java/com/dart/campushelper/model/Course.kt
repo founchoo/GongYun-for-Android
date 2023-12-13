@@ -153,6 +153,42 @@ data class Course(
         null
     )
 
+    companion object {
+        fun mock() : Course {
+            return Course(
+                id = "123456",
+                academicYearAndTerm = "2022-2023-2",
+                teacherId = "T001",
+                type = 1,
+                xs = 30,
+                rqxl = "2022-09-01 to 2022-12-31",
+                sfwc = 0,
+                classId = "C001",
+                courseNameHtml = "<h1>Mathematics</h1>",
+                courseCode = "MATH101",
+                zc = "1-16",
+                weekNoListStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16",
+                classroomNameHtml = "<h1>Room 101</h1>",
+                teacherNameHtml = "<h1>John Doe</h1>",
+                classNameHtml = "<h1>Class A</h1>",
+                xqid = "XQ01",
+                campusName = "Main Campus",
+                weekDayNo = 1,
+                nodeNo = 2,
+                flag = 1,
+                source = "System",
+                pkid = "PK001",
+                xq = "1",
+                bjdm = "BJ001",
+                kcxz = "Compulsory",
+                xdxz = "Chosen",
+                ksxs = "Written",
+                xdfs = "Credit",
+                zctype = "Registered"
+            )
+        }
+    }
+
     // 课程名称
     val courseName: String?
         get() = courseNameHtml?.let { parseHtml(it) }

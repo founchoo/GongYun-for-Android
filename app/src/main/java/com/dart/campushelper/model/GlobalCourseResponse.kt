@@ -60,4 +60,46 @@ data class GlobalCourse(
                 parseHtml(html)
             }
         }
+
+    companion object {
+        fun mock(): GlobalCourse {
+            return GlobalCourse(
+                currentUserId = "U001",
+                userRoleId = "R001",
+                dataAuth = true,
+                dataXnxq = "2022-2023-1",
+                currentRoleId = "R002",
+                currentJsId = "JS001",
+                currentUserName = "John Doe",
+                currentDepartmentId = "D001",
+                tid = "T001",
+                type = "1",
+                xnxq = "2022-2023-1",
+                xqmc = "Main Campus",
+                kkyxmc = "Computer Science",
+                kcxz = "Compulsory",
+                courseNameHtml = "<h1>Introduction to Computer Science</h1>",
+                teacherNameHtml = "<h1>John Doe</h1>",
+                jxbid = "JXB001",
+                jxbmc = "Class A",
+                classNameHtml = "<h1>Class A</h1>",
+                bjrs = "30",
+                sksjdd = "Monday 10:00 AM - 12:00 PM",
+                classroomRaw = "<h1>Room 101</h1>",
+                zdskrnrs = "30",
+                ksxs = "Written",
+                ksfs = "Final Exam",
+                zongxs = "48",
+                llxs = "32",
+                syxs = "16",
+                shangjxs = "2",
+                shijianxs = "2",
+                kkyxAuth = true,
+                jsyxAuth = true,
+                xsyxAuth = true,
+                sfhyclj = false,
+                showallbj = true
+            )
+        }
+    }
 }

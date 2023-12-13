@@ -1,5 +1,7 @@
 package com.dart.campushelper.ui.login
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -7,7 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -29,12 +33,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.R
+import com.dart.campushelper.api.NetworkService.Companion.BASE_URL
+import com.dart.campushelper.utils.visitWebsite
 import com.dart.campushelper.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoginDialog(
     loginViewModel: LoginViewModel
@@ -55,6 +65,7 @@ fun LoginDialog(
         text = {
             Column(verticalArrangement = Arrangement.SpaceAround) {
                 TextField(
+                    readOnly = !uiState.inputEnabled,
                     value = uiState.username,
                     onValueChange = { loginViewModel.onUsernameChanged(it) },
                     label = { Text(stringResource(R.string.student_number)) },
@@ -75,6 +86,7 @@ fun LoginDialog(
                     },
                 )
                 TextField(
+                    readOnly = !uiState.inputEnabled,
                     value = uiState.password,
                     onValueChange = { loginViewModel.onPasswordChanged(it) },
                     label = { Text(stringResource(R.string.password)) },
@@ -91,7 +103,7 @@ fun LoginDialog(
                     trailingIcon = {
                         if (uiState.loginResponse == false) {
                             Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error)
-                        } else {
+                        } else if (uiState.inputEnabled) {
                             IconButton(
                                 onClick = { },
                                 interactionSource = interactionSource
@@ -118,6 +130,48 @@ fun LoginDialog(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
+                }
+                if (uiState.inputEnabled) {
+                    ClickableText(
+                        modifier = Modifier
+                            .basicMarquee()
+                            .padding(bottom = 5.dp),
+                        text = AnnotatedString(
+                            stringResource(R.string.login_help_text, BASE_URL),
+                            spanStyle = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        ),
+                        onClick = {
+                            visitWebsite(BASE_URL)
+                        }
+                    )
+                    ClickableText(
+                        text = AnnotatedString(
+                            stringResource(R.string.fill_mock_info),
+                            spanStyle = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline,
+                            )
+                        ),
+                        onClick = {
+                            loginViewModel.fillMockInfo()
+                        }
+                    )
+                } else {
+                    ClickableText(
+                        text = AnnotatedString(
+                            stringResource(R.string.clear_mock_info),
+                            spanStyle = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline,
+                            )
+                        ),
+                        onClick = {
+                            loginViewModel.clearMockInfo()
+                        }
+                    )
                 }
             }
         },

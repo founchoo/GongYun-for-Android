@@ -130,4 +130,8 @@
     <string name="network_connection_error">Network connection error</string>
     <string name="login_info_error">Invalid student # or password</string>
     <string name="switch_week">Switch week</string>
+    <string name="current_semester">Current academic year and semester</string>
+    <string name="fill_mock_info">Don\'t have an account? Fill an experience account</string>
+    <string name="clear_mock_info">Clear experience account</string>
+    <string name="login_help_text">Don\'t know your password? Visit %1$s for more information</string>
 </resources>

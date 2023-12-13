@@ -1,9 +1,10 @@
 package com.dart.campushelper.model
 
+import com.dart.campushelper.data.DataStoreRepository
 import com.google.gson.annotations.SerializedName
+import java.time.LocalDate
 
 data class CalendarItem(
-
     /**
      * 学年学期，例如：2020-2021-1
      */
@@ -26,5 +27,22 @@ data class CalendarItem(
     @SerializedName("friday") var friday: String? = null,
     @SerializedName("saturday") var saturday: String? = null,
     @SerializedName("sunday") var sunday: String? = null,
-
-)
+) {
+    companion object {
+        fun mock(): CalendarItem {
+            return CalendarItem(
+                DataStoreRepository.MOCK_VALUE_YEAR_AND_SEMESTER,
+                "${
+                    DataStoreRepository.MOCK_VALUE_YEAR_AND_SEMESTER.substring(
+                        0,
+                        4
+                    )
+                }-${
+                    LocalDate.now().minusMonths(3).month.value.let { if (it < 10) "0$it" else it }
+                }",
+                "1",
+                "21"
+            )
+        }
+    }
+}

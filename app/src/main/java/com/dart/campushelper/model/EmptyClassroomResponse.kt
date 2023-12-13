@@ -31,4 +31,25 @@ data class Classroom(
     @SerializedName("jyzt") var jyzt: String? = null,
     @SerializedName("gcqmc") var functionalAreaName: String? = null,
 
-)
+) {
+    companion object {
+        fun mock(): Classroom {
+            return Classroom(
+                id = "CR001",
+                roomName = "Room 101",
+                jsbh = "JSBH001",
+                type = "Lecture",
+                jxldm = "JXLD001",
+                buildingName = "Building A",
+                xqmc = "Main Campus",
+                xqdm = "XQDM001",
+                zdskrnrs = 30,
+                floor = "1",
+                sfqy = "1",
+                syyx = "Computer Science",
+                jyzt = "Available",
+                functionalAreaName = "Computer Science"
+            )
+        }
+    }
+}

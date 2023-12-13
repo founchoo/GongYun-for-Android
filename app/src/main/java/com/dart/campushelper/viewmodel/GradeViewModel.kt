@@ -39,7 +39,17 @@ data class YearAndSemester(
     var selected: Boolean
 )
 
-data class CourseType(val value: String, val label: String, val selected: Boolean)
+data class CourseType(val value: String, val label: String, val selected: Boolean) {
+    companion object {
+        fun mock() : CourseType {
+            return CourseType(
+                value = "CT001",
+                label = "CT001",
+                selected = true
+            )
+        }
+    }
+}
 
 enum class SortBasis {
     GRADE,
@@ -128,6 +138,14 @@ class GradeViewModel @Inject constructor(
             }
         )
 
+    private val isLoginStateFlow = dataStoreRepository.observeIsLogin().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            dataStoreRepository.observeIsLogin().first()
+        }
+    )
+
     private var _backedGrades: List<Grade>? = null
 
     init {
@@ -142,6 +160,13 @@ class GradeViewModel @Inject constructor(
             enterUniversityYearStateFlow.collect { value ->
                 if (value.toIntOrNull() != null) {
                     _uiState.update { it.copy(startYearAndSemester = "${value}-${value.toInt() + 1}-1") }
+                }
+            }
+        }
+        viewModelScope.launch {
+            isLoginStateFlow.collect {
+                if (it) {
+                    getGrades()
                 }
             }
         }
@@ -213,7 +238,6 @@ class GradeViewModel @Inject constructor(
     }
 
     suspend fun getGrades() {
-        val firstLoad = _backedGrades == null
         _backedGrades = null
         viewModelScope.launch {
             _uiState.update {
@@ -221,7 +245,7 @@ class GradeViewModel @Inject constructor(
             }
             val gradesResult = networkRepository.getGrades()
             _backedGrades = gradesResult
-            if (firstLoad) resetFilter()
+            resetFilter()
             filterGrades()
         }
     }

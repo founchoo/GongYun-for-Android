@@ -1,5 +1,7 @@
 package com.dart.campushelper.model
 
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
 import com.google.gson.annotations.SerializedName
 
 
@@ -74,7 +76,16 @@ data class Records(
     @SerializedName("wfwtbzt") var wfwtbzt: String? = null,
     @SerializedName("new") var new: Boolean? = null
 
-)
+) {
+    companion object {
+        fun mock(): Records {
+            return Records(
+                dataXnxq = MOCK_VALUE_YEAR_AND_SEMESTER,
+                rxnj = MOCK_VALUE_ENTER_UNIVERSITY_YEAR,
+            )
+        }
+    }
+}
 
 data class UpdateBy(
 

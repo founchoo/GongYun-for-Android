@@ -2,19 +2,22 @@ package com.dart.campushelper.viewmodel
 
 import android.appwidget.AppWidgetManager
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.BuildConfig
+import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
-import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.ui.component.preference.SelectionItem
+import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.ui.main.pin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -288,39 +291,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onShowFeedbackUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openFeedbackUrlConfirmDialog = true)
-        }
-    }
-
-    fun onHideFeedbackUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openFeedbackUrlConfirmDialog = false)
-        }
-    }
-
-    fun onShowSourceCodeUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openSourceCodeUrlConfirmDialog = true)
-        }
-    }
-
-    fun onHideSourceCodeUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openSourceCodeUrlConfirmDialog = false)
-        }
-    }
-
-    fun onShowDevProfileUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openDevProfileUrlConfirmDialog = true)
-        }
-    }
-
-    fun onHideDevProfileUrlConfirmDialogRequest() {
-        _uiState.update {
-            it.copy(openDevProfileUrlConfirmDialog = false)
+    fun copyText(cbManager: ClipboardManager) {
+        cbManager.setText(AnnotatedString(instance.getString(R.string.qq_group_number)))
+        viewModelScope.launch {
+            MainActivity.snackBarHostState.showSnackbar(instance.getString(R.string.copy_group_toast))
         }
     }
 

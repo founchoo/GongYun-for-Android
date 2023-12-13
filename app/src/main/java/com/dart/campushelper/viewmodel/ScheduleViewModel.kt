@@ -138,6 +138,14 @@ class ScheduleViewModel @Inject constructor(
         }
     )
 
+    private val isLoginStateFlow = dataStoreRepository.observeIsLogin().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        runBlocking {
+            dataStoreRepository.observeIsLogin().first()
+        }
+    )
+
     init {
         viewModelScope.launch {
             isOtherCourseDisplayStateFlow.collect { value ->
@@ -176,6 +184,13 @@ class ScheduleViewModel @Inject constructor(
             }.collect { data ->
                 if (data[0].isNotEmpty() && data[1].isNotEmpty()) {
                     _uiState.update { it.copy(currentSemester = data[0]) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            isLoginStateFlow.collect {
+                if (it) {
+                    loadSchedule()
                 }
             }
         }

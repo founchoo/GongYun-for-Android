@@ -68,9 +68,23 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
             ) {
                 SingleChoiceSegmentedButtonRow {
                     uiState.sortBasisList.forEachIndexed { index, item ->
+                        var selected by remember { mutableStateOf(item.selected) }
+                        var asc by remember { mutableStateOf(item.asc) }
+                        LaunchedEffect(uiState.sortBasisList[index].selected) {
+                            selected = uiState.sortBasisList[index].selected
+                            asc = uiState.sortBasisList[index].asc
+                        }
                         SegmentedButton(
-                            selected = item.selected,
+                            selected = selected,
                             onClick = {
+                                if (!selected) {
+                                    selected = true
+                                } else if (!asc) {
+                                    asc = true
+                                } else {
+                                    asc = false
+                                    selected = false
+                                }
                                 viewModel.sortGradesBy(index, item)
                             },
                             shape = SegmentedButtonDefaults.itemShape(
@@ -78,9 +92,9 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                                 count = SortBasis.values().size
                             ),
                             icon = {
-                                if (item.asc) {
+                                if (asc) {
                                     SegmentedButtonDefaults.Icon(
-                                        active = item.selected,
+                                        active = selected,
                                         activeContent = {
                                             Icon(
                                                 Icons.Outlined.North,
@@ -91,7 +105,7 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                                     )
                                 } else {
                                     SegmentedButtonDefaults.Icon(
-                                        active = item.selected,
+                                        active = selected,
                                         activeContent = {
                                             Icon(
                                                 Icons.Outlined.South,
