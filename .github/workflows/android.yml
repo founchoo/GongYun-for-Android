@@ -14,16 +14,6 @@ on:
       - '**.md'
       - 'LICENSE'
       - 'NOTICE'
-  pull_request:
-    paths-ignore:
-      - '.idea/**'
-      - '.gitattributes'
-      - '.github/**'
-      - '.gitignore'
-      - '.gitmodules'
-      - '**.md'
-      - 'LICENSE'
-      - 'NOTICE'
   workflow_dispatch:
 
 jobs:
