@@ -87,7 +87,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
@@ -513,7 +513,7 @@ class MainActivity : AppCompatActivity() {
             showExitHint = true
             scope.launch {
                 showExitHint =
-                    snackBarHostState.showSnackbar(context.getString(R.string.message_befor_exit)) != SnackbarResult.Dismissed
+                    snackBarHostState.showSnackbar(instance.getString(R.string.message_befor_exit)) != SnackbarResult.Dismissed
             }
         }
     }

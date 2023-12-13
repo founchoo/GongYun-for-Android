@@ -1,7 +1,5 @@
 package com.dart.campushelper.utils
 
-import com.dart.campushelper.CampusHelperApplication.Companion.context
-import com.dart.campushelper.R
 import org.jsoup.Jsoup
 
 // 解析HTML

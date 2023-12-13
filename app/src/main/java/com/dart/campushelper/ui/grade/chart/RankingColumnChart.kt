@@ -1,7 +1,7 @@
 package com.dart.campushelper.ui.grade.chart
 
 import androidx.compose.runtime.Composable
-import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.App
 import com.dart.campushelper.R
 import com.dart.campushelper.model.SubRankingType
 import com.dart.campushelper.ui.component.rememberMarker
@@ -42,7 +42,7 @@ fun RankingColumnChart(uiState: GradeUiState) {
                 ),
                 marker = rememberMarker(
                     formatter = { raw ->
-                        "${CampusHelperApplication.context.getString(R.string.rank_at)} ${
+                        "${App.instance.getString(R.string.rank_at)} ${
                             DecimalFormat("#.##").format((1 - raw) * 100)
                                 .toString()
                                 .replaceWithStars(uiState.isScreenshotMode)

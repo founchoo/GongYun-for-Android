@@ -6,7 +6,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.BuildConfig
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
@@ -242,14 +242,14 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun pin() {
-        val widgetManager = AppWidgetManager.getInstance(context)
+        val widgetManager = AppWidgetManager.getInstance(instance)
         // Get a list of our app widget providers to retrieve their info
         val widgetProviders =
             widgetManager.getInstalledProvidersForPackage(
-                context.packageName,
+                instance.packageName,
                 null
             )
-        widgetProviders[0].pin(context)
+        widgetProviders[0].pin(instance)
     }
 
     fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {

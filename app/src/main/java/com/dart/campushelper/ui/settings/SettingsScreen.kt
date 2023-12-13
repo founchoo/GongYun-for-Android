@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.ui.component.TextAlertDialog
@@ -216,9 +216,9 @@ fun SettingsScreen(
         actionAfterConfirm = {
             settingsViewModel.onHideFeedbackUrlConfirmDialogRequest()
             // Copy QQ group number
-            clipboardManager.setText(AnnotatedString(context.getString(R.string.qq_group_number)))
+            clipboardManager.setText(AnnotatedString(instance.getString(R.string.qq_group_number)))
             settingsViewModel.viewModelScope.launch {
-                MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.copy_group_toast))
+                MainActivity.snackBarHostState.showSnackbar(instance.getString(R.string.copy_group_toast))
             }
         },
         onDismissRequest = { settingsViewModel.onHideFeedbackUrlConfirmDialogRequest() },
@@ -231,8 +231,8 @@ fun SettingsScreen(
             settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(context.getString(R.string.project_github_url))
-            context.startActivity(intent)
+            intent.data = Uri.parse(instance.getString(R.string.project_github_url))
+            instance.startActivity(intent)
         },
         onDismissRequest = { settingsViewModel.onHideSourceCodeUrlConfirmDialogRequest() },
         contentText = stringResource(R.string.open_source_code_message)
@@ -244,8 +244,8 @@ fun SettingsScreen(
             settingsViewModel.onHideDevProfileUrlConfirmDialogRequest()
             val intent = Intent(Intent.ACTION_VIEW)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.data = Uri.parse(context.getString(R.string.dev_github_url))
-            context.startActivity(intent)
+            intent.data = Uri.parse(instance.getString(R.string.dev_github_url))
+            instance.startActivity(intent)
         },
         onDismissRequest = { settingsViewModel.onHideDevProfileUrlConfirmDialogRequest() },
         contentText = stringResource(R.string.open_dev_profile_message)

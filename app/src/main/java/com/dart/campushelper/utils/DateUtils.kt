@@ -1,6 +1,6 @@
 package com.dart.campushelper.utils
 
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App
 import com.dart.campushelper.R
 import com.dart.campushelper.utils.DateUtils.nodeEnds
 import java.time.LocalDate
@@ -46,13 +46,13 @@ fun getCurrentNode(): Int {
 
 class DayOfWeek {
     private val map = mapOf(
-        1 to context.getString(R.string.monday),
-        2 to context.getString(R.string.tuesday),
-        3 to context.getString(R.string.wednesday),
-        4 to context.getString(R.string.thursday),
-        5 to context.getString(R.string.friday),
-        6 to context.getString(R.string.saturday),
-        7 to context.getString(R.string.sunday),
+        1 to App.instance.getString(R.string.monday),
+        2 to App.instance.getString(R.string.tuesday),
+        3 to App.instance.getString(R.string.wednesday),
+        4 to App.instance.getString(R.string.thursday),
+        5 to App.instance.getString(R.string.friday),
+        6 to App.instance.getString(R.string.saturday),
+        7 to App.instance.getString(R.string.sunday),
     )
 
     fun convertDayOfWeekToText(dayOfWeek: Int): String = map[dayOfWeek] ?: ""

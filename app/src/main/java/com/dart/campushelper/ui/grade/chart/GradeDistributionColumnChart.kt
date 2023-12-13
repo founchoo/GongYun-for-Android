@@ -2,7 +2,7 @@ package com.dart.campushelper.ui.grade.chart
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.App
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.rememberMarker
 import com.dart.campushelper.utils.replaceWithStars
@@ -52,7 +52,7 @@ fun GradeDistributionColumnChart(uiState: GradeUiState, viewModel: GradeViewMode
                     "${
                         DecimalFormat("#").format(raw).toString()
                             .replaceWithStars(uiState.isScreenshotMode)
-                    } ${CampusHelperApplication.context.getString(R.string.courses_belong_to_interval)}"
+                    } ${App.instance.getString(R.string.courses_belong_to_interval)}"
                 }
             ),
         )

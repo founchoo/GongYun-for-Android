@@ -1,6 +1,6 @@
 package com.dart.campushelper.di
 
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.data.DataStoreRepository
@@ -48,8 +48,8 @@ object NetworkModule {
                         .protocol(Protocol.HTTP_1_1)
                         .code(502)
                         .request(chain.request())
-                        .message(context.getString(R.string.network_connection_error))
-                        .body(context.getString(R.string.network_connection_error).toResponseBody())
+                        .message(instance.getString(R.string.network_connection_error))
+                        .body(instance.getString(R.string.network_connection_error).toResponseBody())
                         .build()
                 }
             }

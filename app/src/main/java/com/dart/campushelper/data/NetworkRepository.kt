@@ -1,7 +1,7 @@
 package com.dart.campushelper.data
 
 import androidx.compose.material3.SnackbarResult
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.model.CalendarItem
@@ -94,8 +94,8 @@ class NetworkRepository @Inject constructor(
 
     private suspend fun <T> showSnackBarWithRetryButton(call: Call<T>): T? {
         val result = MainActivity.snackBarHostState.showSnackbar(
-            context.getString(R.string.network_connection_error),
-            context.getString(R.string.retry),
+            instance.getString(R.string.network_connection_error),
+            instance.getString(R.string.retry),
             true
         )
         return if (result == SnackbarResult.ActionPerformed) {

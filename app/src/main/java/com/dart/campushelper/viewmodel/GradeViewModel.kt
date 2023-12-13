@@ -3,7 +3,7 @@ package com.dart.campushelper.viewmodel
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.CampusHelperApplication.Companion.context
+import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.NetworkRepository
@@ -47,8 +47,8 @@ enum class SortBasis {
 
     override fun toString(): String {
         return when (this) {
-            GRADE -> context.getString(R.string.grade_label)
-            CREDIT -> context.getString(R.string.credit_label)
+            GRADE -> instance.getString(R.string.grade_label)
+            CREDIT -> instance.getString(R.string.credit_label)
         }
     }
 }
@@ -209,7 +209,7 @@ class GradeViewModel @Inject constructor(
             3 -> "80-89"
             4 -> "90-100"
             else -> "0-59"
-        } + context.getString(R.string.score)
+        } + instance.getString(R.string.score)
     }
 
     suspend fun getGrades() {

@@ -129,5 +129,6 @@ interface NetworkService {
 
     companion object {
         const val BASE_URL = "https://hbut.jw.chaoxing.com/admin/"
+        const val MOCK_BASE_URL = "https://founchoo.github.io/GongYun-for-Android/mockapi/"
     }
 }

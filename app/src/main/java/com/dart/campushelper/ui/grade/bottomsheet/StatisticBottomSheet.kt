@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.dart.campushelper.CampusHelperApplication
+import com.dart.campushelper.App
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.ColumnCard
@@ -89,7 +89,7 @@ fun StatisticBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                         description = stringResource(
                             R.string.rank_desc,
                             uiState.semesters?.filter { it.selected }
-                                ?.joinToString(", ") { "${CampusHelperApplication.context.getString(it.yearResId)} ${CampusHelperApplication.context.getString(it.semesterResId)}" } ?: ""
+                                ?.joinToString(", ") { "${App.instance.getString(it.yearResId)} ${App.instance.getString(it.semesterResId)}" } ?: ""
                         )
                     ) {
                         RankingInfo(uiState)
