@@ -6,7 +6,6 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'mockapi/**'
       - '.idea/**'
       - '.gitattributes'
       - '.github/**'
@@ -17,7 +16,6 @@ on:
       - 'NOTICE'
   pull_request:
     paths-ignore:
-      - 'mockapi/**'
       - '.idea/**'
       - '.gitattributes'
       - '.github/**'
@@ -75,7 +73,14 @@ jobs:
           format: "YYYY_MM_DD HH_mm_ss_SSS"
           
       - name: Set COM_ID
-        run: echo COM_ID=$(echo ${{ github.event.head_commit.id }} | head -c 7) >> $GITHUB_ENV
+        run: |
+          ID=${{ github.event.head_commit.id }}
+          if [[ -z "$ID" ]]; then
+            ID="XXXXXXX"
+          else
+            ID=$(echo $ID | head -c 7)
+          fi
+          echo COM_ID=$ID >> $GITHUB_ENV
         
       - name: Set VERSION_NAME
         run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
@@ -104,28 +109,9 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-          
-      - name: Create release for APK
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION_NAME }}
-          release_name: ${{ env.VERSION_NAME }}
-          draft: false
-          prerelease: false
-          
-      - name: Upload release APK
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./${{ env.SIGNED_RELEASE_FILE }}
-          asset_name: GongYun-${{ env.VERSION_NAME }}.apk
-          asset_content_type: application/vnd.android.package-archive
+
+      - name: Copy and rename APK
+        run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-${{ env.VERSION_NAME }}.apk
 
       - name: Build release AAB
         id: buildRelease
@@ -143,8 +129,15 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload built AAB
-        uses: actions/upload-artifact@v3
+      - name: Copy and rename AAB
+        run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-${{ env.VERSION_NAME }}.aab
+
+      - name: Release APK and AAB
+        uses: softprops/action-gh-release@v1
         with:
-          name: GongYun-${{ env.VERSION_NAME }}
-          path: ./${{ env.SIGNED_RELEASE_FILE }}
+          tag_name: ${{ env.VERSION_NAME }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+          generate_release_notes: true
+          files: |
+            ./GongYun-${{ env.VERSION_NAME }}.apk
+            ./GongYun-${{ env.VERSION_NAME }}.aab
