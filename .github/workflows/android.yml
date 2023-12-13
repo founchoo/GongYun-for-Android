@@ -139,5 +139,5 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
           generate_release_notes: true
           files: |
-            ./GongYun-{{ env.VERSION_NAME }}.apk
-            ./GongYun-{{ env.VERSION_NAME }}.aab
+            ./GongYun-${{ env.VERSION_NAME }}.apk
+            ./GongYun-${{ env.VERSION_NAME }}.aab
