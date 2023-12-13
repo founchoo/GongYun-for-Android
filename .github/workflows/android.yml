@@ -104,7 +104,7 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Copy and rename APK
-      - run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-{{ env.VERSION_NAME }}.apk
+        run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-{{ env.VERSION_NAME }}.apk
 
       - name: Build release AAB
         id: buildRelease
@@ -123,7 +123,7 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Copy and rename AAB
-      - run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-{{ env.VERSION_NAME }}.aab
+        run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-{{ env.VERSION_NAME }}.aab
 
       - name: Release APK and AAB
         uses: softprops/action-gh-release@v1
