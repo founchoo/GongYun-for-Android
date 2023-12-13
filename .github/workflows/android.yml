@@ -6,9 +6,10 @@ on:
     branches:
       - main
     paths-ignore:
+      - 'mockapi/**'
       - '.idea/**'
       - '.gitattributes'
-      - '.github/**.json'
+      - '.github/**'
       - '.gitignore'
       - '.gitmodules'
       - '**.md'
@@ -16,9 +17,10 @@ on:
       - 'NOTICE'
   pull_request:
     paths-ignore:
+      - 'mockapi/**'
       - '.idea/**'
       - '.gitattributes'
-      - '.github/**.json'
+      - '.github/**'
       - '.gitignore'
       - '.gitmodules'
       - '**.md'
