@@ -2,12 +2,12 @@
 
 changelog:
   categories:
-    - title: Bug fixed 🛠
+    - title: 错误修复 / Bug fixed 🛠
       labels:
         - bug
-    - title: New Features 🎉
+    - title: 新功能 / New Features 🎉
       labels:
         - enhancement
-    - title: Other Changes
+    - title: 其他变动 / Other Changes
       labels:
         - "*"
