@@ -1,5 +1,5 @@
 # Reference: https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
-name: Android CI
+name: Auto release
 
 on:
   push:
