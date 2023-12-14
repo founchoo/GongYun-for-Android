@@ -137,4 +137,7 @@
     <string name="fill_mock_info">没有帐户？填充体验账户</string>
     <string name="clear_mock_info">清除体验账户</string>
     <string name="login_help_text">不知道到密码？访问 %1$s 了解更多信息</string>
+    <string name="teacher_schedule">查找教师课表</string>
+    <string name="no_teacher_schedule_found">暂无与此教师相关的课表</string>
+    <string name="input_teacher_name">输入教师姓名</string>
 </resources>

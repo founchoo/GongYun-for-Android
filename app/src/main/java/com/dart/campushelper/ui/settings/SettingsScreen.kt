@@ -71,6 +71,7 @@ fun SettingsScreen(
                     loginViewModel.onShowLoginDialogRequest()
                 }
             }
+            PreferenceHeader(text = stringResource(R.string.schedule_label))
             SwitchPreference(
                 imageVector = Icons.Outlined.DoNotDisturbOn,
                 value = settingsUiState.isOtherCourseDisplay,

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.PeopleOutline
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material3.DropdownMenu
@@ -77,6 +78,16 @@ fun ActionsForSchedule(viewModel: ScheduleViewModel, uiState: ScheduleUiState) {
             onClick = {
                 isMenuExpanded = false
                 viewModel.setIsShowPlannedScheduleSheet(true)
+            },
+        )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Outlined.PeopleOutline, null)
+            },
+            text = { Text(stringResource(R.string.teacher_schedule)) },
+            onClick = {
+                isMenuExpanded = false
+                viewModel.setIsShowTeacherScheduleSheet(true)
             },
         )
     }

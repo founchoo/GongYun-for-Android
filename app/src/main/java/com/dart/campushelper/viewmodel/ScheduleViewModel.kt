@@ -9,6 +9,7 @@ import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.data.Result
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
+import com.dart.campushelper.model.GlobalCourse
 import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.utils.DateUtils
@@ -30,7 +31,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-data class ScheduleUiState @OptIn(ExperimentalFoundationApi::class) constructor(
+data class ScheduleUiState constructor(
     val courses: Result<List<Course>> = Result(),
     val currentWeek: Int? = null,
     val browsedWeek: Int? = null,
@@ -69,6 +70,9 @@ data class ScheduleUiState @OptIn(ExperimentalFoundationApi::class) constructor(
     val isShowEmptyClassroomSheet: Boolean = false,
     val dayOfWeekOnHoldingCourse: Int = 0,
     val nodeNoOnHoldingCourse: Int = 0,
+    val isShowTeacherScheduleSheet: Boolean = false,
+    val teacherSchedule: Result<List<GlobalCourse>> = Result(),
+    val searchTeacherName: String = "",
 )
 
 @HiltViewModel
@@ -235,10 +239,10 @@ class ScheduleViewModel @Inject constructor(
         val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
         val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
         val semesters = mutableListOf<String>()
-        (semesterYearStart..semesterYearEnd).forEach { year ->
+        (semesterYearStart..semesterYearEnd).forEach label@ { year ->
             (1..2).forEach { no ->
                 if (year == semesterYearEnd && no > semesterNoEnd) {
-                    return@forEach
+                    return@label
                 }
                 semesters.add("$year-${year + 1}-$no")
             }
@@ -425,6 +429,43 @@ class ScheduleViewModel @Inject constructor(
     fun setNodeNoOnHoldingCourse(value: Int) {
         _uiState.update {
             it.copy(nodeNoOnHoldingCourse = value)
+        }
+    }
+
+    fun setIsShowTeacherScheduleSheet(value: Boolean) {
+        _uiState.update {
+            it.copy(searchTeacherName = "")
+        }
+        loadTeacherSchedule()
+        _uiState.update {
+            it.copy(
+                isShowTeacherScheduleSheet = value
+            )
+        }
+    }
+
+    fun loadTeacherSchedule() {
+        _uiState.value.browsedSemester?.let { browsedSemester ->
+            viewModelScope.launch {
+                _uiState.update {
+                    it.copy(
+                        teacherSchedule = if (_uiState.value.searchTeacherName.isEmpty()) Result(
+                            emptyList()
+                        ) else Result(
+                            networkRepository.getGlobalSchedule(
+                                yearAndSemester = browsedSemester,
+                                teacherName = _uiState.value.searchTeacherName,
+                            )
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    fun setSearchTeacherName(value: String) {
+        _uiState.update {
+            it.copy(searchTeacherName = value)
         }
     }
 }

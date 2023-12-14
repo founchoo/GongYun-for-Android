@@ -1,8 +1,5 @@
 package com.dart.campushelper.data
 
-import androidx.compose.material3.SnackbarResult
-import com.dart.campushelper.App.Companion.instance
-import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
 import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_PASSWORD
 import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_USERNAME
@@ -19,7 +16,6 @@ import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.Records
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.model.SubRankingType
-import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.viewmodel.CourseType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,8 +36,6 @@ enum class Status {
 }
 
 data class Result<T>(val data: T?, val status: Status) {
-    val isDataEmpty = data is List<*> && (data as List<*>).isEmpty()
-
     constructor() : this(null, Status.LOADING)
 
     constructor(data: T?) : this(data, if (data == null) Status.ERROR else Status.SUCCESS)
@@ -97,47 +91,35 @@ class NetworkRepository @Inject constructor(
         password = passwordStateFlow.value,
     )
 
-    private suspend fun <T> showSnackBarWithRetryButton(call: Call<T>): T? {
-        val result = MainActivity.snackBarHostState.showSnackbar(
-            instance.getString(R.string.network_connection_error),
-            instance.getString(R.string.retry),
-            true
-        )
-        return if (result == SnackbarResult.ActionPerformed) {
-            tryRequest(call)
-        } else {
-            return null
-        }
-    }
-
     /**
      * This method is only for requests which are not handling the login process
      */
     private suspend fun <T> tryRequest(call: Call<T>): T? {
         try {
             val res = call.awaitResponse()
-            val code = res.code()
             // Success to response
-            if (code == 200) {
-                return res.body()
-                // Fail to response due to invalid cookies info, need re-login
-            } else if (code == 303) {
-                // Success to login
-                if (reLogin() == true) {
-                    // Do the original request again
-                    return tryRequest(call.clone())
-                    // Encounter problems during login
-                } else {
-                    // return showSnackBarWithRetryButton(call.clone())
+            when (res.code()) {
+                200 -> {
+                    return res.body()
+                    // Fail to response due to invalid cookies info, need re-login
+                }
+                303 -> {
+                    // Success to login
+                    return if (reLogin() == true) {
+                        // Do the original request again
+                        tryRequest(call.clone())
+                        // Encounter problems during login
+                    } else {
+                        // return showSnackBarWithRetryButton(call.clone())
+                        null
+                    }
+                    // Fail to response due to other issues.
+                }
+                else -> {
                     return null
                 }
-                // Fail to response due to other issues.
-            } else {
-                // return showSnackBarWithRetryButton(call.clone())
-                return null
             }
         } catch (e: Exception) {
-            // return showSnackBarWithRetryButton(call.clone())
             return null
         }
     }
@@ -292,12 +274,13 @@ class NetworkRepository @Inject constructor(
 
     suspend fun getGlobalSchedule(
         yearAndSemester: String,
-        startWeekNo: String,
-        endWeekNo: String,
-        startDayOfWeek: String,
-        endDayOfWeek: String,
-        startNode: String,
-        endNode: String,
+        startWeekNo: String = "",
+        endWeekNo: String = "",
+        startDayOfWeek: String = "",
+        endDayOfWeek: String = "",
+        startNode: String = "",
+        endNode: String = "",
+        teacherName: String = "",
     ): List<GlobalCourse>? {
         return if (isMockMode()) {
             List(20) {
@@ -313,6 +296,7 @@ class NetworkRepository @Inject constructor(
                     endDayOfWeek = endDayOfWeek,
                     startNode = startNode,
                     endNode = endNode,
+                    teacherName = teacherName,
                 )
             )?.results
         }
@@ -362,26 +346,21 @@ class NetworkRepository @Inject constructor(
         password: String,
     ): Boolean? {
         if (username == MOCK_VALUE_USERNAME && password == MOCK_VALUE_PASSWORD) {
-
             return true
         } else {
             val call = networkService.login(
                 username = username,
                 password = password,
             )
-            val reqUrl = call.request().url.toString()
-            // Log.d("ChaoxingRepository", "Sending request to: $reqUrl")
-            try {
+            return try {
                 val res = call.awaitResponse()
-                // Log.d("ChaoxingRepository", "Response code: $code")
-                return when (res.code()) {
+                when (res.code()) {
                     200 -> false
                     302 -> true
                     else -> null
                 }
             } catch (e: Exception) {
-                // Log.e("ChaoxingRepository", "Error occurred: ${e.message}")
-                return null
+                null
             }
         }
     }
