@@ -73,14 +73,15 @@ interface NetworkService {
         @Query("page.pn") pagePn: String? = "1",
         @Query("sort") sort: String? = "kcmc",
         @Query("order") order: String? = "asc",
-        @Query("xnxq") yearAndSemester: String,
-        @Query("zxzc") startWeekNo: String,
-        @Query("zdzc") endWeekNo: String,
-        @Query("zxxq") startDayOfWeek: String,
-        @Query("zdxq") endDayOfWeek: String,
-        @Query("zxjc") startNode: String,
-        @Query("zdjc") endNode: String,
+        @Query("xnxq") yearAndSemester: String = "",
+        @Query("zxzc") startWeekNo: String = "",
+        @Query("zdzc") endWeekNo: String = "",
+        @Query("zxxq") startDayOfWeek: String = "",
+        @Query("zdxq") endDayOfWeek: String = "",
+        @Query("zxjc") startNode: String = "",
+        @Query("zdjc") endNode: String = "",
         @Query("query.xnxq||") queryStartYearAndSemester: String = yearAndSemester,
+        @Query("skjs") teacherName: String = "",
     ): Call<GlobalCourseResponse>
 
     @GET("xsd/studentpyfa/ajaxList2")
@@ -129,6 +130,5 @@ interface NetworkService {
 
     companion object {
         const val BASE_URL = "https://hbut.jw.chaoxing.com/admin/"
-        const val MOCK_BASE_URL = "https://founchoo.github.io/GongYun-for-Android/mockapi/"
     }
 }

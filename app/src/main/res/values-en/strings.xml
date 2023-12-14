@@ -134,4 +134,7 @@
     <string name="fill_mock_info">Don\'t have an account? Fill an experience account</string>
     <string name="clear_mock_info">Clear experience account</string>
     <string name="login_help_text">Don\'t know your password? Visit %1$s for more information</string>
+    <string name="teacher_schedule">Find a teacher\'s schedule</string>
+    <string name="no_teacher_schedule_found">There are no class schedules associated with this teacher</string>
+    <string name="input_teacher_name">Enter teacher\'s name</string>
 </resources>

@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import com.dart.campushelper.ui.schedule.bottomsheet.EmptyClassroomBottomSheet
 import com.dart.campushelper.ui.schedule.bottomsheet.PlannedScheduleBottomSheet
 import com.dart.campushelper.ui.schedule.bottomsheet.ScheduleNotesBottomSheet
+import com.dart.campushelper.ui.schedule.bottomsheet.TeacherScheduleBottomSheet
 import com.dart.campushelper.ui.schedule.bottomsheet.TeachingClassroomBottomSheet
 import com.dart.campushelper.ui.schedule.bottomsheet.WeekSliderBottomSheet
 import com.dart.campushelper.utils.DayOfWeek
@@ -47,4 +48,5 @@ fun ScheduleScreen(
     EmptyClassroomBottomSheet(uiState, viewModel, *args)
     ScheduleNotesBottomSheet(uiState, viewModel)
     PlannedScheduleBottomSheet(uiState, viewModel)
+    TeacherScheduleBottomSheet(uiState, viewModel)
 }

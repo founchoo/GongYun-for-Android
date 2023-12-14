@@ -20,12 +20,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
@@ -44,7 +42,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -55,7 +52,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,20 +61,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -91,6 +81,7 @@ import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.DateChangeReceiver
+import com.dart.campushelper.ui.component.NoBorderTextField
 import com.dart.campushelper.ui.grade.ActionsForGrade
 import com.dart.campushelper.ui.grade.FloatingActionButtonForGrade
 import com.dart.campushelper.ui.grade.GradeScreen
@@ -229,8 +220,6 @@ class MainActivity : AppCompatActivity() {
                 selectedIcon = Icons.Filled.DriveFileRenameOutline,
                 enabled = mainUiState.isLogin,
                 title = {
-                    val interactionSource = remember { MutableInteractionSource() }
-
                     if (!gradeUiState.isSearchBarShow) {
                         Text(
                             text = stringResource(screens[Route.GRADE]!!.resourceId),
@@ -243,52 +232,12 @@ class MainActivity : AppCompatActivity() {
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
-                        BasicTextField(
-                            value = gradeUiState.searchKeyword,
-                            onValueChange = {
-                                gradeViewModel.setSearchKeyword(it)
-                            },
-                            interactionSource = interactionSource,
-                            textStyle = TextStyle(
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            modifier = Modifier
-                                .focusRequester(
-                                    focusSearchBarRequester
-                                ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                        ) {
-                            OutlinedTextFieldDefaults.DecorationBox(
-                                value = gradeUiState.searchKeyword,
-                                innerTextField = it,
-                                enabled = true,
-                                singleLine = true,
-                                interactionSource = interactionSource,
-                                visualTransformation = VisualTransformation.None,
-                                placeholder = {
-                                    Text(
-                                        text = stringResource(R.string.course_name),
-                                    )
-                                },
-                                container = {
-                                    OutlinedTextFieldDefaults.ContainerBox(
-                                        enabled = true,
-                                        isError = false,
-                                        interactionSource = interactionSource,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color.Transparent,
-                                            unfocusedBorderColor = Color.Transparent,
-                                        ),
-                                        focusedBorderThickness = 0.dp,
-                                        unfocusedBorderThickness = 0.dp,
-                                    )
-                                }
-                            )
-                        }
-                        LaunchedEffect(Unit) {
-                            focusSearchBarRequester.requestFocus()
-                        }
+                        NoBorderTextField(
+                            text = gradeUiState.searchKeyword,
+                            placeholderText = stringResource(R.string.course_name),
+                            onValueChange = { gradeViewModel.setSearchKeyword(it) },
+                            focusRequester = focusSearchBarRequester
+                        )
                     }
                 },
                 actions = { ActionsForGrade(gradeViewModel, gradeUiState) },
@@ -503,17 +452,17 @@ class MainActivity : AppCompatActivity() {
         scope: CoroutineScope
     ) {
         var showExitHint by remember { mutableStateOf(false) }
-        BackHandler(true) {
+        BackHandler(true) label@ {
             if (gradeUiState.isSearchBarShow) {
                 gradeViewModel.setIsSearchBarShow(false)
                 gradeViewModel.setSearchKeyword("")
-                return@BackHandler
+                return@label
             }
             if (showExitHint) {
                 scope.launch {
                     ActivityCompat.finishAffinity(this@MainActivity)
                 }
-                return@BackHandler
+                return@label
             }
             showExitHint = true
             scope.launch {
