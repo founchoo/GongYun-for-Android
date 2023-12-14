@@ -1,0 +1,57 @@
+# Reference: https://github.com/LibChecker/LibChecker/blob/master/.github/workflows/android.yml
+name: Pull request check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '.idea/**'
+      - '.gitattributes'
+      - '.github/**'
+      - '.gitignore'
+      - '.gitmodules'
+      - '**.md'
+      - 'LICENSE'
+      - 'NOTICE'
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip duplicate actions
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+
+  build:
+    name: Trying to build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set Java version
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+          
+      - name: Build Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
