@@ -1,0 +1,22 @@
+# .github/workflows/translate.yml
+name: Translate Readme
+
+on:
+  push:
+    branches: main
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 3
+
+      - name: Auto Translate
+        uses: Lin-jun-xiang/action-translate-readme@v2
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }} # Based on step2 name
+          g4f_provider: g4f.Provider.DeepAi # You can change this provider
+          langs: "en" # You can define any langs
