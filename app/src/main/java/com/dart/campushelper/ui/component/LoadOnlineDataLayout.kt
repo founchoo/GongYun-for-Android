@@ -88,7 +88,7 @@ fun <T> LoadOnlineDataLayout(
             }
         } else if (dataSource.data == null) {
             // If fail to load data from network, show a placeholder
-            FailToLoadPlaceholder(::onRefresh)
+            FailToLoadPlaceholder { onRefresh() }
         } else if (dataSource.data is List<*> && dataSource.data.isEmpty()) {
             contentWhenDataSourceIsEmpty?.let { it() }
         } else {

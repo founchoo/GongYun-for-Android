@@ -25,6 +25,7 @@ data class LoginUiState(
     val password: String = "",
     val loginResponse: Boolean? = true,
     val inputEnabled: Boolean = true,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -51,7 +52,9 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         viewModelScope.launch {
-            // Log.d("LoginViewModel", loginResource.toString())
+            _uiState.update {
+                it.copy(isLoading = true)
+            }
             when (val response =
                 networkRepository.login(_uiState.value.username, _uiState.value.password)) {
                 true -> {
@@ -83,6 +86,9 @@ class LoginViewModel @Inject constructor(
                         uiState.copy(loginResponse = response)
                     }
                 }
+            }
+            _uiState.update {
+                it.copy(isLoading = false)
             }
         }
     }

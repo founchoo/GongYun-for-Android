@@ -2,7 +2,7 @@
     android:description="@string/schedule_label"
     android:minWidth="96dp"
     android:minHeight="96dp"
-    android:updatePeriodMillis="14400000"
+    android:updatePeriodMillis="0"
     android:previewImage="@drawable/outline_schedule_24dp"
     android:initialLayout="@layout/schedule_appwidget_view"
     android:resizeMode="horizontal|vertical"

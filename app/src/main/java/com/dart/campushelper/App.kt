@@ -3,17 +3,16 @@ package com.dart.campushelper
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
-
 @HiltAndroidApp
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
+        context = this
     }
 
     companion object {
-        lateinit var instance: App
+        lateinit var context: App
             private set
     }
 }

@@ -1,73 +1,84 @@
 package com.dart.campushelper.viewmodel
 
 import androidx.annotation.WorkerThread
+import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.model.Course
-import com.dart.campushelper.utils.getCurrentNode
+import com.dart.campushelper.utils.getCurrentSmallNode
 import com.dart.campushelper.utils.getWeekCount
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class AppWidgetUiState(
-    val courses: List<Course> = emptyList(),
-    val currentWeek: Int,
+    val courses: List<Course>? = null,
+    val currentWeek: Int? = null,
     val dayOfWeek: Int,
     val currentNode: Int,
+    val lastUpdateDateTime: LocalDateTime? = null,
 )
 
 class AppWidgetViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
+    private val dataStoreRepository: DataStoreRepository,
 ) {
+    val scope = CoroutineScope(Dispatchers.IO)
+
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(
         AppWidgetUiState(
-            currentWeek = 1,
             dayOfWeek = LocalDate.now().dayOfWeek.value,
-            currentNode = getCurrentNode()
+            currentNode = getCurrentSmallNode(),
         )
     )
     val uiState: StateFlow<AppWidgetUiState> = _uiState.asStateFlow()
 
-    @WorkerThread
-    suspend fun getTodaySchedule() {
-        getCurrentWeek(null)
-        // Log.d("AppWidgetViewModel", "getTodaySchedule: ")
-        val result = networkRepository.getSchedule(null)
-        if (result != null) {
-            val courses = result.filter { course ->
-                course.nodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
-                    _uiState.value.currentWeek
-                )
-            }
-            // Log.d("AppWidgetViewModel", "courses.size: ${courses.size}")
-            _uiState.update { uiState ->
-                uiState.copy(courses = courses)
+    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsLogin().stateIn(
+        scope = scope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
+            dataStoreRepository.observeIsLogin().first()
+        }
+    )
+
+    init {
+        scope.launch {
+            isLoginStateFlow.collect {
+                getTodaySchedule()
             }
         }
     }
 
     @WorkerThread
-    private suspend fun getCurrentWeek(yearAndSemester: String?) {
-        val list = networkRepository.getCalendar(yearAndSemester)
-        if (list != null) {
-            val first = list[0]
-            val day = first.monday ?: (first.tuesday ?: (first.wednesday
-                ?: (first.thursday ?: (first.friday ?: (first.saturday ?: first.sunday ?: "")))))
-            val date =
-                first.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day)
-            val startLocalDate =
-                LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            if (yearAndSemester == null) {
-                val currentWeek = getWeekCount(startLocalDate, LocalDate.now())
-                _uiState.update { uiState ->
-                    uiState.copy(currentWeek = currentWeek)
-                }
-            }
+    suspend fun getTodaySchedule() {
+        _uiState.update {
+            it.copy(
+                currentWeek = getWeekCount(
+                    networkRepository.getSemesterStartDate(null),
+                    LocalDate.now()
+                )
+            )
+        }
+        _uiState.update {
+            it.copy(
+                courses = networkRepository.getSchedule(null)?.filter { course ->
+                    course.bigNodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
+                        _uiState.value.currentWeek
+                    )
+                },
+                lastUpdateDateTime = LocalDateTime.now()
+            )
         }
     }
 }

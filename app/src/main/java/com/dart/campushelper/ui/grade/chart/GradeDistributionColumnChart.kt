@@ -52,7 +52,7 @@ fun GradeDistributionColumnChart(uiState: GradeUiState, viewModel: GradeViewMode
                     "${
                         DecimalFormat("#").format(raw).toString()
                             .replaceWithStars(uiState.isScreenshotMode)
-                    } ${App.instance.getString(R.string.courses_belong_to_interval)}"
+                    } ${App.context.getString(R.string.courses_belong_to_interval)}"
                 }
             ),
         )

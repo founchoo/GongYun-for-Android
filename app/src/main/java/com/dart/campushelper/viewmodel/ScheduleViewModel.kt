@@ -1,6 +1,5 @@
 package com.dart.campushelper.viewmodel
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +12,7 @@ import com.dart.campushelper.model.GlobalCourse
 import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.utils.DateUtils
-import com.dart.campushelper.utils.getCurrentNode
+import com.dart.campushelper.utils.getCurrentSmallNode
 import com.dart.campushelper.utils.getWeekCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class ScheduleUiState constructor(
@@ -43,13 +41,8 @@ data class ScheduleUiState constructor(
     val isShowWeekSliderDialog: Boolean = false,
     val nodeHeaders: IntRange = (1..5),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
-    val nodeStartHeaders: List<String> = DateUtils.nodeEnds.map {
-        LocalTime.of(
-            it.split(":")[0].toInt(),
-            it.split(":")[1].toInt()
-        ).minusMinutes(45).format(DateTimeFormatter.ofPattern("HH:mm"))
-    },
-    val nodeEndHeaders: List<String> = DateUtils.nodeEnds,
+    val nodeStartHeaders: List<LocalTime> = DateUtils.smallNodeStarts,
+    val nodeEndHeaders: List<LocalTime> = DateUtils.smallNodeEnds,
     val isOtherCourseDisplay: Boolean = false,
     val isYearDisplay: Boolean = false,
     val isDateDisplay: Boolean = false,
@@ -82,11 +75,10 @@ class ScheduleViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state exposed to the UI
-    @OptIn(ExperimentalFoundationApi::class)
     private val _uiState = MutableStateFlow(
         ScheduleUiState(
             dayOfWeek = LocalDate.now().dayOfWeek.value,
-            currentNode = getCurrentNode(),
+            currentNode = getCurrentSmallNode(),
         )
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
@@ -239,7 +231,7 @@ class ScheduleViewModel @Inject constructor(
         val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
         val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
         val semesters = mutableListOf<String>()
-        (semesterYearStart..semesterYearEnd).forEach label@ { year ->
+        (semesterYearStart..semesterYearEnd).forEach label@{ year ->
             (1..2).forEach { no ->
                 if (year == semesterYearEnd && no > semesterNoEnd) {
                     return@label
@@ -251,17 +243,7 @@ class ScheduleViewModel @Inject constructor(
             it.copy(
                 browsedSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
                 semesters = semesters,
-                startLocalDate = networkRepository.getCalendar(yearAndSemester)?.firstOrNull()
-                    ?.let { found ->
-                        (found.monday ?: (found.tuesday ?: (found.wednesday
-                            ?: (found.thursday ?: (found.friday ?: (found.saturday
-                                ?: found.sunday))))))?.let { day ->
-                            LocalDate.parse(
-                                found.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day),
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            )
-                        }
-                    },
+                startLocalDate = networkRepository.getSemesterStartDate(yearAndSemester),
             )
         }
         if (_uiState.value.browsedSemester == semesters.last()) {

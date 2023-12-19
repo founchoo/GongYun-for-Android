@@ -36,6 +36,8 @@ interface DataStoreService {
 
     suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean)
 
+    suspend fun changeIsLessonReminderEnabled(isLessonReminderEnabled: Boolean)
+
     /**
      * Observe section.
      */
@@ -66,4 +68,6 @@ interface DataStoreService {
     fun observeEnterUniversityYear(): Flow<String>
 
     fun observeIsScreenshotMode(): Flow<Boolean>
+
+    fun observeIsLessonReminderEnabled(): Flow<Boolean>
 }

@@ -1,24 +1,31 @@
 package com.dart.campushelper.viewmodel
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.R
+import com.dart.campushelper.alarm.LessonReminderRepository
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
+import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
+import com.dart.campushelper.receiver.AppWidgetReceiver
 import com.dart.campushelper.ui.component.preference.SelectionItem
 import com.dart.campushelper.ui.main.MainActivity
-import com.dart.campushelper.ui.main.pin
+import com.dart.campushelper.utils.Notification
+import com.dart.campushelper.utils.Permission
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,11 +57,14 @@ data class SettingsUiState(
     val languageList: List<SelectionItem<String>>,
     val selectedLanguageIndex: Int,
     val currentYearAndSemester: String? = null,
+    val isLessonReminderEnabled: Boolean = DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED,
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepository: DataStoreRepository,
+    private val lessonReminderRepository: LessonReminderRepository,
+    private val notification: Notification,
 ) : ViewModel() {
 
     private var _languageMap = mapOf(
@@ -160,6 +170,15 @@ class SettingsViewModel @Inject constructor(
             }
         )
 
+    private val isLessonReminderEnabledStateFlow: StateFlow<Boolean> =
+        dataStoreRepository.observeIsLessonReminderEnabled().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                dataStoreRepository.observeIsLessonReminderEnabled().first()
+            }
+        )
+
     init {
         viewModelScope.launch {
             usernameStateFlow.collect { value ->
@@ -169,6 +188,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             isLoginStateFlow.collect { value ->
                 _uiState.update { it.copy(isLogin = value) }
+                AppWidgetReceiver.updateBroadcast(context)
             }
         }
         viewModelScope.launch {
@@ -211,6 +231,22 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(currentYearAndSemester = value) }
             }
         }
+        viewModelScope.launch {
+            isLessonReminderEnabledStateFlow.collect { value ->
+                _uiState.update { it.copy(isLessonReminderEnabled = value) }
+                if (value) {
+                    if (Permission.requestNotificationPermission()) {
+                        notification.createNotificationChannel()
+                        lessonReminderRepository.setAlarm()
+                    } else {
+                        changeIsLessonReminderEnabled(false)
+                    }
+                } else {
+                    notification.deleteNotificationChannel()
+                    lessonReminderRepository.cancelAlarm()
+                }
+            }
+        }
         changeLanguage(_uiState.value.selectedLanguageIndex)
     }
 
@@ -245,14 +281,28 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun pin() {
-        val widgetManager = AppWidgetManager.getInstance(instance)
-        // Get a list of our app widget providers to retrieve their info
-        val widgetProviders =
-            widgetManager.getInstalledProvidersForPackage(
-                instance.packageName,
+        val widgetManager = AppWidgetManager.getInstance(context)
+
+        if (widgetManager.isRequestPinAppWidgetSupported) {
+            val providerInfo = widgetManager.getInstalledProvidersForPackage(
+                context.packageName,
                 null
+            )[0]
+            val successCallback = PendingIntent.getBroadcast(
+                context,
+                0,
+                Intent(context, AppWidgetPinnedReceiver::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-        widgetProviders[0].pin(instance)
+            widgetManager.requestPinAppWidget(providerInfo.provider, null, successCallback)
+            viewModelScope.launch {
+                MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.pin_request))
+            }
+        } else {
+            viewModelScope.launch {
+                MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.unsupport_to_pin))
+            }
+        }
     }
 
     fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
@@ -292,9 +342,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun copyText(cbManager: ClipboardManager) {
-        cbManager.setText(AnnotatedString(instance.getString(R.string.qq_group_number)))
+        cbManager.setText(AnnotatedString(context.getString(R.string.qq_group_number)))
         viewModelScope.launch {
-            MainActivity.snackBarHostState.showSnackbar(instance.getString(R.string.copy_group_toast))
+            MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.copy_group_toast))
         }
     }
 
@@ -316,6 +366,12 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 selectedLanguageIndex = index,
             )
+        }
+    }
+
+    fun changeIsLessonReminderEnabled(value: Boolean) {
+        viewModelScope.launch {
+            dataStoreRepository.changeIsLessonReminderEnabled(value)
         }
     }
 }

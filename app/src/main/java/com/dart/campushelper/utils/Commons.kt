@@ -8,5 +8,5 @@ fun visitWebsite(url: String) {
     val intent = Intent(Intent.ACTION_VIEW)
     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
     intent.data = Uri.parse(url)
-    App.instance.startActivity(intent)
+    App.context.startActivity(intent)
 }

@@ -3,11 +3,12 @@ package com.dart.campushelper.viewmodel
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
 import com.dart.campushelper.data.DataStoreRepository
 import com.dart.campushelper.data.NetworkRepository
 import com.dart.campushelper.data.Result
+import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.RankingInfo
@@ -39,26 +40,14 @@ data class YearAndSemester(
     var selected: Boolean
 )
 
-data class CourseType(val value: String, val label: String, val selected: Boolean) {
-    companion object {
-        fun mock() : CourseType {
-            return CourseType(
-                value = "CT001",
-                label = "CT001",
-                selected = true
-            )
-        }
-    }
-}
-
 enum class SortBasis {
     GRADE,
     CREDIT;
 
     override fun toString(): String {
         return when (this) {
-            GRADE -> instance.getString(R.string.grade_label)
-            CREDIT -> instance.getString(R.string.credit_label)
+            GRADE -> context.getString(R.string.grade_label)
+            CREDIT -> context.getString(R.string.credit_label)
         }
     }
 }
@@ -234,7 +223,7 @@ class GradeViewModel @Inject constructor(
             3 -> "80-89"
             4 -> "90-100"
             else -> "0-59"
-        } + instance.getString(R.string.score)
+        } + context.getString(R.string.score)
     }
 
     suspend fun getGrades() {
@@ -338,14 +327,20 @@ class GradeViewModel @Inject constructor(
     fun filterGrades() {
         val formattedSearchKeyword = _uiState.value.searchKeyword.replace(" ", "").lowercase()
         val selectedCourseTypes = _uiState.value.courseTypes?.filter { it.selected }
-            ?.map { it.value.toString() }
+            ?.map { it.value }
         val selectedYearAndSemesters =
             _uiState.value.semesters?.filter { it.selected }?.map { it.value }
         _uiState.update {
             it.copy(
                 grades = Result(_backedGrades?.filter { grade ->
                     grade.name.replace(" ", "").lowercase().contains(formattedSearchKeyword) &&
-                            selectedCourseTypes?.contains(grade.courseTypeRaw) == true &&
+                            (_uiState.value.courseTypes?.map { it.value }
+                                ?.contains(
+                                    grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                ) == false ||
+                                    selectedCourseTypes?.contains(
+                                        grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                    ) == true) &&
                             selectedYearAndSemesters?.contains(grade.yearAndSemester) == true
                 }),
                 rankingAvailable = it.courseTypes?.find { !it.selected } == null && it.searchKeyword.isEmpty()
