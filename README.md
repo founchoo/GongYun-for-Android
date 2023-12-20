@@ -62,25 +62,25 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 发现 bug ？想要新功能？创建一个 issue 阐述你当前遇到的问题；已经写好了代码，希望与主分支合并？请创建 pull request。
 
-## 鸣谢
+## 引用及参考
 
-- https://stackoverflow.com/ StackOverflow
+- https://stackoverflow.com/
 
-- https://m3.material.io/ Material Design 指南
+- https://m3.material.io/
 
-- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary 官方开发文档
+- https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary
 
-- https://google.github.io/accompanist/placeholder/ Placeholder for Jetpack Compose
+- https://google.github.io/accompanist/placeholder/
 
-- https://json2kt.com/ 将 `JSON` 文件转换为 `.kt` 文件
+- https://json2kt.com/
 
-- https://github.com/harmittaa/KoinExample Retrofit 错误处理
+- https://github.com/harmittaa/KoinExample
 
-- https://github.com/patrykandpatrick/vico 图表库
+- https://github.com/patrykandpatrick/vico
 
-- https://plugins.jetbrains.com/plugin/18619-svg-to-compose svg 转 compose
+- https://plugins.jetbrains.com/plugin/18619-svg-to-compose
 
-- 以及众多来自互联网的灵感和正在阅读此 README 的你
+- https://github.com/osipxd/encrypted-datastore
 
 
 ## 开源协议
