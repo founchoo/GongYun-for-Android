@@ -3,9 +3,9 @@ package com.dart.campushelper.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,7 +25,7 @@ data class ThemeUiState(
 
 @HiltViewModel
 class ThemeViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -33,20 +33,20 @@ class ThemeViewModel @Inject constructor(
     val uiState: StateFlow<ThemeUiState> = _uiState.asStateFlow()
 
     private val enableSystemColorStateFlow =
-        dataStoreRepository.observeEnableSystemColor().stateIn(
+        dataStoreRepo.observeEnableSystemColor().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                dataStoreRepository.observeEnableSystemColor().first()
+                dataStoreRepo.observeEnableSystemColor().first()
             }
         )
 
     private val selectedDarkModeStateFlow =
-        dataStoreRepository.observeSelectedDarkMode().stateIn(
+        dataStoreRepo.observeSelectedDarkMode().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                dataStoreRepository.observeSelectedDarkMode().first()
+                dataStoreRepo.observeSelectedDarkMode().first()
             }
         )
 

@@ -70,7 +70,7 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel, pagerS
     LoadOnlineDataLayout(
         dataSource = uiState.courses,
         loadData = {
-            viewModel.loadSchedule(uiState.browsedSemester)
+            viewModel.loadSchedule()
         },
         autoLoadingArgs = arrayOf(uiState.browsedSemester),
         contentWhenDataSourceIsEmpty = {

@@ -1,7 +1,7 @@
 package com.dart.campushelper.model
 
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_ENTER_UNIVERSITY_YEAR
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
 import com.google.gson.annotations.SerializedName
 
 

@@ -2,14 +2,14 @@ package com.dart.campushelper.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_PASSWORD
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_USERNAME
-import com.dart.campushelper.data.DataStoreRepository.Companion.DEFAULT_VALUE_YEAR_AND_SEMESTER
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_PASSWORD
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_USERNAME
-import com.dart.campushelper.data.NetworkRepository
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_PASSWORD
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_USERNAME
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_YEAR_AND_SEMESTER
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_PASSWORD
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_USERNAME
+import com.dart.campushelper.repo.NetworkRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,8 +30,8 @@ data class LoginUiState(
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository,
-    private val dataStoreRepository: DataStoreRepository
+    private val networkRepo: NetworkRepo,
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -56,25 +56,25 @@ class LoginViewModel @Inject constructor(
                 it.copy(isLoading = true)
             }
             when (val response =
-                networkRepository.login(_uiState.value.username, _uiState.value.password)) {
+                networkRepo.login(_uiState.value.username, _uiState.value.password)) {
                 true -> {
                     runBlocking {
-                        dataStoreRepository.changeUsername(_uiState.value.username)
+                        dataStoreRepo.changeUsername(_uiState.value.username)
                     }
                     runBlocking {
-                        dataStoreRepository.changePassword(_uiState.value.password)
+                        dataStoreRepo.changePassword(_uiState.value.password)
                     }
-                    val studentInfoResult = networkRepository.getStudentInfo()
+                    val studentInfoResult = networkRepo.getStudentInfo()
                     if (studentInfoResult != null) {
                         runBlocking {
-                            dataStoreRepository.changeSemesterYearAndNo(studentInfoResult.dataXnxq!!)
+                            dataStoreRepo.changeSemesterYearAndNo(studentInfoResult.dataXnxq!!)
                         }
                         runBlocking {
-                            dataStoreRepository.changeEnterUniversityYear(studentInfoResult.rxnj!!)
+                            dataStoreRepo.changeEnterUniversityYear(studentInfoResult.rxnj!!)
                         }
                     }
                     runBlocking {
-                        dataStoreRepository.changeIsLogin(true)
+                        dataStoreRepo.changeIsLogin(true)
                     }
                     _uiState.update { uiState ->
                         uiState.copy(isShowLoginDialog = false)
@@ -120,12 +120,12 @@ class LoginViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            dataStoreRepository.changeUsername(DEFAULT_VALUE_USERNAME)
-            dataStoreRepository.changePassword(DEFAULT_VALUE_PASSWORD)
-            dataStoreRepository.changeEnterUniversityYear(DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
-            dataStoreRepository.changeSemesterYearAndNo(DEFAULT_VALUE_YEAR_AND_SEMESTER)
-            dataStoreRepository.changeIsLogin(false)
-            dataStoreRepository.changeCookies(emptyList())
+            dataStoreRepo.changeUsername(DEFAULT_VALUE_USERNAME)
+            dataStoreRepo.changePassword(DEFAULT_VALUE_PASSWORD)
+            dataStoreRepo.changeEnterUniversityYear(DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR)
+            dataStoreRepo.changeSemesterYearAndNo(DEFAULT_VALUE_YEAR_AND_SEMESTER)
+            dataStoreRepo.changeIsLogin(false)
+            dataStoreRepo.changeCookies(emptyList())
         }
     }
 }

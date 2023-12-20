@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.NetworkRepository
-import com.dart.campushelper.data.Result
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.NetworkRepo
+import com.dart.campushelper.repo.Result
 import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
@@ -101,8 +101,8 @@ data class GradeUiState(
 
 @HiltViewModel
 class GradeViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository,
-    private val dataStoreRepository: DataStoreRepository
+    private val networkRepo: NetworkRepo,
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -110,28 +110,28 @@ class GradeViewModel @Inject constructor(
     val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
 
     private val isScreenshotModeStateFlow: StateFlow<Boolean> =
-        dataStoreRepository.observeIsScreenshotMode().stateIn(
+        dataStoreRepo.observeIsScreenshotMode().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeIsScreenshotMode().first()
+                dataStoreRepo.observeIsScreenshotMode().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        dataStoreRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepo.observeEnterUniversityYear().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeEnterUniversityYear().first()
+                dataStoreRepo.observeEnterUniversityYear().first()
             }
         )
 
-    private val isLoginStateFlow = dataStoreRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow = dataStoreRepo.observeIsLogin().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsLogin().first()
+            dataStoreRepo.observeIsLogin().first()
         }
     )
 
@@ -227,16 +227,13 @@ class GradeViewModel @Inject constructor(
     }
 
     suspend fun getGrades() {
-        _backedGrades = null
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(courseTypes = networkRepository.getCourseTypeList())
-            }
-            val gradesResult = networkRepository.getGrades()
-            _backedGrades = gradesResult
+        val needResetFilter = _backedGrades == null
+        _uiState.update { it.copy(courseTypes = networkRepo.getCourseTypeList()) }
+        _backedGrades = networkRepo.getGrades()
+        if (needResetFilter) {
             resetFilter()
-            filterGrades()
         }
+        filterGrades()
     }
 
     fun resetFilter() {
@@ -308,7 +305,7 @@ class GradeViewModel @Inject constructor(
 
     suspend fun getRankingInfo() {
         _uiState.value.semesters?.filter { it.selected }?.map { it.value }?.let {
-            val rankingInfo = networkRepository.getStudentRankingInfo(it)
+            val rankingInfo = networkRepo.getStudentRankingInfo(it)
             _uiState.update {
                 it.copy(
                     rankingInfo = Result(rankingInfo),

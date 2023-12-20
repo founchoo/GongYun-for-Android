@@ -1,8 +1,8 @@
 package com.dart.campushelper.viewmodel
 
 import androidx.annotation.WorkerThread
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.NetworkRepository
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.NetworkRepo
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.utils.getCurrentSmallNode
 import com.dart.campushelper.utils.getWeekCount
@@ -30,8 +30,8 @@ data class AppWidgetUiState(
 )
 
 class AppWidgetViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository,
-    private val dataStoreRepository: DataStoreRepository,
+    private val networkRepo: NetworkRepo,
+    private val dataStoreRepo: DataStoreRepo,
 ) {
     val scope = CoroutineScope(Dispatchers.IO)
 
@@ -44,11 +44,11 @@ class AppWidgetViewModel @Inject constructor(
     )
     val uiState: StateFlow<AppWidgetUiState> = _uiState.asStateFlow()
 
-    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepo.observeIsLogin().stateIn(
         scope = scope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
-            dataStoreRepository.observeIsLogin().first()
+            dataStoreRepo.observeIsLogin().first()
         }
     )
 
@@ -65,14 +65,14 @@ class AppWidgetViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 currentWeek = getWeekCount(
-                    networkRepository.getSemesterStartDate(null),
+                    networkRepo.getSemesterStartDate(null),
                     LocalDate.now()
                 )
             )
         }
         _uiState.update {
             it.copy(
-                courses = networkRepository.getSchedule(null)?.filter { course ->
+                courses = networkRepo.getSchedule(null)?.filter { course ->
                     course.bigNodeNo!! % 2 != 0 && course.weekDayNo == _uiState.value.dayOfWeek && course.weekNoList.contains(
                         _uiState.value.currentWeek
                     )

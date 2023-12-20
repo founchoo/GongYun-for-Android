@@ -2,7 +2,7 @@ package com.dart.campushelper.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.repo.DataStoreRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,18 +21,18 @@ data class MainUiState(
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow: StateFlow<Boolean> = dataStoreRepo.observeIsLogin().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = runBlocking {
-            dataStoreRepository.observeIsLogin().first()
+            dataStoreRepo.observeIsLogin().first()
         }
     )
 

@@ -1,9 +1,6 @@
-package com.dart.campushelper.data
+package com.dart.campushelper.repo
 
 import com.dart.campushelper.api.NetworkService
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_PASSWORD
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_USERNAME
-import com.dart.campushelper.data.DataStoreRepository.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.CourseType
@@ -16,6 +13,9 @@ import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.Records
 import com.dart.campushelper.model.ScheduleNoteItem
 import com.dart.campushelper.model.SubRankingType
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_PASSWORD
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_USERNAME
+import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_YEAR_AND_SEMESTER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -42,46 +42,46 @@ data class Result<T>(val data: T?, val status: Status) {
     constructor(data: T?) : this(data, if (data == null) Status.ERROR else Status.SUCCESS)
 }
 
-class NetworkRepository @Inject constructor(
+class NetworkRepo @Inject constructor(
     private val networkService: NetworkService,
-    private val dataStoreRepository: DataStoreRepository,
+    private val dataStoreRepo: DataStoreRepo,
 ) {
 
     val scope = CoroutineScope(Dispatchers.IO)
 
     private val yearAndSemesterStateFlow =
-        dataStoreRepository.observeYearAndSemester().stateIn(
+        dataStoreRepo.observeYearAndSemester().stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                dataStoreRepository.observeYearAndSemester().first()
+                dataStoreRepo.observeYearAndSemester().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        dataStoreRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepo.observeEnterUniversityYear().stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                dataStoreRepository.observeEnterUniversityYear().first()
+                dataStoreRepo.observeEnterUniversityYear().first()
             }
         )
 
-    private val usernameStateFlow: StateFlow<String> = dataStoreRepository.observeUsername()
+    private val usernameStateFlow: StateFlow<String> = dataStoreRepo.observeUsername()
         .stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                dataStoreRepository.observeUsername().first()
+                dataStoreRepo.observeUsername().first()
             }
         )
 
-    private val passwordStateFlow: StateFlow<String> = dataStoreRepository.observePassword()
+    private val passwordStateFlow: StateFlow<String> = dataStoreRepo.observePassword()
         .stateIn(
             scope = scope,
             started = Eagerly,
             initialValue = runBlocking {
-                dataStoreRepository.observePassword().first()
+                dataStoreRepo.observePassword().first()
             }
         )
 
@@ -250,7 +250,7 @@ class NetworkRepository @Inject constructor(
                         )
                     })
             }
-            return list
+            list
         } else {
             tryRequest(
                 networkService.getSchedule(

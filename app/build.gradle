@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -69,6 +70,17 @@ android {
 
 dependencies {
 
+    implementation("io.github.osipxd:security-crypto-datastore-preferences:1.0.0-beta01")
+
+    def room_version = "2.5.0"
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    // To use Kotlin Symbol Processing (KSP)
+    ksp("androidx.room:room-compiler:$room_version")
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // Material Icons Extended
     implementation "androidx.compose.material:material-icons-extended:$compose_version"
 
     // Vico

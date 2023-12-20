@@ -1,16 +1,19 @@
-package com.dart.campushelper.data
+package com.dart.campushelper.repo
 
-import android.content.Context
+import androidx.datastore.dataStoreFile
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.security.crypto.EncryptedFile
+import androidx.security.crypto.MasterKeys
 import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.api.DataStoreService
 import com.dart.campushelper.viewmodel.DarkMode
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import io.github.osipxd.security.crypto.createEncrypted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -18,21 +21,26 @@ import kotlinx.coroutines.sync.withLock
 import okhttp3.Cookie
 import java.time.LocalDate
 import javax.inject.Inject
+import javax.inject.Singleton
 
-private val Context.dataStore by preferencesDataStore(DataStoreRepository.PREFS_NAME)
-
-/**
- * Implementation of InterestRepository that returns a hardcoded list of
- * topics, people and publications synchronously.
- */
-class DataStoreRepository @Inject constructor() : DataStoreService {
+@Singleton
+class DataStoreRepo @Inject constructor() : DataStoreService {
 
     // Used to make suspend functions that read and update state safe to call from any thread
     private val mutex = Mutex()
 
+    private val dataStore = PreferenceDataStoreFactory.createEncrypted {
+        EncryptedFile.Builder(
+            context.dataStoreFile(PREFS_NAME),
+            context,
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
+        ).build()
+    }
+
     override suspend fun changeIsOtherCourseDisplay(isOtherCourseDisplay: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_OTHER_COURSE_DISPLAY] = isOtherCourseDisplay
             }
         }
@@ -40,7 +48,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsYearDisplay(isYearDisplay: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_YEAR_DISPLAY] = isYearDisplay
             }
         }
@@ -48,7 +56,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsDateDisplay(isDateDisplay: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_DATE_DISPLAY] = isDateDisplay
             }
         }
@@ -56,7 +64,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsTimeDisplay(isTimeDisplay: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_TIME_DISPLAY] = isTimeDisplay
             }
         }
@@ -64,7 +72,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeCookies(cookies: List<Cookie>) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_COOKIES] = Gson().toJson(cookies)
             }
         }
@@ -72,7 +80,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsLogin(isLogin: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_LOGIN] = isLogin
             }
         }
@@ -80,7 +88,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeSelectedDarkMode(darkMode: Int) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_SELECTED_DARK_MODE] = darkMode
             }
         }
@@ -88,7 +96,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeEnableSystemColor(enable: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_ENABLE_SYSTEM_COLOR] = enable
             }
         }
@@ -96,7 +104,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeUsername(username: String) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_USERNAME] = username
             }
         }
@@ -104,7 +112,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changePassword(password: String) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_PASSWORD] = password
             }
         }
@@ -112,7 +120,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeSemesterYearAndNo(yearAndSemester: String) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_SEMESTER_YEAR_AND_NO] = yearAndSemester
             }
         }
@@ -120,7 +128,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeEnterUniversityYear(enterUniversityYear: String) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_ENTER_UNIVERSITY_YEAR] = enterUniversityYear
             }
         }
@@ -128,7 +136,7 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsScreenshotMode(isScreenshotMode: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_SCREENSHOT_MODE] = isScreenshotMode
             }
         }
@@ -136,29 +144,29 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
 
     override suspend fun changeIsLessonReminderEnabled(isLessonReminderEnabled: Boolean) {
         mutex.withLock {
-            context.dataStore.edit {
+            dataStore.edit {
                 it[KEY_IS_LESSON_REMINDER_ENABLED] = isLessonReminderEnabled
             }
         }
     }
 
-    override fun observeIsOtherCourseDisplay(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsOtherCourseDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_OTHER_COURSE_DISPLAY] ?: DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
     }
 
-    override fun observeIsYearDisplay(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsYearDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_YEAR_DISPLAY] ?: DEFAULT_VALUE_IS_YEAR_DISPLAY
     }
 
-    override fun observeIsDateDisplay(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsDateDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_DATE_DISPLAY] ?: DEFAULT_VALUE_IS_DATE_DISPLAY
     }
 
-    override fun observeIsTimeDisplay(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsTimeDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_TIME_DISPLAY] ?: DEFAULT_VALUE_IS_TIME_DISPLAY
     }
 
-    override fun observeCookies(): Flow<List<Cookie>> = context.dataStore.data.map {
+    override fun observeCookies(): Flow<List<Cookie>> = dataStore.data.map {
         val json = it[KEY_COOKIES] ?: DEFAULT_VALUE_COOKIES
         if (json == DEFAULT_VALUE_COOKIES) {
             emptyList<Cookie>()
@@ -168,48 +176,48 @@ class DataStoreRepository @Inject constructor() : DataStoreService {
         }
     }
 
-    override fun observeIsLogin(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsLogin(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_LOGIN] ?: DEFAULT_VALUE_IS_LOGIN
     }
 
     override fun observeSelectedDarkMode(): Flow<Int> =
-        context.dataStore.data.map {
+        dataStore.data.map {
             it[KEY_SELECTED_DARK_MODE] ?: DEFAULT_VALUE_SELECTED_DARK_MODE
         }
 
     override fun observeDayOfWeek(): Flow<Int> =
-        context.dataStore.data.map { it[KEY_DAY_OF_WEEK] ?: DEFAULT_VALUE_DAY_OF_WEEK }
+        dataStore.data.map { it[KEY_DAY_OF_WEEK] ?: DEFAULT_VALUE_DAY_OF_WEEK }
 
-    override fun observeEnableSystemColor(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeEnableSystemColor(): Flow<Boolean> = dataStore.data.map {
         it[KEY_ENABLE_SYSTEM_COLOR] ?: DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
     }
 
-    override fun observeUsername(): Flow<String> = context.dataStore.data.map {
+    override fun observeUsername(): Flow<String> = dataStore.data.map {
         it[KEY_USERNAME] ?: DEFAULT_VALUE_USERNAME
     }
 
-    override fun observePassword(): Flow<String> = context.dataStore.data.map {
+    override fun observePassword(): Flow<String> = dataStore.data.map {
         it[KEY_PASSWORD] ?: DEFAULT_VALUE_PASSWORD
     }
 
-    override fun observeYearAndSemester(): Flow<String> = context.dataStore.data.map {
+    override fun observeYearAndSemester(): Flow<String> = dataStore.data.map {
         it[KEY_SEMESTER_YEAR_AND_NO] ?: DEFAULT_VALUE_YEAR_AND_SEMESTER
     }
 
-    override fun observeEnterUniversityYear(): Flow<String> = context.dataStore.data.map {
+    override fun observeEnterUniversityYear(): Flow<String> = dataStore.data.map {
         it[KEY_ENTER_UNIVERSITY_YEAR] ?: DEFAULT_VALUE_ENTER_UNIVERSITY_YEAR
     }
 
-    override fun observeIsScreenshotMode(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsScreenshotMode(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_SCREENSHOT_MODE] ?: DEFAULT_VALUE_IS_SCREENSHOT_MODE
     }
 
-    override fun observeIsLessonReminderEnabled(): Flow<Boolean> = context.dataStore.data.map {
+    override fun observeIsLessonReminderEnabled(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_LESSON_REMINDER_ENABLED] ?: DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED
     }
 
     companion object {
-        const val PREFS_NAME = "user_datastore"
+        const val PREFS_NAME = "user_datastore.preferences_pb"
 
         val KEY_IS_OTHER_COURSE_DISPLAY = booleanPreferencesKey("is_other_course_display")
         val KEY_IS_YEAR_DISPLAY = booleanPreferencesKey("is_year_display")
