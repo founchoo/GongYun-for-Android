@@ -137,4 +137,13 @@
     <string name="teacher_schedule">Find a teacher\'s schedule</string>
     <string name="no_teacher_schedule_found">There are no class schedules associated with this teacher</string>
     <string name="input_teacher_name">Enter teacher\'s name</string>
+    <string name="lesson_reminder_title">Pre-course reminder</string>
+    <string name="lesson_reminder_desc">Push reminder notification before class starts</string>
+    <string name="channel_name">Main notifications</string>
+    <string name="channel_description">Provide notification channels for pre-class reminders and new grade reminders</string>
+    <string name="lesson_reminder_push_content">%1$s will start at %2$s in %3$s</string>
+    <string name="pin_request">The request for fixing the widget has been sent, if it is not successfully fixed, please manually grant the \"Desktop Shortcut\" permission to the app.</string>
+    <string name="unsupport_to_pin">Pin widgets are not supported by current launcher</string>
+    <string name="last_update_time">Last updated %1$s</string>
+    <string name="course_type_fallback_label">Uncategorised</string>
 </resources>

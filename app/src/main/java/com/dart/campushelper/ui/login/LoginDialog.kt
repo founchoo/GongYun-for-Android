@@ -6,20 +6,17 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -41,6 +37,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService.Companion.BASE_URL
+import com.dart.campushelper.ui.component.FailToLoadPlaceholder
 import com.dart.campushelper.utils.visitWebsite
 import com.dart.campushelper.viewmodel.LoginViewModel
 
@@ -64,8 +61,12 @@ fun LoginDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.SpaceAround) {
+                if (uiState.isLoading) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
                 TextField(
                     readOnly = !uiState.inputEnabled,
+                    enabled = !uiState.isLoading,
                     value = uiState.username,
                     onValueChange = { loginViewModel.onUsernameChanged(it) },
                     label = { Text(stringResource(R.string.student_number)) },
@@ -87,6 +88,7 @@ fun LoginDialog(
                 )
                 TextField(
                     readOnly = !uiState.inputEnabled,
+                    enabled = !uiState.isLoading,
                     value = uiState.password,
                     onValueChange = { loginViewModel.onPasswordChanged(it) },
                     label = { Text(stringResource(R.string.password)) },
@@ -118,18 +120,7 @@ fun LoginDialog(
                     visualTransformation = if (displayPassword) VisualTransformation.None else PasswordVisualTransformation()
                 )
                 if (uiState.loginResponse == null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Outlined.ErrorOutline,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                        Spacer(Modifier.width(5.dp))
-                        Text(
-                            text = stringResource(R.string.network_connection_error),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    FailToLoadPlaceholder(isShowRetryButton = false)
                 }
                 if (uiState.inputEnabled) {
                     ClickableText(
@@ -180,6 +171,7 @@ fun LoginDialog(
         },
         confirmButton = {
             TextButton(
+                enabled = !uiState.isLoading,
                 onClick = {
                     loginViewModel.login()
                 }

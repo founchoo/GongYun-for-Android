@@ -1,6 +1,6 @@
 package com.dart.campushelper.model
 
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
 
 class RankingInfo {
@@ -37,8 +37,8 @@ enum class HostRankingType {
 
     override fun toString(): String {
         return when (this) {
-            GPA -> instance.getString(R.string.gpa_label)
-            SCORE -> instance.getString(R.string.arithmetic_mean_score)
+            GPA -> context.getString(R.string.gpa_label)
+            SCORE -> context.getString(R.string.arithmetic_mean_score)
         }
     }
 }
@@ -48,9 +48,9 @@ enum class SubRankingType {
 
     override fun toString(): String {
         return when (this) {
-            INSTITUTE -> instance.getString(R.string.institute)
-            MAJOR -> instance.getString(R.string.major)
-            CLASS -> instance.getString(R.string._class)
+            INSTITUTE -> context.getString(R.string.institute)
+            MAJOR -> context.getString(R.string.major)
+            CLASS -> context.getString(R.string._class)
         }
     }
 }

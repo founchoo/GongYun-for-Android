@@ -78,7 +78,7 @@ data class Course(
 
     // 节次
     @SerializedName("djc")
-    val nodeNo: Int?,
+    val bigNodeNo: Int?,
 
     // 标志
     @SerializedName("flag")
@@ -167,14 +167,14 @@ data class Course(
                 courseNameHtml = "<h1>Mathematics</h1>",
                 courseCode = "MATH101",
                 zc = "1-16",
-                weekNoListStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16",
+                weekNoListStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                 classroomNameHtml = "<h1>Room 101</h1>",
                 teacherNameHtml = "<h1>John Doe</h1>",
                 classNameHtml = "<h1>Class A</h1>",
                 xqid = "XQ01",
                 campusName = "Main Campus",
                 weekDayNo = 1,
-                nodeNo = 2,
+                bigNodeNo = 2,
                 flag = 1,
                 source = "System",
                 pkid = "PK001",

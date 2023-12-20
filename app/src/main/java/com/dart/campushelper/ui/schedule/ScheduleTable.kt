@@ -70,7 +70,7 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel, pagerS
     LoadOnlineDataLayout(
         dataSource = uiState.courses,
         loadData = {
-            viewModel.loadSchedule(uiState.browsedSemester)
+            viewModel.loadSchedule()
         },
         autoLoadingArgs = arrayOf(uiState.browsedSemester),
         contentWhenDataSourceIsEmpty = {
@@ -95,7 +95,7 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel, pagerS
                             browsedWeek
                         )) || uiState.isOtherCourseDisplay
                     ) {
-                        val key = Pair(course.weekDayNo!!, course.nodeNo!!)
+                        val key = Pair(course.weekDayNo!!, course.bigNodeNo!!)
                         if (coursesOnCell.containsKey(key)) {
                             coursesOnCell[key] =
                                 coursesOnCell[key]!! + course
@@ -212,7 +212,15 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel, pagerS
                                             if (uiState.isTimeDisplay) {
                                                 Text(
                                                     color = color,
-                                                    text = "${uiState.nodeStartHeaders[it - 1]}\n${uiState.nodeEndHeaders[it - 1]}",
+                                                    text = "${
+                                                        uiState.nodeStartHeaders[it - 1].format(
+                                                            DateTimeFormatter.ofPattern("HH:mm")
+                                                        )
+                                                    }\n${
+                                                        uiState.nodeEndHeaders[it - 1].format(
+                                                            DateTimeFormatter.ofPattern("HH:mm")
+                                                        )
+                                                    }",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     lineHeight = 12.sp,
                                                 )

@@ -42,7 +42,7 @@ fun RankingColumnChart(uiState: GradeUiState) {
                 ),
                 marker = rememberMarker(
                     formatter = { raw ->
-                        "${App.instance.getString(R.string.rank_at)} ${
+                        "${App.context.getString(R.string.rank_at)} ${
                             DecimalFormat("#.##").format((1 - raw) * 100)
                                 .toString()
                                 .replaceWithStars(uiState.isScreenshotMode)

@@ -21,34 +21,41 @@ import kotlinx.coroutines.runBlocking
 
 @Composable
 fun FailToLoadPlaceholder(
-    retry: () -> Unit,
+    isShowRetryButton: Boolean = true,
+    retry: () -> Unit = {},
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(5.dp)
-            .background(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(5.dp)),
+            .background(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(5.dp)
+            ),
     ) {
         Spacer(Modifier.width(15.dp))
         Text(
+            modifier = Modifier.padding(vertical = 8.dp),
             text = stringResource(R.string.network_connection_error),
             color = MaterialTheme.colorScheme.onErrorContainer
         )
         Spacer(Modifier.weight(1f))
-        TextButton(
-            onClick = {
-                runBlocking { retry() }
-            },
-            colors =  ButtonDefaults.textButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            )
-        ) {
-            Text(
-                text = stringResource(R.string.retry),
-            )
+        if (isShowRetryButton) {
+            TextButton(
+                onClick = {
+                    runBlocking { retry() }
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.retry),
+                )
+            }
+            Spacer(Modifier.width(15.dp))
         }
-        Spacer(Modifier.width(15.dp))
     }
 }

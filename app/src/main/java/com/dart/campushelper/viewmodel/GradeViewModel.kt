@@ -3,11 +3,12 @@ package com.dart.campushelper.viewmodel
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.NetworkRepository
-import com.dart.campushelper.data.Result
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.NetworkRepo
+import com.dart.campushelper.repo.Result
+import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.RankingInfo
@@ -39,26 +40,14 @@ data class YearAndSemester(
     var selected: Boolean
 )
 
-data class CourseType(val value: String, val label: String, val selected: Boolean) {
-    companion object {
-        fun mock() : CourseType {
-            return CourseType(
-                value = "CT001",
-                label = "CT001",
-                selected = true
-            )
-        }
-    }
-}
-
 enum class SortBasis {
     GRADE,
     CREDIT;
 
     override fun toString(): String {
         return when (this) {
-            GRADE -> instance.getString(R.string.grade_label)
-            CREDIT -> instance.getString(R.string.credit_label)
+            GRADE -> context.getString(R.string.grade_label)
+            CREDIT -> context.getString(R.string.credit_label)
         }
     }
 }
@@ -112,8 +101,8 @@ data class GradeUiState(
 
 @HiltViewModel
 class GradeViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository,
-    private val dataStoreRepository: DataStoreRepository
+    private val networkRepo: NetworkRepo,
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -121,28 +110,28 @@ class GradeViewModel @Inject constructor(
     val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
 
     private val isScreenshotModeStateFlow: StateFlow<Boolean> =
-        dataStoreRepository.observeIsScreenshotMode().stateIn(
+        dataStoreRepo.observeIsScreenshotMode().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeIsScreenshotMode().first()
+                dataStoreRepo.observeIsScreenshotMode().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        dataStoreRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepo.observeEnterUniversityYear().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeEnterUniversityYear().first()
+                dataStoreRepo.observeEnterUniversityYear().first()
             }
         )
 
-    private val isLoginStateFlow = dataStoreRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow = dataStoreRepo.observeIsLogin().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsLogin().first()
+            dataStoreRepo.observeIsLogin().first()
         }
     )
 
@@ -234,20 +223,17 @@ class GradeViewModel @Inject constructor(
             3 -> "80-89"
             4 -> "90-100"
             else -> "0-59"
-        } + instance.getString(R.string.score)
+        } + context.getString(R.string.score)
     }
 
     suspend fun getGrades() {
-        _backedGrades = null
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(courseTypes = networkRepository.getCourseTypeList())
-            }
-            val gradesResult = networkRepository.getGrades()
-            _backedGrades = gradesResult
+        val needResetFilter = _backedGrades == null
+        _uiState.update { it.copy(courseTypes = networkRepo.getCourseTypeList()) }
+        _backedGrades = networkRepo.getGrades()
+        if (needResetFilter) {
             resetFilter()
-            filterGrades()
         }
+        filterGrades()
     }
 
     fun resetFilter() {
@@ -319,7 +305,7 @@ class GradeViewModel @Inject constructor(
 
     suspend fun getRankingInfo() {
         _uiState.value.semesters?.filter { it.selected }?.map { it.value }?.let {
-            val rankingInfo = networkRepository.getStudentRankingInfo(it)
+            val rankingInfo = networkRepo.getStudentRankingInfo(it)
             _uiState.update {
                 it.copy(
                     rankingInfo = Result(rankingInfo),
@@ -338,14 +324,20 @@ class GradeViewModel @Inject constructor(
     fun filterGrades() {
         val formattedSearchKeyword = _uiState.value.searchKeyword.replace(" ", "").lowercase()
         val selectedCourseTypes = _uiState.value.courseTypes?.filter { it.selected }
-            ?.map { it.value.toString() }
+            ?.map { it.value }
         val selectedYearAndSemesters =
             _uiState.value.semesters?.filter { it.selected }?.map { it.value }
         _uiState.update {
             it.copy(
                 grades = Result(_backedGrades?.filter { grade ->
                     grade.name.replace(" ", "").lowercase().contains(formattedSearchKeyword) &&
-                            selectedCourseTypes?.contains(grade.courseTypeRaw) == true &&
+                            (_uiState.value.courseTypes?.map { it.value }
+                                ?.contains(
+                                    grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                ) == false ||
+                                    selectedCourseTypes?.contains(
+                                        grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                    ) == true) &&
                             selectedYearAndSemesters?.contains(grade.yearAndSemester) == true
                 }),
                 rankingAvailable = it.courseTypes?.find { !it.selected } == null && it.searchKeyword.isEmpty()

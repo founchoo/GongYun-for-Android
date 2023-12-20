@@ -27,8 +27,7 @@ import kotlinx.coroutines.launch
 class AppWidgetPinnedReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val scope = CoroutineScope(Dispatchers.IO)
-        scope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             MainActivity.snackBarHostState.showSnackbar("微件已固定到主屏幕")
         }
     }

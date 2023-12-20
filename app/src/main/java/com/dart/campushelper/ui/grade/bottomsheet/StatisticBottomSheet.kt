@@ -89,7 +89,7 @@ fun StatisticBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                         description = stringResource(
                             R.string.rank_desc,
                             uiState.semesters?.filter { it.selected }
-                                ?.joinToString(", ") { "${App.instance.getString(it.yearResId)} ${App.instance.getString(it.semesterResId)}" } ?: ""
+                                ?.joinToString(", ") { "${App.context.getString(it.yearResId)} ${App.context.getString(it.semesterResId)}" } ?: ""
                         )
                     ) {
                         RankingInfo(uiState)

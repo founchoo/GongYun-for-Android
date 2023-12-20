@@ -1,13 +1,9 @@
 package com.dart.campushelper.ui.main
 
 //noinspection UsingMaterialAndMaterial3Libraries
+import android.Manifest
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProviderInfo
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -77,10 +73,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.dart.campushelper.App.Companion.instance
 import com.dart.campushelper.R
-import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
-import com.dart.campushelper.receiver.DateChangeReceiver
 import com.dart.campushelper.ui.component.NoBorderTextField
 import com.dart.campushelper.ui.grade.ActionsForGrade
 import com.dart.campushelper.ui.grade.FloatingActionButtonForGrade
@@ -90,6 +83,7 @@ import com.dart.campushelper.ui.schedule.ScheduleScreen
 import com.dart.campushelper.ui.settings.SettingsScreen
 import com.dart.campushelper.ui.theme.CampusHelperTheme
 import com.dart.campushelper.utils.AcademicYearAndSemester
+import com.dart.campushelper.utils.Permission.Companion.PERMISSION_REQUEST_CODE
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.dart.campushelper.viewmodel.GradeViewModel
 import com.dart.campushelper.viewmodel.LoginViewModel
@@ -151,20 +145,36 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     private lateinit var scrollBehavior: TopAppBarScrollBehavior
 
-    private val mDateReceiver = DateChangeReceiver()
-
     companion object {
         lateinit var snackBarHostState: SnackbarHostState
+        lateinit var mainActivity: MainActivity
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        mainActivity = this
 
         setContent {
             val scope = rememberCoroutineScope()
             snackBarHostState = remember { SnackbarHostState() }
             focusSearchBarRequester = remember { FocusRequester() }
             CampusHelperApp(mainViewModel, scope)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (permissions[0] == Manifest.permission.POST_NOTIFICATIONS) {
+                    settingsViewModel.changeIsLessonReminderEnabled(true)
+                }
+            }
         }
     }
 
@@ -452,7 +462,7 @@ class MainActivity : AppCompatActivity() {
         scope: CoroutineScope
     ) {
         var showExitHint by remember { mutableStateOf(false) }
-        BackHandler(true) label@ {
+        BackHandler(true) label@{
             if (gradeUiState.isSearchBarShow) {
                 gradeViewModel.setIsSearchBarShow(false)
                 gradeViewModel.setSearchKeyword("")
@@ -467,36 +477,8 @@ class MainActivity : AppCompatActivity() {
             showExitHint = true
             scope.launch {
                 showExitHint =
-                    snackBarHostState.showSnackbar(instance.getString(R.string.message_befor_exit)) != SnackbarResult.Dismissed
+                    snackBarHostState.showSnackbar(mainActivity.getString(R.string.message_befor_exit)) != SnackbarResult.Dismissed
             }
         }
     }
-
-    override fun onResume() {
-        registerReceiver(mDateReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
-        super.onResume()
-    }
-
-    override fun onPause() {
-        unregisterReceiver(mDateReceiver)
-        super.onPause()
-    }
-}
-
-/**
- * Extension method to request the launcher to pin the given AppWidgetProviderInfo
- *
- * Note: the optional success callback to retrieve if the widget was placed might be unreliable
- * depending on the default launcher implementation. Also, it does not callback if user cancels the
- * request.
- */
-fun AppWidgetProviderInfo.pin(context: Context) {
-    val successCallback = PendingIntent.getBroadcast(
-        context,
-        0,
-        Intent(context, AppWidgetPinnedReceiver::class.java),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-
-    AppWidgetManager.getInstance(context).requestPinAppWidget(provider, null, successCallback)
 }

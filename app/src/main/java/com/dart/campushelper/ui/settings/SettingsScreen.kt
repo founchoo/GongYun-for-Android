@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Nightlight
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Schedule
@@ -22,7 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.TextAlertDialog
 import com.dart.campushelper.ui.component.preference.DropdownMenuPreference
@@ -72,6 +73,15 @@ fun SettingsScreen(
                 }
             }
             PreferenceHeader(text = stringResource(R.string.schedule_label))
+            SwitchPreference(
+                imageVector = Icons.Outlined.NotificationsActive,
+                value = settingsUiState.isLessonReminderEnabled,
+                title = stringResource(R.string.lesson_reminder_title),
+                description = stringResource(R.string.lesson_reminder_desc),
+                onValueChanged = {
+                    settingsViewModel.changeIsLessonReminderEnabled(it)
+                }
+            )
             SwitchPreference(
                 imageVector = Icons.Outlined.DoNotDisturbOn,
                 value = settingsUiState.isOtherCourseDisplay,
@@ -161,7 +171,7 @@ fun SettingsScreen(
                 description = stringResource(R.string.dev_name),
                 painter = painterResource(R.drawable.dev_avatar),
             ) {
-                visitWebsite(instance.getString(R.string.dev_github_url))
+                visitWebsite(context.getString(R.string.dev_github_url))
             }
             TextPreference(
                 title = stringResource(R.string.feedback_title),
@@ -176,7 +186,7 @@ fun SettingsScreen(
                 description = stringResource(R.string.open_source_code_desc),
                 imageVector = Icons.Outlined.Code
             ) {
-                visitWebsite(instance.getString(R.string.project_github_url))
+                visitWebsite(context.getString(R.string.project_github_url))
             }
             if (settingsUiState.isDevSectionShow) {
                 PreferenceHeader(text = stringResource(R.string.dev))

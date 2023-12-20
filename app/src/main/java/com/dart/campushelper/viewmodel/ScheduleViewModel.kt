@@ -1,19 +1,18 @@
 package com.dart.campushelper.viewmodel
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dart.campushelper.data.DataStoreRepository
-import com.dart.campushelper.data.NetworkRepository
-import com.dart.campushelper.data.Result
 import com.dart.campushelper.model.Classroom
 import com.dart.campushelper.model.Course
 import com.dart.campushelper.model.GlobalCourse
 import com.dart.campushelper.model.PlannedCourse
 import com.dart.campushelper.model.ScheduleNoteItem
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.NetworkRepo
+import com.dart.campushelper.repo.Result
 import com.dart.campushelper.utils.DateUtils
-import com.dart.campushelper.utils.getCurrentNode
+import com.dart.campushelper.utils.getCurrentSmallNode
 import com.dart.campushelper.utils.getWeekCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class ScheduleUiState constructor(
@@ -43,13 +41,8 @@ data class ScheduleUiState constructor(
     val isShowWeekSliderDialog: Boolean = false,
     val nodeHeaders: IntRange = (1..5),
     val contentInCourseDetailDialog: List<Course> = emptyList(),
-    val nodeStartHeaders: List<String> = DateUtils.nodeEnds.map {
-        LocalTime.of(
-            it.split(":")[0].toInt(),
-            it.split(":")[1].toInt()
-        ).minusMinutes(45).format(DateTimeFormatter.ofPattern("HH:mm"))
-    },
-    val nodeEndHeaders: List<String> = DateUtils.nodeEnds,
+    val nodeStartHeaders: List<LocalTime> = DateUtils.smallNodeStarts,
+    val nodeEndHeaders: List<LocalTime> = DateUtils.smallNodeEnds,
     val isOtherCourseDisplay: Boolean = false,
     val isYearDisplay: Boolean = false,
     val isDateDisplay: Boolean = false,
@@ -77,76 +70,75 @@ data class ScheduleUiState constructor(
 
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
-    private val networkRepository: NetworkRepository,
-    private val dataStoreRepository: DataStoreRepository
+    private val networkRepo: NetworkRepo,
+    private val dataStoreRepo: DataStoreRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
-    @OptIn(ExperimentalFoundationApi::class)
     private val _uiState = MutableStateFlow(
         ScheduleUiState(
             dayOfWeek = LocalDate.now().dayOfWeek.value,
-            currentNode = getCurrentNode(),
+            currentNode = getCurrentSmallNode(),
         )
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
     private val yearAndSemesterStateFlow =
-        dataStoreRepository.observeYearAndSemester().stateIn(
+        dataStoreRepo.observeYearAndSemester().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeYearAndSemester().first()
+                dataStoreRepo.observeYearAndSemester().first()
             }
         )
 
     private val enterUniversityYearStateFlow =
-        dataStoreRepository.observeEnterUniversityYear().stateIn(
+        dataStoreRepo.observeEnterUniversityYear().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                dataStoreRepository.observeEnterUniversityYear().first()
+                dataStoreRepo.observeEnterUniversityYear().first()
             }
         )
 
     private val isOtherCourseDisplayStateFlow =
-        dataStoreRepository.observeIsOtherCourseDisplay().stateIn(
+        dataStoreRepo.observeIsOtherCourseDisplay().stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             runBlocking {
-                dataStoreRepository.observeIsOtherCourseDisplay().first()
+                dataStoreRepo.observeIsOtherCourseDisplay().first()
             }
         )
 
-    private val isYearDisplayStateFlow = dataStoreRepository.observeIsYearDisplay().stateIn(
+    private val isYearDisplayStateFlow = dataStoreRepo.observeIsYearDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsYearDisplay().first()
+            dataStoreRepo.observeIsYearDisplay().first()
         }
     )
 
-    private val isDateDisplayStateFlow = dataStoreRepository.observeIsDateDisplay().stateIn(
+    private val isDateDisplayStateFlow = dataStoreRepo.observeIsDateDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsDateDisplay().first()
+            dataStoreRepo.observeIsDateDisplay().first()
         }
     )
 
-    private val isTimeDisplayStateFlow = dataStoreRepository.observeIsTimeDisplay().stateIn(
+    private val isTimeDisplayStateFlow = dataStoreRepo.observeIsTimeDisplay().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsTimeDisplay().first()
+            dataStoreRepo.observeIsTimeDisplay().first()
         }
     )
 
-    private val isLoginStateFlow = dataStoreRepository.observeIsLogin().stateIn(
+    private val isLoginStateFlow = dataStoreRepo.observeIsLogin().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         runBlocking {
-            dataStoreRepository.observeIsLogin().first()
+            dataStoreRepo.observeIsLogin().first()
         }
     )
 
@@ -234,12 +226,12 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    suspend fun loadSchedule(yearAndSemester: String? = null) {
+    suspend fun loadSchedule() {
         val semesterYearStart = enterUniversityYearStateFlow.value.toInt()
         val semesterYearEnd = yearAndSemesterStateFlow.value.take(4).toInt()
         val semesterNoEnd = yearAndSemesterStateFlow.value.last().toString().toInt()
         val semesters = mutableListOf<String>()
-        (semesterYearStart..semesterYearEnd).forEach label@ { year ->
+        (semesterYearStart..semesterYearEnd).forEach label@{ year ->
             (1..2).forEach { no ->
                 if (year == semesterYearEnd && no > semesterNoEnd) {
                     return@label
@@ -249,28 +241,20 @@ class ScheduleViewModel @Inject constructor(
         }
         _uiState.update {
             it.copy(
-                browsedSemester = yearAndSemester ?: yearAndSemesterStateFlow.value,
+                browsedSemester = it.browsedSemester ?: yearAndSemesterStateFlow.value,
                 semesters = semesters,
-                startLocalDate = networkRepository.getCalendar(yearAndSemester)?.firstOrNull()
-                    ?.let { found ->
-                        (found.monday ?: (found.tuesday ?: (found.wednesday
-                            ?: (found.thursday ?: (found.friday ?: (found.saturday
-                                ?: found.sunday))))))?.let { day ->
-                            LocalDate.parse(
-                                found.yearAndMonth + "-" + (if (day.toInt() < 10) "0$day" else day),
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            )
-                        }
-                    },
+                startLocalDate = networkRepo.getSemesterStartDate(
+                    it.browsedSemester ?: yearAndSemesterStateFlow.value
+                ),
             )
         }
-        if (_uiState.value.browsedSemester == semesters.last()) {
+        if (_uiState.value.currentWeek == null) {
             val currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now())
-            _uiState.update { uiState ->
-                uiState.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
+            _uiState.update {
+                it.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
             }
         }
-        _uiState.update { it.copy(courses = Result(networkRepository.getSchedule(yearAndSemester))) }
+        _uiState.update { it.copy(courses = Result(networkRepo.getSchedule(_uiState.value.browsedSemester))) }
     }
 
     suspend fun loadTeachingClassrooms() {
@@ -279,7 +263,7 @@ class ScheduleViewModel @Inject constructor(
         val dayOfWeek = _uiState.value.dayOfWeekOnHoldingCourse
         val startNode = node * 2 - 1
         val result = _uiState.value.browsedSemester?.let {
-            networkRepository.getGlobalSchedule(
+            networkRepo.getGlobalSchedule(
                 yearAndSemester = it,
                 startWeekNo = _uiState.value.browsedWeek.toString(),
                 endWeekNo = _uiState.value.browsedWeek.toString(),
@@ -341,7 +325,7 @@ class ScheduleViewModel @Inject constructor(
     suspend fun loadEmptyClassroom() {
         _uiState.update { it.copy(buildingNames = null) }
         val result = _uiState.value.browsedWeek?.let {
-            networkRepository.getEmptyClassroom(
+            networkRepo.getEmptyClassroom(
                 weekNo = listOf(it),
                 dayOfWeekNo = listOf(_uiState.value.dayOfWeekOnHoldingCourse),
                 nodeNo = listOf(_uiState.value.nodeNoOnHoldingCourse),
@@ -375,7 +359,7 @@ class ScheduleViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 scheduleNotes = Result(
-                    networkRepository.getScheduleNotes(
+                    networkRepo.getScheduleNotes(
                         _uiState.value.browsedSemester
                     )
                 ),
@@ -397,7 +381,7 @@ class ScheduleViewModel @Inject constructor(
         }
         _uiState.update {
             it.copy(
-                plannedSchedule = Result(networkRepository.getPlannedSchedule()),
+                plannedSchedule = Result(networkRepo.getPlannedSchedule()),
             )
         }
     }
@@ -452,7 +436,7 @@ class ScheduleViewModel @Inject constructor(
                         teacherSchedule = if (_uiState.value.searchTeacherName.isEmpty()) Result(
                             emptyList()
                         ) else Result(
-                            networkRepository.getGlobalSchedule(
+                            networkRepo.getGlobalSchedule(
                                 yearAndSemester = browsedSemester,
                                 teacherName = _uiState.value.searchTeacherName,
                             )

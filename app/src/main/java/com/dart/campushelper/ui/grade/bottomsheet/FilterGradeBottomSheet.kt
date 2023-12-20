@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.ColumnCard
@@ -41,6 +42,7 @@ import com.dart.campushelper.ui.component.TooltipIconButton
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.dart.campushelper.viewmodel.GradeViewModel
 import com.dart.campushelper.viewmodel.SortBasis
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -51,8 +53,10 @@ fun FilterGradeBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
         onDismissRequest = { viewModel.setOpenFilterSheet(false) },
         actions = {
             TooltipIconButton(label = R.string.reset, imageVector = Icons.Outlined.RestartAlt) {
-                viewModel.resetFilter()
-                viewModel.filterGrades()
+                viewModel.viewModelScope.launch {
+                    viewModel.resetFilter()
+                    viewModel.filterGrades()
+                }
             }
         },
     ) {

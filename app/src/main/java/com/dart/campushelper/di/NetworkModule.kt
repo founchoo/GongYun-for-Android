@@ -1,9 +1,9 @@
 package com.dart.campushelper.di
 
-import com.dart.campushelper.App.Companion.instance
+import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
 import com.dart.campushelper.api.NetworkService
-import com.dart.campushelper.data.DataStoreRepository
+import com.dart.campushelper.repo.DataStoreRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,12 +34,12 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideNetworkService(
-        dataStoreRepository: DataStoreRepository
+        dataStoreRepo: DataStoreRepo
     ): NetworkService {
 
         val client = OkHttpClient.Builder()
             .followRedirects(false)
-            .cookieJar(NetworkCookieJar(dataStoreRepository))
+            .cookieJar(NetworkCookieJar(dataStoreRepo))
             .addInterceptor { chain ->
                 try {
                     chain.proceed(chain.request())
@@ -48,8 +48,8 @@ object NetworkModule {
                         .protocol(Protocol.HTTP_1_1)
                         .code(502)
                         .request(chain.request())
-                        .message(instance.getString(R.string.network_connection_error))
-                        .body(instance.getString(R.string.network_connection_error).toResponseBody())
+                        .message(context.getString(R.string.network_connection_error))
+                        .body(context.getString(R.string.network_connection_error).toResponseBody())
                         .build()
                 }
             }
@@ -67,24 +67,24 @@ object NetworkModule {
 }
 
 class NetworkCookieJar @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepo: DataStoreRepo
 ) : CookieJar {
 
     val scope = CoroutineScope(Dispatchers.IO)
 
     private var cookies: List<Cookie>
 
-    private val cookiesStateFlow = dataStoreRepository.observeCookies().stateIn(
+    private val cookiesStateFlow = dataStoreRepo.observeCookies().stateIn(
         scope = scope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = runBlocking { dataStoreRepository.observeCookies().first() }
+        initialValue = runBlocking { dataStoreRepo.observeCookies().first() }
     )
 
     init {
         cookies = runBlocking { cookiesStateFlow.first() }
         scope.launch {
             // Log.d("okhttp.OkHttpClient", "init: cookies.size: ${cookies.size}")
-            dataStoreRepository.observeCookies().collect {
+            dataStoreRepo.observeCookies().collect {
                 cookies = it
             }
         }
@@ -104,7 +104,7 @@ class NetworkCookieJar @Inject constructor(
             // Log.d("okhttp.OkHttpClient", "saveFromResponse: cookies.size: ${cookies.size}")
             this@NetworkCookieJar.cookies = cookies
             scope.launch {
-                this@NetworkCookieJar.dataStoreRepository.changeCookies(cookies)
+                this@NetworkCookieJar.dataStoreRepo.changeCookies(cookies)
             }
         }
     }

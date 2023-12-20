@@ -140,4 +140,13 @@
     <string name="teacher_schedule">查找教师课表</string>
     <string name="no_teacher_schedule_found">暂无与此教师相关的课表</string>
     <string name="input_teacher_name">输入教师姓名</string>
+    <string name="lesson_reminder_title">课前提醒</string>
+    <string name="lesson_reminder_desc">上课前推送提醒通知</string>
+    <string name="channel_name">主要通知</string>
+    <string name="channel_description">为课前提醒、新成绩提醒提供通知渠道</string>
+    <string name="lesson_reminder_push_content">%1$s 将于 %2$s 在 %3$s 开始</string>
+    <string name="pin_request">固定微件请求已发送，若未成功固定，请手动授予应用“桌面快捷方式”权限</string>
+    <string name="unsupport_to_pin">当前启动器不支持固定微件</string>
+    <string name="last_update_time">上次更新时间 %1$s</string>
+    <string name="course_type_fallback_label">未分类</string>
 </resources>
