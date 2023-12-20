@@ -50,13 +50,13 @@
 
 ## 下载
 
-Github release: [点此](https://github.com/founchoo/CampusHelper/releases/latest)链接跳转到下载页面，页面下方的 `.apk` 文件即是安装包，下载安装即可。
+GitHub release: [点此](https://github.com/founchoo/CampusHelper/releases/latest)链接跳转到下载页面，页面下方的 `.apk` 文件即是安装包，下载安装即可。
 
 Google Play Store: [点此前往谷歌应用商店下载](https://play.google.com/store/apps/details?id=com.dart.campushelper)
 
 ## 参与开发
 
-发现 bug ？想要新功能？创建一个 issue 阐述你当前遇到的问题；已经写好了代码，希望与主分支合并？请创建 pull request。
+发现 bug？想要新功能？创建一个 issue 阐述你当前遇到的问题；已经写好了代码，希望与主分支合并？请创建 pull request。
 
 ## 引用及参考
 
