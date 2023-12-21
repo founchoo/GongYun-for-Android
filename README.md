@@ -58,6 +58,8 @@ Google Play Store: [点此前往谷歌应用商店下载](https://play.google.co
 
 发现 bug？想要新功能？创建一个 issue 阐述你当前遇到的问题；已经写好了代码，希望与主分支合并？请创建 pull request。
 
+我们期待您的贡献，期望将此项目继续延续下去。
+
 ## 引用及参考
 
 - https://stackoverflow.com/
