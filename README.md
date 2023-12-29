@@ -46,7 +46,7 @@
 
 注意：考虑到隐私问题，我们已星号处理某些信息，当您实际正常使用该应用时，不会出现该现象。
 
-<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/4140a910-2893-4889-ad12-5cd8ca0882c0">
+<img src="https://github.com/founchoo/GongYun-for-Android/assets/24630338/e0385777-f842-42b4-b20b-5bfa177dd3a3">
 
 ## 下载
 
