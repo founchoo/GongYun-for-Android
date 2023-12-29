@@ -13,6 +13,8 @@ import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.R
 import com.dart.campushelper.alarm.LessonReminderRepository
+import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
+import com.dart.campushelper.receiver.AppWidgetReceiver
 import com.dart.campushelper.repo.DataStoreRepo
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED
@@ -20,9 +22,7 @@ import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_SELECTED_DARK_MODE
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_USERNAME
-import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
-import com.dart.campushelper.receiver.AppWidgetReceiver
-import com.dart.campushelper.ui.component.preference.SelectionItem
+import com.dart.campushelper.ui.component.listitem.SelectionItem
 import com.dart.campushelper.ui.main.MainActivity
 import com.dart.campushelper.utils.Notification
 import com.dart.campushelper.utils.Permission

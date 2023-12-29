@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.dart.campushelper.App
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.ColumnCard
@@ -29,6 +28,7 @@ import com.dart.campushelper.ui.grade.RankingInfo
 import com.dart.campushelper.ui.grade.chart.GPAChangeLineChart
 import com.dart.campushelper.ui.grade.chart.GradeDistributionColumnChart
 import com.dart.campushelper.ui.grade.chart.RankingColumnChart
+import com.dart.campushelper.utils.AcademicYearAndSemester
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.dart.campushelper.viewmodel.GradeViewModel
@@ -81,19 +81,27 @@ fun StatisticBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                     },
                     autoLoadingArgs = arrayOf(uiState.semesters),
                     autoLoadWhenDataLoaded = true,
-                    loadingIndicatorStyle = LoadingIndicatorStyle.SHIMMER,
+                    loadingIndicatorStyle = LoadingIndicatorStyle.CIRCULAR,
                 ) {
-                    ColumnCard(
-                        icon = Icons.Outlined.Groups,
-                        title = stringResource(R.string.rank_title),
-                        description = stringResource(
-                            R.string.rank_desc,
-                            uiState.semesters?.filter { it.selected }
-                                ?.joinToString(", ") { "${App.context.getString(it.yearResId)} ${App.context.getString(it.semesterResId)}" } ?: ""
-                        )
-                    ) {
-                        RankingInfo(uiState)
-                        RankingColumnChart(uiState)
+                    val startSemester = uiState.semesters?.firstOrNull { it.selected }?.value
+                    if (startSemester != null) {
+                        ColumnCard(
+                            icon = Icons.Outlined.Groups,
+                            title = stringResource(R.string.rank_title),
+                            description = stringResource(
+                                R.string.rank_desc,
+                                uiState.semesters.filter { it.selected }
+                                    .joinToString(", ") {
+                                        AcademicYearAndSemester.getReadableString(
+                                            startSemester,
+                                            it.value
+                                        )
+                                    }
+                            )
+                        ) {
+                            RankingInfo(uiState)
+                            RankingColumnChart(uiState)
+                        }
                     }
                 }
             } else {

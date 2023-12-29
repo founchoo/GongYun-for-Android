@@ -1,8 +1,8 @@
 package com.dart.campushelper.ui.grade.chart
 
 import androidx.compose.runtime.Composable
-import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.ui.component.rememberMarker
+import com.dart.campushelper.utils.AcademicYearAndSemester.Companion.getReadableString
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -31,9 +31,7 @@ fun GPAChangeLineChart(uiState: GradeUiState) {
             bottomAxis = rememberBottomAxis(
                 guideline = null,
                 valueFormatter = { value, _ ->
-                    uiState.semesters?.get(value.toInt() - 1)
-                        ?.let { "${context.getString(it.yearResId)} ${context.getString(it.semesterResId)}" }
-                        ?.replaceWithStars(uiState.isScreenshotMode) ?: ""
+                    getReadableString(value)
                 },
             ),
             marker = rememberMarker(

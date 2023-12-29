@@ -1,8 +1,6 @@
 package com.dart.campushelper.ui.main
 
-//noinspection UsingMaterialAndMaterial3Libraries
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
@@ -11,7 +9,6 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -94,7 +91,6 @@ import com.dart.campushelper.viewmodel.ScheduleViewModel
 import com.dart.campushelper.viewmodel.SettingsViewModel
 import com.dart.campushelper.viewmodel.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 lateinit var focusSearchBarRequester: FocusRequester
@@ -142,9 +138,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navHostController: NavHostController
     private var currentDestination: NavDestination? = null
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    private lateinit var scrollBehavior: TopAppBarScrollBehavior
-
     companion object {
         lateinit var snackBarHostState: SnackbarHostState
         lateinit var mainActivity: MainActivity
@@ -156,10 +149,9 @@ class MainActivity : AppCompatActivity() {
         mainActivity = this
 
         setContent {
-            val scope = rememberCoroutineScope()
             snackBarHostState = remember { SnackbarHostState() }
             focusSearchBarRequester = remember { FocusRequester() }
-            CampusHelperApp(mainViewModel, scope)
+            CampusHelperApp()
         }
     }
 
@@ -179,16 +171,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
-    @SuppressLint("CoroutineCreationDuringComposition", "StateFlowValueCalledInComposition")
     @Composable
-    fun CampusHelperApp(mainViewModel: MainViewModel, scope: CoroutineScope) {
+    fun CampusHelperApp() {
         val width = LocalConfiguration.current.screenWidthDp
 
         mainUiState = mainViewModel.uiState.collectAsState().value
         scheduleUiState = scheduleViewModel.uiState.collectAsState().value
         gradeUiState = gradeViewModel.uiState.collectAsState().value
 
-        scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
         screens = mapOf(
             Route.SCHEDULE to Screen(
@@ -252,7 +243,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 actions = { ActionsForGrade(gradeViewModel, gradeUiState) },
                 fab = { FloatingActionButtonForGrade(gradeUiState, gradeViewModel) },
-                content = { GradeScreen(gradeViewModel) }
+                content = { GradeScreen(gradeUiState, gradeViewModel) }
             ),
             Route.SETTINGS to Screen(
                 route = Route.SETTINGS.toString(),
@@ -268,7 +259,7 @@ class MainActivity : AppCompatActivity() {
         val navBackStackEntry by navHostController.currentBackStackEntryAsState()
         currentDestination = navBackStackEntry?.destination
 
-        BackHandler(gradeUiState, gradeViewModel, scope)
+        BackHandler(gradeUiState)
 
         CampusHelperTheme(themeViewModel) {
             Surface(
@@ -289,10 +280,10 @@ class MainActivity : AppCompatActivity() {
                             }
                         },
                     ) {
-                        MobileScaffold(true)
+                        MobileScaffold(scrollBehavior, true)
                     }
                 } else {
-                    MobileScaffold(false)
+                    MobileScaffold(scrollBehavior, false)
                 }
             }
         }
@@ -301,12 +292,13 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MobileScaffold(
+        scrollBehavior: TopAppBarScrollBehavior,
         largeScreenMode: Boolean = false,
     ) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                DefaultTopAppBar(largeScreenMode)
+                DefaultTopAppBar(scrollBehavior, largeScreenMode)
             },
             bottomBar = {
                 if (!largeScreenMode) {
@@ -317,21 +309,23 @@ class MainActivity : AppCompatActivity() {
                 SnackbarHost(hostState = snackBarHostState)
             },
             floatingActionButton = {
-                Crossfade(targetState = currentDestination?.route?.let {
+                currentDestination?.route?.let {
                     screens[Route.valueOf(
                         it
                     )]
-                }?.let { if (it.enabled) it else null }?.fab) {
-                    it?.let { it() }
-                }
+                }?.let { if (it.enabled) it else null }?.fab?.let { it() }
             }
         ) {
             NavHost(
-                navHostController,
-                screens.values.first { it.enabled }.route,
-                Modifier.padding(it),
+                navController = navHostController,
+                startDestination = screens.values.first { it.enabled }.route,
+                modifier = Modifier.padding(it),
             ) {
-                screens.values.forEach { screen -> composable(screen.route) { screen.content() } }
+                screens.values.forEach { screen ->
+                    composable(
+                        route = screen.route,
+                    ) { screen.content() }
+                }
             }
         }
     }
@@ -398,7 +392,7 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun DefaultTopAppBar(largeScreenMode: Boolean) {
+    fun DefaultTopAppBar(scrollBehavior: TopAppBarScrollBehavior, largeScreenMode: Boolean) {
         val density = LocalDensity.current
 
         MediumTopAppBar(
@@ -410,23 +404,19 @@ class MainActivity : AppCompatActivity() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Crossfade(targetState = currentDestination?.route?.let {
+                    currentDestination?.route?.let {
                         screens[Route.valueOf(
                             it
                         )]
-                    }?.let { if (it.enabled) it else null }?.title) {
-                        it?.let { it() }
-                    }
+                    }?.let { if (it.enabled) it else null }?.title?.let { it() }
                 }
             },
             actions = {
-                Crossfade(targetState = currentDestination?.route?.let {
+                currentDestination?.route?.let {
                     screens[Route.valueOf(
                         it
                     )]
-                }?.let { if (it.enabled) it else null }?.actions) {
-                    it?.let { Row { it() } }
-                }
+                }?.let { if (it.enabled) it else null }?.actions?.let { Row { it() } }
             },
             scrollBehavior = scrollBehavior,
             navigationIcon = {
@@ -458,9 +448,8 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun BackHandler(
         gradeUiState: GradeUiState,
-        gradeViewModel: GradeViewModel,
-        scope: CoroutineScope
     ) {
+        val scope = rememberCoroutineScope()
         var showExitHint by remember { mutableStateOf(false) }
         BackHandler(true) label@{
             if (gradeUiState.isSearchBarShow) {

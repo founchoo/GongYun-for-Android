@@ -146,4 +146,6 @@
     <string name="unsupport_to_pin">Pin widgets are not supported by current launcher</string>
     <string name="last_update_time">Last updated %1$s</string>
     <string name="course_type_fallback_label">Uncategorised</string>
+    <string name="unidentified">" (Unidentified)"</string>
+    <string name="semester">Semester</string>
 </resources>

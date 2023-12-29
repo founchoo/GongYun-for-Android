@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dart.campushelper.repo.Result
 import com.dart.campushelper.repo.Status
+import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
 import io.github.fornewid.placeholder.material3.placeholder
 import io.github.fornewid.placeholder.material3.shimmer
@@ -77,7 +79,10 @@ fun <T> LoadOnlineDataLayout(
         if (dataSource.status == Status.LOADING || isRefreshing) {
             // Waiting for data to load from network
             if (loadingIndicatorStyle == LoadingIndicatorStyle.CIRCULAR) {
-                Box(Modifier.fillMaxSize())
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                )
             } else {
                 Box(
                     Modifier
@@ -96,9 +101,12 @@ fun <T> LoadOnlineDataLayout(
         }
         if (loadingIndicatorStyle == LoadingIndicatorStyle.CIRCULAR) {
             PullRefreshIndicator(
-                isRefreshing,
-                refreshState,
-                Modifier.align(Alignment.TopCenter)
+                refreshing = isRefreshing,
+                state = refreshState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(bottom = DEFAULT_PADDING),
+                scale = true
             )
         }
     }

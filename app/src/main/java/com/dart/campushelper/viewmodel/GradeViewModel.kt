@@ -1,26 +1,23 @@
 package com.dart.campushelper.viewmodel
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.R
-import com.dart.campushelper.repo.DataStoreRepo
-import com.dart.campushelper.repo.NetworkRepo
-import com.dart.campushelper.repo.Result
 import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.RankingInfo
 import com.dart.campushelper.model.SubRankingType
-import com.dart.campushelper.utils.AcademicYearAndSemester
+import com.dart.campushelper.repo.DataStoreRepo
+import com.dart.campushelper.repo.NetworkRepo
+import com.dart.campushelper.repo.Result
 import com.patrykandpatrick.vico.core.chart.composed.ComposedChartEntryModel
 import com.patrykandpatrick.vico.core.entry.ChartEntryModel
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.patrykandpatrick.vico.core.entry.composed.plus
 import com.patrykandpatrick.vico.core.entry.entryModelOf
 import com.patrykandpatrick.vico.core.entry.entryOf
-import com.patrykandpatrick.vico.core.extension.setFieldValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,41 +31,30 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 data class YearAndSemester(
-    @StringRes val yearResId: Int,
-    @StringRes val semesterResId: Int,
     val value: String,
-    var selected: Boolean
+    val selected: Boolean
 )
 
 enum class SortBasis {
+    SEMESTER,
     GRADE,
     CREDIT;
 
-    override fun toString(): String {
+    fun getResId(): Int {
         return when (this) {
-            GRADE -> context.getString(R.string.grade_label)
-            CREDIT -> context.getString(R.string.credit_label)
+            SEMESTER -> R.string.semester
+            GRADE -> R.string.grade_label
+            CREDIT -> R.string.credit_label
         }
     }
 }
 
-class SortBasisItem(val sortBasis: SortBasis) {
-
-    private var _selected: Boolean = false
-    val selected: Boolean
-        get() = _selected
-
-    private var _asc: Boolean = false
+data class SortBasisItem(
+    val sortBasis: SortBasis,
+    val selected: Boolean,
     val asc: Boolean
-        get() = _asc
-
-    fun setSelected(value: Boolean) {
-        _selected = value
-    }
-
-    fun setAsc(value: Boolean) {
-        _asc = value
-    }
+) {
+    constructor(sortBasis: SortBasis) : this(sortBasis, false, false)
 }
 
 data class GradeUiState(
@@ -93,9 +79,7 @@ data class GradeUiState(
     val openFilterSheet: Boolean = false,
     val openSummarySheet: Boolean = false,
     val fabVisibility: Boolean? = null,
-    val sortBasisList: List<SortBasisItem> = SortBasis.values().map {
-        SortBasisItem(it)
-    },
+    val sortBasisList: List<SortBasisItem>,
     val startYearAndSemester: String? = null,
 )
 
@@ -106,7 +90,11 @@ class GradeViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state exposed to the UI
-    private val _uiState = MutableStateFlow(GradeUiState())
+    private val _uiState = MutableStateFlow(
+        GradeUiState(
+            sortBasisList = getInitSortBasisList()
+        )
+    )
     val uiState: StateFlow<GradeUiState> = _uiState.asStateFlow()
 
     private val isScreenshotModeStateFlow: StateFlow<Boolean> =
@@ -228,8 +216,22 @@ class GradeViewModel @Inject constructor(
 
     suspend fun getGrades() {
         val needResetFilter = _backedGrades == null
-        _uiState.update { it.copy(courseTypes = networkRepo.getCourseTypeList()) }
         _backedGrades = networkRepo.getGrades()
+        val courseTypes = networkRepo.getCourseTypeList()
+        _uiState.update {
+            it.copy(courseTypes = _backedGrades?.asSequence()?.map { it.courseTypeRaw }
+                ?.filterNotNull()?.toSet()
+                ?.map { courseTypeValue ->
+                    CourseType(
+                        courseTypeValue,
+                        courseTypes?.find { it.value == courseTypeValue }?.label
+                            ?: "$courseTypeValue${context.getString(R.string.unidentified)}",
+                        true
+                    )
+                }
+                ?.sortedBy { it.value }?.toList()
+            )
+        }
         if (needResetFilter) {
             resetFilter()
         }
@@ -237,27 +239,29 @@ class GradeViewModel @Inject constructor(
     }
 
     fun resetFilter() {
-        val semesters = _backedGrades?.map { grade ->
-            grade.yearAndSemester ?: ""
+        val semesters = _backedGrades?.map {
+            it.yearAndSemester ?: ""
         }?.toSet()?.toList()?.sorted()
         _uiState.update {
             it.copy(
-                semesters = semesters?.map {
-                    YearAndSemester(
-                        AcademicYearAndSemester.getYearResId(
-                            semesters.first(),
-                            it
-                        ),
-                        AcademicYearAndSemester.getSemesterResId(it),
-                        it,
-                        it == semesters.last()
-                    )
+                semesters = semesters?.map { semester ->
+                    YearAndSemester(semester, true)
                 },
                 courseTypes = it.courseTypes?.map { courseType ->
                     courseType.copy(selected = true)
                 },
-                sortBasisList = SortBasis.values().map { SortBasisItem(it) }
+                sortBasisList = getInitSortBasisList()
             )
+        }
+    }
+
+    private fun getInitSortBasisList(): List<SortBasisItem> {
+        return SortBasis.values().map {
+            if (it == SortBasis.SEMESTER) {
+                SortBasisItem(it, true, false)
+            } else {
+                SortBasisItem(it)
+            }
         }
     }
 
@@ -333,10 +337,10 @@ class GradeViewModel @Inject constructor(
                     grade.name.replace(" ", "").lowercase().contains(formattedSearchKeyword) &&
                             (_uiState.value.courseTypes?.map { it.value }
                                 ?.contains(
-                                    grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                    grade.courseTypeRaw
                                 ) == false ||
                                     selectedCourseTypes?.contains(
-                                        grade.courseTypeRaw ?: CourseType.FALLBACK_VALUE
+                                        grade.courseTypeRaw
                                     ) == true) &&
                             selectedYearAndSemesters?.contains(grade.yearAndSemester) == true
                 }),
@@ -365,24 +369,34 @@ class GradeViewModel @Inject constructor(
         )
     }
 
-    fun changeCourseSortSelected(index: Int, selected: Boolean) {
+    fun switchCourseSortSelected(item: CourseType) {
         _uiState.update {
             it.copy(
-                courseTypes = it.courseTypes.apply {
-                    this?.get(index)?.setFieldValue("selected", selected)
+                courseTypes = it.courseTypes?.map {
+                    if (it == item) {
+                        it.copy(selected = !it.selected)
+                    } else {
+                        it
+                    }
                 }
             )
         }
+        filterGrades()
     }
 
-    fun changeSemesterSelected(index: Int, selected: Boolean) {
+    fun switchSemesterSelected(item: YearAndSemester) {
         _uiState.update {
             it.copy(
-                semesters = it.semesters?.apply {
-                    this[index].selected = selected
+                semesters = it.semesters?.map {
+                    if (it == item) {
+                        it.copy(selected = !it.selected)
+                    } else {
+                        it
+                    }
                 }
             )
         }
+        filterGrades()
     }
 
     fun setIsSearchBarShow(value: Boolean) {
@@ -409,21 +423,20 @@ class GradeViewModel @Inject constructor(
         }
     }
 
-    fun sortGradesBy(index: Int, sortBasisItem: SortBasisItem) {
+    fun sortGradesBy(sortBasisItem: SortBasisItem) {
         _uiState.update {
             it.copy(
-                sortBasisList = it.sortBasisList.onEach {
+                sortBasisList = it.sortBasisList.map {
                     if (it == sortBasisItem) {
                         if (!it.selected) {
-                            it.setSelected(true)
+                            it.copy(selected = true)
                         } else if (!it.asc) {
-                            it.setAsc(true)
+                            it.copy(asc = true)
                         } else {
-                            it.setAsc(false)
-                            it.setSelected(false)
+                            it.copy(selected = false, asc = false)
                         }
                     } else {
-                        it.setSelected(false)
+                        it.copy(selected = false)
                     }
                 }
             )
@@ -438,6 +451,9 @@ class GradeViewModel @Inject constructor(
                 it.copy(
                     grades = Result(it.grades.data?.sortedBy {
                         when (found.sortBasis) {
+                            SortBasis.SEMESTER -> it.yearAndSemester?.replace("-", "")?.toDouble()
+                                ?.times(if (found.asc) 1 else -1)
+
                             SortBasis.GRADE -> it.score.toDouble().times(if (found.asc) 1 else -1)
                             SortBasis.CREDIT -> it.credit.times(if (found.asc) 1 else -1)
                         }
@@ -445,5 +461,29 @@ class GradeViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun switchAllSemesterSelected() {
+        val futureSelected = _uiState.value.semesters?.find { !it.selected } != null
+        _uiState.update {
+            it.copy(
+                semesters = _uiState.value.semesters?.map {
+                    it.copy(selected = futureSelected)
+                }
+            )
+        }
+        filterGrades()
+    }
+
+    fun switchAllCourseTypeSelected() {
+        val futureSelected = _uiState.value.courseTypes?.find { !it.selected } != null
+        _uiState.update {
+            it.copy(
+                courseTypes = _uiState.value.courseTypes?.map {
+                    it.copy(selected = futureSelected)
+                }
+            )
+        }
+        filterGrades()
     }
 }

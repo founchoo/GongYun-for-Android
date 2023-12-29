@@ -23,6 +23,8 @@ import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.LoadOnlineDataLayout
 import com.dart.campushelper.ui.component.NoBorderTextField
 import com.dart.campushelper.ui.main.focusSearchBarRequester
+import com.dart.campushelper.utils.Constants
+import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 import com.dart.campushelper.utils.parseHtml
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
@@ -38,7 +40,10 @@ fun TeacherScheduleBottomSheet(uiState: ScheduleUiState, viewModel: ScheduleView
         }
     ) {
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = Constants.DEFAULT_PADDING)
+            ) {
                 Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
                 NoBorderTextField(
                     text = uiState.searchTeacherName,
@@ -58,7 +63,7 @@ fun TeacherScheduleBottomSheet(uiState: ScheduleUiState, viewModel: ScheduleView
                     Text(
                         text = stringResource(R.string.no_teacher_schedule_found),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 5.dp),
+                        modifier = Modifier.padding(top = 5.dp).padding(horizontal = DEFAULT_PADDING),
                     )
                 },
                 contentWhenDataSourceIsNotEmpty = {

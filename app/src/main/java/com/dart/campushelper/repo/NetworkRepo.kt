@@ -188,13 +188,7 @@ class NetworkRepo @Inject constructor(
                         label = it.text(),
                         selected = true,
                     )
-                }?.plus(
-                    CourseType(
-                        value = CourseType.FALLBACK_VALUE,
-                        label = CourseType.FALLBACK_LABEL,
-                        selected = true,
-                    )
-                )
+                }
             }
         }
     }
