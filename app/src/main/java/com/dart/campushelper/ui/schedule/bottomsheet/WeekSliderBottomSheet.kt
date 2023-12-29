@@ -12,9 +12,9 @@ import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.BasicBottomSheet
 import com.dart.campushelper.ui.component.TooltipIconButton
-import com.dart.campushelper.ui.component.preference.DropdownMenuPreference
-import com.dart.campushelper.ui.component.preference.SelectionItem
-import com.dart.campushelper.ui.component.preference.SliderPreference
+import com.dart.campushelper.ui.component.listitem.DropdownListItem
+import com.dart.campushelper.ui.component.listitem.SelectionItem
+import com.dart.campushelper.ui.component.listitem.SliderListItem
 import com.dart.campushelper.utils.AcademicYearAndSemester
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
@@ -41,14 +41,14 @@ fun WeekSliderBottomSheet(
         },
     ) {
         Column {
-            SliderPreference(
+            SliderListItem(
                 value = uiState.browsedWeek?.toFloat() ?: 0f,
                 minValue = 1f,
                 maxValue = 20f,
-                title = stringResource(
+                headlineText = stringResource(
                     R.string.switch_week
                 ),
-                description = stringResource(
+                supportingText = stringResource(
                     R.string.week_indicator, uiState.browsedWeek ?: 0
                 ),
                 onValueChanged = {
@@ -57,9 +57,9 @@ fun WeekSliderBottomSheet(
                     }
                 },
             )
-            DropdownMenuPreference(
+            DropdownListItem(
                 value = uiState.browsedSemester,
-                title = stringResource(R.string.switch_year_semester),
+                headlineText = stringResource(R.string.switch_year_semester),
                 selections = uiState.semesters.map {
                     SelectionItem(
                         AcademicYearAndSemester.getReadableString(

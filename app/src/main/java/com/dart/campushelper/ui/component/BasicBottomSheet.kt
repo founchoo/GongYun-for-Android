@@ -42,7 +42,6 @@ fun BasicBottomSheet(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(bottom = DEFAULT_PADDING)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -57,9 +56,7 @@ fun BasicBottomSheet(
                     actions?.let { it() }
                 }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacer)))
-                Box(
-                    Modifier.padding(horizontal = DEFAULT_PADDING)
-                ) {
+                Box {
                     content()
                 }
             }

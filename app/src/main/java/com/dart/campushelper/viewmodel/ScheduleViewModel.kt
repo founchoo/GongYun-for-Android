@@ -1,5 +1,6 @@
 package com.dart.campushelper.viewmodel
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TooltipState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,7 +30,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 
-data class ScheduleUiState constructor(
+data class ScheduleUiState @OptIn(ExperimentalMaterial3Api::class) constructor(
     val courses: Result<List<Course>> = Result(),
     val currentWeek: Int? = null,
     val browsedWeek: Int? = null,
@@ -68,6 +69,7 @@ data class ScheduleUiState constructor(
     val searchTeacherName: String = "",
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
     private val networkRepo: NetworkRepo,
@@ -245,13 +247,15 @@ class ScheduleViewModel @Inject constructor(
                 semesters = semesters,
                 startLocalDate = networkRepo.getSemesterStartDate(
                     it.browsedSemester ?: yearAndSemesterStateFlow.value
-                ),
+                )
             )
         }
-        if (_uiState.value.currentWeek == null) {
-            val currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now())
+        if (_uiState.value.browsedWeek == null) {
             _uiState.update {
-                it.copy(currentWeek = currentWeek, browsedWeek = currentWeek)
+                it.copy(currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now()))
+            }
+            _uiState.update {
+                it.copy(browsedWeek = _uiState.value.currentWeek)
             }
         }
         _uiState.update { it.copy(courses = Result(networkRepo.getSchedule(_uiState.value.browsedSemester))) }

@@ -2,9 +2,10 @@ package com.dart.campushelper.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import com.dart.campushelper.App
 import com.dart.campushelper.R
 
-class AcademicYearAndSemester {
+class AcademicYearAndSemesterComposable {
     companion object {
         @Composable
         fun getReadableString(value: Float): String {
@@ -38,21 +39,39 @@ class AcademicYearAndSemester {
             val semester = now.last().toString().toInt()
             return getReadableString(grade, semester)
         }
+    }
+}
 
-        fun getYearResId(start: String, now: String): Int =
-            when (now.substring(0, 4).toInt() - start.substring(0, 4).toInt() + 1) {
-                1 -> R.string.freshman_year
-                2 -> R.string.sophomore_year
-                3 -> R.string.junior_year
-                4 -> R.string.senior_year
-                else -> -1
-            }
+class AcademicYearAndSemester {
+    companion object {
+        fun getReadableString(value: Float): String {
+            val grade = ((value.toInt() - 1) / 2) + 1
+            val semester = (value.toInt() - 1) % 2 + 1
+            return getReadableString(grade, semester)
+        }
 
-        fun getSemesterResId(now: String): Int =
-            when (now.last().toString().toInt()) {
-                1 -> R.string.spring_semester
-                2 -> R.string.fall_semester
-                else -> -1
-            }
+        fun getReadableString(grade: Int, semester: Int): String {
+            return "${
+                when (grade) {
+                    1 -> App.context.getString(R.string.freshman_year)
+                    2 -> App.context.getString(R.string.sophomore_year)
+                    3 -> App.context.getString(R.string.junior_year)
+                    4 -> App.context.getString(R.string.senior_year)
+                    else -> ""
+                }
+            } ${
+                when (semester) {
+                    1 -> App.context.getString(R.string.spring_semester)
+                    2 -> App.context.getString(R.string.fall_semester)
+                    else -> ""
+                }
+            }"
+        }
+
+        fun getReadableString(start: String, now: String): String {
+            val grade = now.substring(0, 4).toInt() - start.substring(0, 4).toInt() + 1
+            val semester = now.last().toString().toInt()
+            return getReadableString(grade, semester)
+        }
     }
 }

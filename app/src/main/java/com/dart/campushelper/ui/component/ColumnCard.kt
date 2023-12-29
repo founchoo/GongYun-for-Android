@@ -18,14 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.github.fornewid.placeholder.foundation.PlaceholderHighlight
-import io.github.fornewid.placeholder.material3.placeholder
-import io.github.fornewid.placeholder.material3.shimmer
+import com.dart.campushelper.utils.Constants.Companion.DEFAULT_PADDING
 
 @Composable
 fun ColumnCard(
     useErrorColor: Boolean = false,
-    isLoadingPlaceholderShow: Boolean = false,
     icon: ImageVector? = null,
     title: String,
     description: String? = null,
@@ -38,17 +35,15 @@ fun ColumnCard(
             containerColor = MaterialTheme.colorScheme.errorContainer,
         ) else CardDefaults.elevatedCardColors(),
         modifier = Modifier
-            .placeholder(
-                visible = isLoadingPlaceholderShow,
-                highlight = PlaceholderHighlight.shimmer(),
-            )
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .padding(horizontal = DEFAULT_PADDING),
         elevation = if (isElevated) CardDefaults.elevatedCardElevation() else CardDefaults.cardElevation(
             defaultElevation = 0.dp
         )
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier
+                .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {

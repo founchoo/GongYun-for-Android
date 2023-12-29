@@ -59,10 +59,6 @@ fun ScheduleTable(uiState: ScheduleUiState, viewModel: ScheduleViewModel, pagerS
         100
     )
 
-    LaunchedEffect(uiState.currentWeek) {
-        uiState.currentWeek?.let { pagerState.scrollToPage(it - 1) }
-    }
-
     LaunchedEffect(pagerState.currentPage) {
         viewModel.setBrowsedWeek(pagerState.currentPage + 1)
     }

@@ -8,7 +8,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.dart.campushelper.R
-import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.utils.replaceWithStars
 import com.dart.campushelper.viewmodel.GradeUiState
@@ -49,7 +48,7 @@ fun GradeDetailDialog(
                         trailingContent = {
                             Text(
                                 "${grade.yearAndSemester}\n" +
-                                        "${uiState.courseTypes?.find { it.value == (grade.courseTypeRaw) }?.label ?: CourseType.FALLBACK_LABEL}\n" +
+                                        "${uiState.courseTypes?.find { it.value == (grade.courseTypeRaw) }?.label}\n" +
                                         "${stringResource(R.string.credit_label)} ${grade.credit}"
                             )
                         },

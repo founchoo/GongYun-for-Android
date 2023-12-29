@@ -149,4 +149,6 @@
     <string name="unsupport_to_pin">当前启动器不支持固定微件</string>
     <string name="last_update_time">上次更新时间 %1$s</string>
     <string name="course_type_fallback_label">未分类</string>
+    <string name="unidentified">（未识别）</string>
+    <string name="semester">学期</string>
 </resources>

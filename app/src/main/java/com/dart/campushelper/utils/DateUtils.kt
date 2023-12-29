@@ -76,15 +76,6 @@ class DayOfWeek {
 
     fun convertDayOfWeekToText(dayOfWeek: Int): String = map[dayOfWeek] ?: ""
 
-    fun convertChineseToDayOfWeek(chinese: String): Int {
-        map.forEach { (key, value) ->
-            if (value == chinese) {
-                return key
-            }
-        }
-        return 0
-    }
-
     companion object {
         val instance = DayOfWeek()
     }

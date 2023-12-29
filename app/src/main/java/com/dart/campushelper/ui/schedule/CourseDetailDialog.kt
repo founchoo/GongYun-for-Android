@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.dart.campushelper.R
-import com.dart.campushelper.ui.component.preference.PreferenceHeader
+import com.dart.campushelper.ui.component.listitem.BasicListItem
 import com.dart.campushelper.viewmodel.ScheduleUiState
 import com.dart.campushelper.viewmodel.ScheduleViewModel
 
@@ -39,7 +39,7 @@ fun CourseDetailDialog(
                     val coursesOnNonBrowsedWeek =
                         uiState.contentInCourseDetailDialog.filter { !it.weekNoList.contains(uiState.browsedWeek) }
                     if (coursesOnBrowsedWeek.isNotEmpty()) {
-                        PreferenceHeader(text = stringResource(R.string.current_observed_week_course_title))
+                        BasicListItem(leadingText = stringResource(R.string.current_observed_week_course_title))
                         Column(Modifier.verticalScroll(rememberScrollState())) {
                             coursesOnBrowsedWeek.forEach { course ->
                                 ListItem(
@@ -61,7 +61,7 @@ fun CourseDetailDialog(
                         }
                     }
                     if (coursesOnNonBrowsedWeek.isNotEmpty()) {
-                        PreferenceHeader(text = stringResource(R.string.non_current_observed_week_course_title))
+                        BasicListItem(leadingText = stringResource(R.string.non_current_observed_week_course_title))
                         Column(Modifier.verticalScroll(rememberScrollState())) {
                             coursesOnNonBrowsedWeek.forEach { course ->
                                 ListItem(
