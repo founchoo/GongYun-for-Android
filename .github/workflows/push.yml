@@ -79,7 +79,7 @@ jobs:
         run: |
           simplified_year=${{ steps.dt.outputs.year }}
           simplified_year=$(echo $simplified_year | tail -c 2)
-          echo VERSION_CODE=$(echo ${{ simplified_year }}${{ steps.dt.outputs.month }}${{ steps.dt.outputs.day }}${{ steps.dt.outputs.hours }}${{ steps.dt.outputs.minutes }}) >> $GITHUB_ENV
+          echo VERSION_CODE=$(echo $simplified_year${{ steps.dt.outputs.month }}${{ steps.dt.outputs.day }}${{ steps.dt.outputs.hours }}${{ steps.dt.outputs.minutes }}) >> $GITHUB_ENV
         
       - name: Override version name and code in build.gradle
         uses: Devofure/advance-android-version-actions@v1.4
