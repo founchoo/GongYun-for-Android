@@ -60,7 +60,8 @@ jobs:
         id: dt
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
-          format: "YYYY_MM_DD HH_mm_ss_SSS"
+          format: "YYYY年MM月DD日 HH:mm:ss.SSS"
+          timezone-offset: -480
           
       - name: Set COM_ID
         run: |
@@ -78,7 +79,7 @@ jobs:
       - name: Set simplified year
         run: |
           SIM_YEAR=${{ steps.dt.outputs.year }}
-          SIM_YEAR=$(echo $SIM_YEAR | tail -c 2)
+          SIM_YEAR=$(echo $SIM_YEAR | tail -c 3)
           echo YEAR=$SIM_YEAR >> $GITHUB_ENV
         
       - name: Set VERSION_CODE
