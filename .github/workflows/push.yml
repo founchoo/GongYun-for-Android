@@ -77,7 +77,7 @@ jobs:
         run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
         
       - name: Set VERSION_CODE
-        run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.time }}) >> $GITHUB_ENV
+        run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.milliseconds_since_epoch }} | head -c 10) >> $GITHUB_ENV
         
       - name: Override version name and code in build.gradle
         uses: Devofure/advance-android-version-actions@v1.4
