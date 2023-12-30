@@ -60,7 +60,7 @@ jobs:
         id: dt
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
-          format: "YYMMDDHHmm"
+          format: "YYYY.MM.DD.HH.mm"
           timezone-offset: -480
           
       - name: Set COM_ID
@@ -74,7 +74,7 @@ jobs:
           echo COM_ID=$ID >> $GITHUB_ENV
         
       - name: Set VERSION_NAME
-        run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.year }}.${{ steps.dt.outputs.month }}.${{ steps.dt.outputs.day }}.${{ env.COM_ID }}) >> $GITHUB_ENV
+        run: echo VERSION_NAME=$(echo v${{ steps.dt.outputs.time }}.${{ env.COM_ID }}) >> $GITHUB_ENV
         
       - name: Set VERSION_CODE
         run: echo VERSION_CODE=$(echo ${{ steps.dt.outputs.milliseconds_since_epoch }} | head -c 10) >> $GITHUB_ENV
