@@ -38,7 +38,7 @@ object DateUtils {
 fun getWeekCount(startLocalDate: LocalDate?, endLocalDate: LocalDate?): Int? {
     return if (startLocalDate != null && endLocalDate != null) {
         startLocalDate.let {
-            val days = endLocalDate.dayOfYear - it.dayOfYear
+            val days = endLocalDate.toEpochDay() - it.toEpochDay()
             floor(days / 7.0).toInt() + 1
         }
     } else {

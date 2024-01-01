@@ -163,7 +163,7 @@ fun SettingsScreen(
         BasicListItem(leadingText = stringResource(R.string.about))
         BasicListItem(
             headlineText = stringResource(R.string.app_name),
-            supportingText = "copyright 2023 摘叶飞镖 ver ${settingsUiState.appVersion}",
+            supportingText = "copyright 2023-2024 摘叶飞镖 ${settingsUiState.appVersion}",
             leadingImageVector = Icons.Outlined.Info
         ) {
             // settingsViewModel.clearCookies()
