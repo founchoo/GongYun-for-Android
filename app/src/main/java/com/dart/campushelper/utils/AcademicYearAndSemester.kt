@@ -26,8 +26,8 @@ class AcademicYearAndSemesterComposable {
                 }
             } ${
                 when (semester) {
-                    1 -> stringResource(R.string.spring_semester)
-                    2 -> stringResource(R.string.fall_semester)
+                    1 -> stringResource(R.string.fall_semester)
+                    2 -> stringResource(R.string.spring_semester)
                     else -> ""
                 }
             }"
@@ -61,8 +61,8 @@ class AcademicYearAndSemester {
                 }
             } ${
                 when (semester) {
-                    1 -> App.context.getString(R.string.spring_semester)
-                    2 -> App.context.getString(R.string.fall_semester)
+                    1 -> App.context.getString(R.string.fall_semester)
+                    2 -> App.context.getString(R.string.spring_semester)
                     else -> ""
                 }
             }"

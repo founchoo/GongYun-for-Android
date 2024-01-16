@@ -250,10 +250,12 @@ class ScheduleViewModel @Inject constructor(
                 )
             )
         }
-        if (_uiState.value.browsedWeek == null) {
+        if (_uiState.value.currentWeek == null) {
             _uiState.update {
                 it.copy(currentWeek = getWeekCount(_uiState.value.startLocalDate, LocalDate.now()))
             }
+        }
+        if (_uiState.value.browsedWeek == null) {
             _uiState.update {
                 it.copy(browsedWeek = _uiState.value.currentWeek)
             }
