@@ -41,22 +41,24 @@ fun WeekSliderBottomSheet(
         },
     ) {
         Column {
-            SliderListItem(
-                value = uiState.browsedWeek?.toFloat() ?: 0f,
-                minValue = 1f,
-                maxValue = 20f,
-                headlineText = stringResource(
-                    R.string.switch_week
-                ),
-                supportingText = stringResource(
-                    R.string.week_indicator, uiState.browsedWeek ?: 0
-                ),
-                onValueChanged = {
-                    viewModel.viewModelScope.launch {
-                        pagerState.scrollToPage(it.toInt() - 1)
-                    }
-                },
-            )
+            if (uiState.browsedWeek != null && uiState.browsedWeek > 0) {
+                SliderListItem(
+                    value = uiState.browsedWeek.toFloat(),
+                    minValue = 1f,
+                    maxValue = 20f,
+                    headlineText = stringResource(
+                        R.string.switch_week
+                    ),
+                    supportingText = stringResource(
+                        R.string.week_indicator, uiState.browsedWeek ?: 0
+                    ),
+                    onValueChanged = {
+                        viewModel.viewModelScope.launch {
+                            pagerState.scrollToPage(it.toInt() - 1)
+                        }
+                    },
+                )
+            }
             DropdownListItem(
                 value = uiState.browsedSemester,
                 headlineText = stringResource(R.string.switch_year_semester),

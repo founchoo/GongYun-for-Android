@@ -196,19 +196,23 @@ class MainActivity : AppCompatActivity() {
                             overflow = TextOverflow.Ellipsis
                         )
                     } else if (scheduleUiState.browsedSemester != null && scheduleUiState.browsedWeek != null) {
-                        Text(
-                            text = "${
-                                AcademicYearAndSemester.getReadableString(
-                                    scheduleUiState.semesters.first(),
-                                    scheduleUiState.browsedSemester.toString()
-                                )
-                            } ${
-                                stringResource(
-                                    R.string.week_indicator,
-                                    scheduleUiState.browsedWeek.toString()
-                                )
-                            }",
-                        )
+                        if (scheduleUiState.browsedWeek!! < 0) {
+                            Text(text=stringResource(R.string.on_vacation))
+                        } else {
+                            Text(
+                                text = "${
+                                    AcademicYearAndSemester.getReadableString(
+                                        scheduleUiState.semesters.first(),
+                                        scheduleUiState.browsedSemester.toString()
+                                    )
+                                } ${
+                                    stringResource(
+                                        R.string.week_indicator,
+                                        scheduleUiState.browsedWeek.toString()
+                                    )
+                                }",
+                            )
+                        }
                     }
                 },
                 actions = { ActionsForSchedule(scheduleViewModel, scheduleUiState) },

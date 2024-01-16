@@ -13,6 +13,7 @@ import com.dart.campushelper.ui.schedule.bottomsheet.TeachingClassroomBottomShee
 import com.dart.campushelper.ui.schedule.bottomsheet.WeekSliderBottomSheet
 import com.dart.campushelper.utils.DayOfWeek
 import com.dart.campushelper.viewmodel.ScheduleViewModel
+import kotlin.math.max
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -32,7 +33,7 @@ fun ScheduleScreen(
     // Home
     if (uiState.currentWeek != null) {
         val pagerState =
-            rememberPagerState(initialPage = uiState.currentWeek!! - 1, pageCount = { 20 })
+            rememberPagerState(initialPage = max(0, uiState.currentWeek!! - 1), pageCount = { 20 })
         ScheduleTable(uiState, viewModel, pagerState)
         WeekSliderBottomSheet(uiState, viewModel, pagerState)
     }

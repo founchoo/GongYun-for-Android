@@ -83,7 +83,7 @@ fun StatisticBottomSheet(uiState: GradeUiState, viewModel: GradeViewModel) {
                     autoLoadWhenDataLoaded = true,
                     loadingIndicatorStyle = LoadingIndicatorStyle.CIRCULAR,
                 ) {
-                    val startSemester = uiState.semesters?.firstOrNull { it.selected }?.value
+                    val startSemester = uiState.semesters?.firstOrNull()?.value
                     if (startSemester != null) {
                         ColumnCard(
                             icon = Icons.Outlined.Groups,
