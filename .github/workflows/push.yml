@@ -85,6 +85,13 @@ jobs:
           gradlePath: app/build.gradle
           versionName: ${{ env.VERSION_NAME }}
           versionCode: ${{ env.VERSION_CODE }}
+
+      - name: Setup build tool version variable
+        shell: bash
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo Last build tool version is: $BUILD_TOOL_VERSION
           
       - name: Build release APK
         run: |
@@ -100,6 +107,8 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: Copy and rename APK
         run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-${{ env.VERSION_NAME }}.apk
@@ -119,6 +128,8 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: Copy and rename AAB
         run: cp ./${{ env.SIGNED_RELEASE_FILE }} ./GongYun-${{ env.VERSION_NAME }}.aab
