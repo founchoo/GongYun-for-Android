@@ -129,6 +129,6 @@ interface NetworkService {
     ): Call<Unit>
 
     companion object {
-        const val BASE_URL = "https://hbut.jw.chaoxing.com/admin/"
+        const val BASE_URL = "http://jwxt.hbut.edu.cn/admin/"
     }
 }
