@@ -1,6 +1,8 @@
 package com.dart.campushelper.ui.grade
 
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,13 +20,14 @@ fun GradeItem(grade: Grade, uiState: GradeUiState, viewModel: GradeViewModel) {
     return ListItem(
         modifier = Modifier
             .clickable {
-                viewModel.setIsGradeDetailDialogOpen(true)
                 viewModel.setContentForGradeDetailDialog(grade)
+                viewModel.setIsGradeDetailDialogOpen(true)
+                viewModel.updateGradeReadStatus(grade)
             },
         headlineContent = {
-            Text(
-                text = grade.name,
-            )
+            BadgedBox(badge = { if (!grade.isRead) Badge() }) {
+                Text(grade.name)
+            }
         },
         supportingContent = {
             Text(

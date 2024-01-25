@@ -12,11 +12,13 @@ import androidx.lifecycle.viewModelScope
 import com.dart.campushelper.App.Companion.context
 import com.dart.campushelper.BuildConfig
 import com.dart.campushelper.R
+import com.dart.campushelper.alarm.GradeReminderRepository
 import com.dart.campushelper.alarm.LessonReminderRepository
 import com.dart.campushelper.receiver.AppWidgetPinnedReceiver
 import com.dart.campushelper.receiver.AppWidgetReceiver
 import com.dart.campushelper.repo.DataStoreRepo
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_ENABLE_SYSTEM_COLOR
+import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_GRADE_REMINDER_ENABLED
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_LOGIN
 import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
@@ -58,12 +60,14 @@ data class SettingsUiState(
     val selectedLanguageIndex: Int,
     val currentYearAndSemester: String? = null,
     val isLessonReminderEnabled: Boolean = DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED,
+    val isGradeReminderEnabled: Boolean = DEFAULT_VALUE_IS_GRADE_REMINDER_ENABLED,
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val dataStoreRepo: DataStoreRepo,
     private val lessonReminderRepository: LessonReminderRepository,
+    private val gradeReminderRepository: GradeReminderRepository,
     private val notification: Notification,
 ) : ViewModel() {
 
@@ -179,6 +183,15 @@ class SettingsViewModel @Inject constructor(
             }
         )
 
+    private val isGradeReminderEnabledStateFlow: StateFlow<Boolean> =
+        dataStoreRepo.observeIsGradeReminderEnabled().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking {
+                dataStoreRepo.observeIsGradeReminderEnabled().first()
+            }
+        )
+
     init {
         viewModelScope.launch {
             usernameStateFlow.collect { value ->
@@ -242,8 +255,22 @@ class SettingsViewModel @Inject constructor(
                         changeIsLessonReminderEnabled(false)
                     }
                 } else {
-                    notification.deleteNotificationChannel()
                     lessonReminderRepository.cancelAlarm()
+                }
+            }
+        }
+        viewModelScope.launch {
+            isGradeReminderEnabledStateFlow.collect { value ->
+                _uiState.update { it.copy(isGradeReminderEnabled = value) }
+                if (value) {
+                    if (Permission.requestNotificationPermission()) {
+                        notification.createNotificationChannel()
+                        gradeReminderRepository.setAlarm()
+                    } else {
+                        changeIsGradeReminderEnabled(false)
+                    }
+                } else {
+                    gradeReminderRepository.cancelAlarm()
                 }
             }
         }
@@ -372,6 +399,12 @@ class SettingsViewModel @Inject constructor(
     fun changeIsLessonReminderEnabled(value: Boolean) {
         viewModelScope.launch {
             dataStoreRepo.changeIsLessonReminderEnabled(value)
+        }
+    }
+
+    fun changeIsGradeReminderEnabled(value: Boolean) {
+        viewModelScope.launch {
+            dataStoreRepo.changeIsGradeReminderEnabled(value)
         }
     }
 }

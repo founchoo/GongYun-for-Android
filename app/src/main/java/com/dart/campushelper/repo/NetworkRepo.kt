@@ -206,13 +206,15 @@ class NetworkRepo @Inject constructor(
             )?.let {
                 rankingInfo = RankingInfo()
                 Jsoup.parse(it).run {
-                    select("table")[1].select("tr").forEachIndexed { hostRankingType, hostElement ->
+                    select("table")[1].select("tr").forEachIndexed { hostRankingTypeIndex, hostElement ->
                         hostElement.select("td")
-                            .forEachIndexed { subRankingType, subElement ->
-                                if (subRankingType > 0) {
+                            .forEachIndexed { subRankingTypeIndex, subElement ->
+                                val hostRankingType = HostRankingType.values()[hostRankingTypeIndex - 1]
+                                rankingInfo!!.setRanking(hostRankingType, SubRankingType.REF, Ranking(1, 100000))
+                                if (subRankingTypeIndex > 0) {
                                     rankingInfo!!.setRanking(
-                                        HostRankingType.values()[hostRankingType - 1],
-                                        SubRankingType.values()[subRankingType - 1],
+                                        hostRankingType,
+                                        SubRankingType.values()[subRankingTypeIndex],
                                         subElement.text().split("/").let {
                                             if (it[0] == "" || it[1] == "") {
                                                 Ranking()

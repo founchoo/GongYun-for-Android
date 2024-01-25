@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">工韵</string>
     <string name="grade_label">Grades</string>
     <string name="settings_label">Settings</string>
     <string name="schedule_label">Schedule</string>
@@ -42,8 +41,8 @@
     <string name="about">About</string>
     <string name="feedback_title">Feedback</string>
     <string name="feedback_desc">Join the group chat to provide your opinions and suggestions</string>
-    <string name="open_source_code_title">Open source code</string>
-    <string name="open_source_code_desc">Your development will contribute to this application</string>
+    <string name="open_source_code_title">Project link</string>
+    <string name="open_source_code_desc">This application follows the Apache-2.0 license, welcome to contribute to the open source page!</string>
     <string name="open_source_code_message">You are about to leave this application. After confirmation, you will be redirected to the browser to open the Github repository.</string>
     <string name="dev">Developer Options</string>
     <string name="screenshot_mode_title">Screenshot mode</string>
@@ -92,8 +91,8 @@
     <string name="senior_year">Senior</string>
     <string name="spring_semester">Spring semester</string>
     <string name="fall_semester">Fall semester</string>
-    <string name="score">Point</string>
-    <string name="institute">Institute</string>
+    <string name="score">PT</string>
+    <string name="institute">Inst.</string>
     <string name="major">Major</string>
     <string name="_class">Class</string>
     <string name="course_name">Course name</string>
@@ -114,7 +113,6 @@
     <string name="switch_year_semester">Switching academic semesters</string>
     <string name="selected_year_semester">Currently selected academic year term</string>
     <string name="dev_title">Developer</string>
-    <string name="dev_name" translatable="false">摘叶飞镖/founchoo</string>
     <string name="open_dev_profile_message">You are about to leave this application. After confirmation, you will be redirected to the browser to open the GitHub profile page of the developer of this application.</string>
     <string name="more">More</string>
     <string name="schedule_other_info">Schedule notes information</string>
@@ -148,4 +146,11 @@
     <string name="course_type_fallback_label">Uncategorised</string>
     <string name="unidentified">" (Unidentified)"</string>
     <string name="semester">Semester</string>
+    <string name="new_grade">New</string>
+    <string name="mark_all_as_read">Mark all as read</string>
+    <string name="mark_all_as_read_success">All grades have been marked as read</string>
+    <string name="grade_reminder_title">Grade reminder</string>
+    <string name="grade_reminder_desc">Push notifications when new grades are available</string>
+    <string name="grade_reminder_push_content">There are new grades to be released</string>
+    <string name="ref">Full grade ref.</string>
 </resources>

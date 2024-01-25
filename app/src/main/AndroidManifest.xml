@@ -51,6 +51,8 @@
         <receiver
             android:name=".receiver.LessonReminderReceiver"
             android:exported="false" />
+        <receiver android:name=".receiver.GradeReminderReceiver"
+            android:exported="false" />
         <receiver
             android:name=".receiver.SyncScheduleReceiver"
             android:exported="false" />

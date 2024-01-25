@@ -44,10 +44,11 @@ enum class HostRankingType {
 }
 
 enum class SubRankingType {
-    INSTITUTE, MAJOR, CLASS;
+    REF, INSTITUTE, MAJOR, CLASS;
 
     override fun toString(): String {
         return when (this) {
+            REF -> context.getString(R.string.ref)
             INSTITUTE -> context.getString(R.string.institute)
             MAJOR -> context.getString(R.string.major)
             CLASS -> context.getString(R.string._class)

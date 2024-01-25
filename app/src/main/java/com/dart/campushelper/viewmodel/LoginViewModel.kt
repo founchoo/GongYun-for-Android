@@ -10,6 +10,8 @@ import com.dart.campushelper.repo.DataStoreRepo.Companion.DEFAULT_VALUE_YEAR_AND
 import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_PASSWORD
 import com.dart.campushelper.repo.DataStoreRepo.Companion.MOCK_VALUE_USERNAME
 import com.dart.campushelper.repo.NetworkRepo
+import com.dart.campushelper.repo.SimplCourseRepo
+import com.dart.campushelper.repo.SimplGradeRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +33,9 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val networkRepo: NetworkRepo,
-    private val dataStoreRepo: DataStoreRepo
+    private val dataStoreRepo: DataStoreRepo,
+    private val simplCourseRepo: SimplCourseRepo,
+    private val simplGradeRepo: SimplGradeRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -126,6 +130,8 @@ class LoginViewModel @Inject constructor(
             dataStoreRepo.changeSemesterYearAndNo(DEFAULT_VALUE_YEAR_AND_SEMESTER)
             dataStoreRepo.changeIsLogin(false)
             dataStoreRepo.changeCookies(emptyList())
+            simplCourseRepo.deleteAll()
+            simplGradeRepo.deleteAll()
         }
     }
 }

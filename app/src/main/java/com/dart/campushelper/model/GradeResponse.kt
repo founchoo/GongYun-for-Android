@@ -22,6 +22,7 @@ data class Grade(
     @SerializedName("jd") var gradePoint: Double? = null,
     @SerializedName("kcid") var courseId: String? = null,
     @SerializedName("cjfxms") var detail: String? = null,
+    var isRead: Boolean = false,
 ) {
     val score: Int
         get() = scoreRaw.orEmpty().toIntOrNull() ?: 0

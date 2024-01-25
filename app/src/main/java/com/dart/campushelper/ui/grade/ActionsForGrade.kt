@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
+import androidx.compose.material.icons.outlined.MarkChatRead
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.ShowChart
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import com.dart.campushelper.R
 import com.dart.campushelper.ui.component.TooltipIconButton
@@ -33,10 +33,17 @@ fun ActionsForGrade(
     }
     TooltipIconButton(
         label = R.string.data_summary,
-        imageVector = Icons.Outlined.ShowChart,
+        imageVector = Icons.AutoMirrored.Outlined.ShowChart,
         onClick = {
             viewModel.loadLineChart()
             viewModel.setOpenSummarySheet(true)
+        },
+    )
+    TooltipIconButton(
+        label = R.string.mark_all_as_read,
+        imageVector = Icons.Outlined.MarkChatRead,
+        onClick = {
+            viewModel.markAllAsRead()
         },
     )
 }
