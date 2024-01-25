@@ -150,6 +150,14 @@ class DataStoreRepo @Inject constructor() : DataStoreService {
         }
     }
 
+    override suspend fun changeIsGradeReminderEnabled(isGradeReminderEnabled: Boolean) {
+        mutex.withLock {
+            dataStore.edit {
+                it[KEY_IS_GRADE_REMINDER_ENABLED] = isGradeReminderEnabled
+            }
+        }
+    }
+
     override fun observeIsOtherCourseDisplay(): Flow<Boolean> = dataStore.data.map {
         it[KEY_IS_OTHER_COURSE_DISPLAY] ?: DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY
     }
@@ -216,6 +224,10 @@ class DataStoreRepo @Inject constructor() : DataStoreService {
         it[KEY_IS_LESSON_REMINDER_ENABLED] ?: DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED
     }
 
+    override fun observeIsGradeReminderEnabled(): Flow<Boolean> = dataStore.data.map {
+        it[KEY_IS_GRADE_REMINDER_ENABLED] ?: DEFAULT_VALUE_IS_GRADE_REMINDER_ENABLED
+    }
+
     companion object {
         const val PREFS_NAME = "user_datastore.preferences_pb"
 
@@ -235,6 +247,7 @@ class DataStoreRepo @Inject constructor() : DataStoreService {
         val KEY_ENTER_UNIVERSITY_YEAR = stringPreferencesKey("enter_university_year")
         val KEY_IS_SCREENSHOT_MODE = booleanPreferencesKey("is_screenshot_mode")
         val KEY_IS_LESSON_REMINDER_ENABLED = booleanPreferencesKey("is_lesson_reminder_enabled")
+        val KEY_IS_GRADE_REMINDER_ENABLED = booleanPreferencesKey("is_grade_reminder_enabled")
 
         const val DEFAULT_VALUE_IS_OTHER_COURSE_DISPLAY = true
         const val DEFAULT_VALUE_IS_YEAR_DISPLAY = true
@@ -255,5 +268,6 @@ class DataStoreRepo @Inject constructor() : DataStoreService {
         val MOCK_VALUE_ENTER_UNIVERSITY_YEAR = "${LocalDate.now().year - 3}"
         const val DEFAULT_VALUE_IS_SCREENSHOT_MODE = false
         const val DEFAULT_VALUE_IS_LESSON_REMINDER_ENABLED = false
+        const val DEFAULT_VALUE_IS_GRADE_REMINDER_ENABLED = false
     }
 }

@@ -8,10 +8,13 @@ import com.dart.campushelper.model.CourseType
 import com.dart.campushelper.model.Grade
 import com.dart.campushelper.model.HostRankingType
 import com.dart.campushelper.model.RankingInfo
+import com.dart.campushelper.model.SimplGrade
 import com.dart.campushelper.model.SubRankingType
 import com.dart.campushelper.repo.DataStoreRepo
 import com.dart.campushelper.repo.NetworkRepo
 import com.dart.campushelper.repo.Result
+import com.dart.campushelper.repo.SimplGradeRepo
+import com.dart.campushelper.ui.main.MainActivity
 import com.patrykandpatrick.vico.core.chart.composed.ComposedChartEntryModel
 import com.patrykandpatrick.vico.core.entry.ChartEntryModel
 import com.patrykandpatrick.vico.core.entry.FloatEntry
@@ -86,7 +89,8 @@ data class GradeUiState(
 @HiltViewModel
 class GradeViewModel @Inject constructor(
     private val networkRepo: NetworkRepo,
-    private val dataStoreRepo: DataStoreRepo
+    private val dataStoreRepo: DataStoreRepo,
+    private val simplGradeRepo: SimplGradeRepo
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -168,6 +172,15 @@ class GradeViewModel @Inject constructor(
         }
     }
 
+    fun updateGradeReadStatus(grade: Grade) {
+        if (!grade.isRead) {
+            viewModelScope.launch {
+                simplGradeRepo.update(grade.courseId.orEmpty(), true)
+                getGrades()
+            }
+        }
+    }
+
     fun loadLineChart() {
         if (_backedGrades != null) {
             val sorted =
@@ -217,6 +230,18 @@ class GradeViewModel @Inject constructor(
     suspend fun getGrades() {
         val needResetFilter = _backedGrades == null
         _backedGrades = networkRepo.getGrades()
+        val localGrades = simplGradeRepo.getAll()
+        val gradesToAdd = mutableListOf<SimplGrade>()
+        _backedGrades?.forEach { grade ->
+            val found = localGrades.find { it.gradeId == grade.courseId }
+            if (found == null) {
+                gradesToAdd.add(SimplGrade(grade.courseId.orEmpty()))
+            }
+            grade.isRead = found?.isRead ?: false
+        }
+        if (gradesToAdd.isNotEmpty()) {
+            simplGradeRepo.insertAll(*gradesToAdd.toTypedArray())
+        }
         val courseTypes = networkRepo.getCourseTypeList()
         _uiState.update {
             it.copy(courseTypes = _backedGrades?.asSequence()?.map { it.courseTypeRaw }
@@ -317,9 +342,8 @@ class GradeViewModel @Inject constructor(
             }
             _uiState.update {
                 it.copy(
-                    entryModelForRankingColumnChart = generateChartModelForGrade(HostRankingType.GPA) + generateChartModelForGrade(
-                        HostRankingType.SCORE
-                    ),
+                    entryModelForRankingColumnChart = generateChartModelForGrade(HostRankingType.GPA) +
+                            generateChartModelForGrade(HostRankingType.SCORE),
                 )
             }
         }
@@ -485,5 +509,15 @@ class GradeViewModel @Inject constructor(
             )
         }
         filterGrades()
+    }
+
+    fun markAllAsRead() {
+        viewModelScope.launch {
+            _backedGrades?.forEach {
+                simplGradeRepo.update(it.courseId.orEmpty(), true)
+            }
+            getGrades()
+            MainActivity.snackBarHostState.showSnackbar(context.getString(R.string.mark_all_as_read_success))
+        }
     }
 }

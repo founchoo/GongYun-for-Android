@@ -42,8 +42,8 @@
     <string name="about">关于</string>
     <string name="feedback_title">反馈</string>
     <string name="feedback_desc">加入群聊提供你的意见及建议</string>
-    <string name="open_source_code_title">开源代码</string>
-    <string name="open_source_code_desc">你的开发将为此应用贡献一份力量</string>
+    <string name="open_source_code_title">项目链接</string>
+    <string name="open_source_code_desc">此应用遵循 Apache-2.0 license 开源协议，欢迎前往开源页面参与贡献</string>
     <string name="open_source_code_message">您即将离开此应用，确认后将跳转到浏览器打开 GitHub 仓库</string>
     <string name="dev">开发者选项</string>
     <string name="screenshot_mode_title">截屏模式</string>
@@ -114,7 +114,7 @@
     <string name="switch_year_semester">切换学年学期</string>
     <string name="selected_year_semester">当前选择的学年学期</string>
     <string name="dev_title">开发人员</string>
-    <string name="dev_name" translatable="false">摘叶飞镖/founchoo</string>
+    <string name="dev_name" translatable="false">摘叶飞镖（founchoo）</string>
     <string name="open_dev_profile_message">您即将离开此应用，确认后将跳转到浏览器打开本应用开发者 GitHub 个人资料页面</string>
     <string name="more">更多</string>
     <string name="schedule_other_info">课表备注信息</string>
@@ -151,4 +151,11 @@
     <string name="course_type_fallback_label">未分类</string>
     <string name="unidentified">（未识别）</string>
     <string name="semester">学期</string>
+    <string name="new_grade">新</string>
+    <string name="mark_all_as_read">全部标记为已读</string>
+    <string name="mark_all_as_read_success">已标记所有成绩为已读</string>
+    <string name="grade_reminder_title">成绩提醒</string>
+    <string name="grade_reminder_desc">当有新成绩时推送通知</string>
+    <string name="grade_reminder_push_content">有新成绩发布</string>
+    <string name="ref">满绩参考</string>
 </resources>

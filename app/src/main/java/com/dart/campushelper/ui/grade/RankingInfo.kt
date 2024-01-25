@@ -35,8 +35,9 @@ fun RankingInfo(uiState: GradeUiState) = HostRankingType.values()
             supportingContent = {
                 Text(it.run {
                     SubRankingType.values()
-                        .joinToString("，") {
-                            uiState.rankingInfo?.data?.getRanking(
+                        .drop(1)
+                        .joinToString(" ") {
+                            uiState.rankingInfo.data?.getRanking(
                                 this,
                                 it
                             ).run {

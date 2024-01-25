@@ -21,7 +21,7 @@ class Notification @Inject constructor() {
 
     companion object {
         private const val CHANNEL_ID = "host_channel"
-        private const val LESSON_REMINDER_NOTIFICATION_ID = 0
+        private const val NOTIFICATION_ID = 0
     }
 
     fun show(title: String, content: String) {
@@ -41,7 +41,7 @@ class Notification @Inject constructor() {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                notify(LESSON_REMINDER_NOTIFICATION_ID, builder.build())
+                notify(NOTIFICATION_ID, builder.build())
             }
         }
     }

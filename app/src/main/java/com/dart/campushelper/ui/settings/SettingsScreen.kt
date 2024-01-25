@@ -1,7 +1,6 @@
 package com.dart.campushelper.ui.settings
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +12,7 @@ import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DoNotDisturbOn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Nightlight
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Palette
@@ -42,7 +42,6 @@ import com.dart.campushelper.viewmodel.LoginViewModel
 import com.dart.campushelper.viewmodel.SettingsViewModel
 import com.dart.campushelper.viewmodel.toStringResourceId
 
-@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnrememberedMutableState", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SettingsScreen(
@@ -128,6 +127,16 @@ fun SettingsScreen(
             supportingText = stringResource(R.string.show_pin_desc),
             onClick = {
                 settingsViewModel.pin()
+            }
+        )
+        BasicListItem(leadingText = stringResource(R.string.grade_label))
+        SwitchListItem(
+            leadingImageVector = Icons.Outlined.NewReleases,
+            value = settingsUiState.isGradeReminderEnabled,
+            headlineText = stringResource(R.string.grade_reminder_title),
+            supportingText = stringResource(R.string.grade_reminder_desc),
+            onValueChanged = {
+                settingsViewModel.changeIsGradeReminderEnabled(it)
             }
         )
         BasicListItem(leadingText = stringResource(R.string.display))

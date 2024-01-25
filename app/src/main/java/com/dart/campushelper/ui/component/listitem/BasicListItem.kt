@@ -27,9 +27,11 @@ fun BasicListItem(
     onClick: (() -> Unit)? = null,
 ) {
     ListItem(
-        modifier = modifier.clickable(
-            onClick = onClick ?: {}
-        ),
+        modifier = onClick?.let {
+            modifier.clickable(
+                onClick = onClick
+            )
+        } ?: modifier,
         headlineContent = {
             if (headlineText != null) {
                 Text(headlineText)

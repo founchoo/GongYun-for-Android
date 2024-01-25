@@ -38,6 +38,8 @@ interface DataStoreService {
 
     suspend fun changeIsLessonReminderEnabled(isLessonReminderEnabled: Boolean)
 
+    suspend fun changeIsGradeReminderEnabled(isGradeReminderEnabled: Boolean)
+
     /**
      * Observe section.
      */
@@ -70,4 +72,6 @@ interface DataStoreService {
     fun observeIsScreenshotMode(): Flow<Boolean>
 
     fun observeIsLessonReminderEnabled(): Flow<Boolean>
+
+    fun observeIsGradeReminderEnabled(): Flow<Boolean>
 }
