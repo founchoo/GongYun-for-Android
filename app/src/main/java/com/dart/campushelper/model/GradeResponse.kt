@@ -31,7 +31,10 @@ data class Grade(
         get() = creditRaw.orEmpty().toDoubleOrNull() ?: 0.0
 
     val name: String
-        get() = courseNameRaw?.replace("[${courseId}]", "") ?: ""
+        get() = courseNameRaw?.substring(courseNameRaw!!.indexOf(']') + 1).toString()
+
+    val composition: String
+        get() = detail.orEmpty().replace(",", "\n")
 
     companion object {
         fun mock(): Grade {

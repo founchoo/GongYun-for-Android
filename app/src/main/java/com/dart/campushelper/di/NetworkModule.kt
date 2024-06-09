@@ -24,6 +24,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,6 +39,9 @@ object NetworkModule {
     ): NetworkService {
 
         val client = OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .followRedirects(false)
             .cookieJar(NetworkCookieJar(dataStoreRepo))
             .addInterceptor { chain ->
