@@ -234,7 +234,7 @@ class MainActivity : AppCompatActivity() {
                         exit = fadeOut(),
                     ) {
                         NoBorderTextField(
-                            text = gradeUiState.searchKeyword,
+                            value = gradeUiState.searchKeyword,
                             placeholderText = stringResource(R.string.course_name),
                             onValueChange = { gradeViewModel.setSearchKeyword(it) },
                             focusRequester = focusSearchBarRequester

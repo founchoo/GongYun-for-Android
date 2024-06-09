@@ -2,7 +2,6 @@ package com.dart.campushelper.model
 
 import com.dart.campushelper.utils.parseHtml
 import com.google.gson.annotations.SerializedName
-import java.util.*
 
 data class Course(
     // ID
@@ -154,7 +153,7 @@ data class Course(
     )
 
     companion object {
-        fun mock() : Course {
+        fun mock(): Course {
             return Course(
                 id = "123456",
                 academicYearAndTerm = "2022-2023-2",
@@ -212,7 +211,7 @@ data class Course(
 
     // 教师名称
     val teacherName: String?
-        get() = teacherNameHtml?.let { parseHtml(it) }
+        get() = teacherNameHtml?.let { parseHtml(it).replace(",", "\n") }
 
     val className: String?
         get() = classNameHtml?.let { parseHtml(it) }

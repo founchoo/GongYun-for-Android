@@ -22,7 +22,7 @@
     <string name="course_grade">课程成绩</string>
     <string name="course_grades_desc">当前课程列表所列课程的成绩</string>
     <string name="arithmetic_mean_score">算数平均分</string>
-    <string name="rank_title">学年学期排名信息</string>
+    <string name="rank_title">排名信息</string>
     <string name="rank_desc">已筛选学年学期：%1$s 的排名信息</string>
     <string name="rank_not_available_title">排名信息不可用</string>
     <string name="rank_not_available_desc">当筛选课程性质或检索课程名称时排名信息不可用</string>
@@ -136,7 +136,7 @@
     <string name="current_semester">当前学年学期</string>
     <string name="fill_mock_info">没有帐户？填充体验账户</string>
     <string name="clear_mock_info">清除体验账户</string>
-    <string name="login_help_text">不知道到密码？访问 %1$s 了解更多信息</string>
+    <string name="login_help_text">不知道密码？访问 %1$s 了解更多信息</string>
     <string name="teacher_schedule">查找教师课表</string>
     <string name="no_teacher_schedule_found">暂无与此教师相关的课表</string>
     <string name="input_teacher_name">输入教师姓名</string>

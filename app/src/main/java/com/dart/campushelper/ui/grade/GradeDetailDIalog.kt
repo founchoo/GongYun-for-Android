@@ -31,10 +31,7 @@ fun GradeDetailDialog(
                     ListItem(
                         headlineContent = {
                             Text(
-                                "${stringResource(R.string.grade_label)} ${
-                                    grade.score.toString()
-                                        .replaceWithStars(uiState.isScreenshotMode)
-                                } / ${stringResource(R.string.gpa_label)} ${
+                                "${stringResource(R.string.gpa_label)} ${
                                     grade.gradePoint.toString()
                                         .replaceWithStars(uiState.isScreenshotMode)
                                 }"
@@ -42,7 +39,7 @@ fun GradeDetailDialog(
                         },
                         supportingContent = {
                             Text(
-                                (grade.detail ?: "").replaceWithStars(uiState.isScreenshotMode)
+                                grade.composition.replaceWithStars(uiState.isScreenshotMode)
                             )
                         },
                         trailingContent = {

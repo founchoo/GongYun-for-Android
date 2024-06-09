@@ -39,7 +39,8 @@ class LessonReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         CoroutineScope(Dispatchers.IO).launch {
-            val needUpdateDatabase = simplCourseRepo.getAll().isEmpty() || LocalTime.now().hour < 8
+            val needUpdateDatabase =
+                simplCourseRepo.getAll().isEmpty() || (LocalTime.now().hour <= 8 && LocalTime.now().minute <= 20)
             if (needUpdateDatabase) {
                 val currentWeek = getWeekCount(
                     networkRepo.getSemesterStartDate(

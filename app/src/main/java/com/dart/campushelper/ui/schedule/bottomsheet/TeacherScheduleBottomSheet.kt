@@ -46,7 +46,7 @@ fun TeacherScheduleBottomSheet(uiState: ScheduleUiState, viewModel: ScheduleView
             ) {
                 Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
                 NoBorderTextField(
-                    text = uiState.searchTeacherName,
+                    value = uiState.searchTeacherName,
                     placeholderText = stringResource(R.string.input_teacher_name),
                     onValueChange = { viewModel.setSearchTeacherName(it) },
                     focusRequester = focusSearchBarRequester
@@ -63,7 +63,9 @@ fun TeacherScheduleBottomSheet(uiState: ScheduleUiState, viewModel: ScheduleView
                     Text(
                         text = stringResource(R.string.no_teacher_schedule_found),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 5.dp).padding(horizontal = DEFAULT_PADDING),
+                        modifier = Modifier
+                            .padding(top = 5.dp)
+                            .padding(horizontal = DEFAULT_PADDING),
                     )
                 },
                 contentWhenDataSourceIsNotEmpty = {
